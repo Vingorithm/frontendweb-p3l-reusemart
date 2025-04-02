@@ -1,4 +1,9 @@
 export const ENDPOINTS = {
+    REGISTER: "/register",
+    LOGIN: "/login",
+    LOGOUT: "/logout",
+    GET_CURRENT_USER: "/me", 
+
     GET_ALL_ALAMAT_PEMBELI: "/alamat-pembeli",
     CREATE_ALAMAT_PEMBELI: "/alamat-pembeli",
     SHOW_ALAMAT_PEMBELI: (id) => `/alamat-pembeli/${id}`,

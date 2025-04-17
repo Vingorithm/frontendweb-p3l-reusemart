@@ -6,7 +6,7 @@ import { FaGooglePlay } from 'react-icons/fa';
 
 const Footer = () => {
   const footerStyle = {
-    backgroundColor: '#03081F',
+    backgroundColor: '#D9D9D9',
     color: '#FFFFFF',
     padding: '2rem 0',
     fontFamily: 'Arial, sans-serif',
@@ -58,7 +58,7 @@ const Footer = () => {
   };
 
   const socialIconStyle = {
-    color: '#FFFFFF',
+    color: '#03081F',
     fontSize: '18px',
     marginRight: '15px',
   };
@@ -70,7 +70,7 @@ const Footer = () => {
   };
 
   const linkStyle = {
-    color: '#FFFFFF',
+    color: '#03081F',
     textDecoration: 'none',
     display: 'block',
     marginBottom: '10px',
@@ -79,11 +79,12 @@ const Footer = () => {
   const linkHeaderStyle = {
     fontWeight: 'bold',
     marginBottom: '15px',
+    color: '#03081F'
   };
 
   const addressStyle = {
     fontSize: '14px',
-    color: '#D9D9D9',
+    color: '#03081F',
   };
 
   const copyrightStyle = {
@@ -91,7 +92,7 @@ const Footer = () => {
     marginTop: '20px',
     paddingTop: '20px',
     fontSize: '14px',
-    color: '#D9D9D9',
+    color: '#03081F',
   };
 
   return (
@@ -100,7 +101,7 @@ const Footer = () => {
         <div className="row">
           <div className="col-md-3 mb-4">
             <div style={logoStyle}>
-              Reuse <span style={logoGreenStyle}>Mart</span>
+              <img src="..\src\assets\images\logo.png" alt="logo" />
             </div>
             
             <div className="app-download mb-3">
@@ -175,7 +176,7 @@ const Footer = () => {
         
         <div className="row" style={copyrightStyle}>
           <div className="col-md-6">
-            <p>Reuse mart copyright 2023, All Rights Reserved.</p>
+            <p>ReuseMart copyright 2025, All Rights Reserved.</p>
           </div>
           <div className="col-md-6 text-md-end">
             <p>All rights reserved</p>

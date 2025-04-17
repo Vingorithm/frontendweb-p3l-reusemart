@@ -31,7 +31,7 @@ const HeaderUtama = () => {
     color: '#028643',
     backgroundColor: '#028643',
     padding: '0 8px',
-    color: '#FFFFFF',
+    // color: '#FFFFFF',
   };
 
   const searchContainerStyle = {
@@ -112,9 +112,7 @@ const HeaderUtama = () => {
         <div className="row align-items-center">
           <div className="col-auto">
             <div style={logoContainerStyle}>
-              <h1 style={logoTextStyle}>
-                Reuse <span style={logoGreenStyle}>Mart</span>
-              </h1>
+              <img src="..\src\assets\images\logo.png" alt="logo" />
             </div>
           </div>
 

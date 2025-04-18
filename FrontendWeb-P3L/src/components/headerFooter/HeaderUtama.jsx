@@ -112,7 +112,9 @@ const HeaderUtama = () => {
         <div className="row align-items-center">
           <div className="col-auto">
             <div style={logoContainerStyle}>
-              <img src="..\src\assets\images\logo.png" alt="logo" />
+              <a href="/" style={{ textDecoration: 'none' }}>
+                <img src="..\src\assets\images\logo.png" alt="logo" />
+              </a>
             </div>
           </div>
 

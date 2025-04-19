@@ -9,6 +9,8 @@ import {
 } from '../../clients/PegawaiService';
 import { Container, Row, Col, Form, Button, Card, Modal, Pagination, Nav } from 'react-bootstrap';
 import defaultAvatar from '../../assets/images/logo.png';
+import { Link } from "react-router-dom";
+import TopNavigation from "../../components/navigation/TopNavigation";
 
 const ManagePegawaiPage = () => {
   const [pegawaiList, setPegawaiList] = useState([]);
@@ -18,26 +20,29 @@ const ManagePegawaiPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('');
   const [currentPegawai, setCurrentPegawai] = useState({
-    id_pegawai: '',
-    id_akun: '',
     nama_pegawai: '',
     tanggal_lahir: '',
     akun: {
       profile_picture: '',
       email: '',
+      password: '',
       role: ''
     }
   });
+  const [resetPassword, setResetPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(3);
   const [error, setError] = useState('');
 
   const roles = [
-    { id: 'gudang', name: 'Gudang' },
-    { id: 'kurir', name: 'Kurir' },
-    { id: 'admin', name: 'Admin' },
-    { id: 'customerservice', name: 'Customer Service' },
-    { id: 'hunter', name: 'Hunter' },
+    { id: 'Pegawai Gudang', name: 'Pegawai Gudang' },
+    { id: 'Kurir', name: 'Kurir' },
+    { id: 'Admin', name: 'Admin' },
+    { id: 'Customer Service', name: 'Customer Service' },
+    { id: 'Hunter', name: 'Hunter' },
   ];
 
   useEffect(() => {
@@ -48,26 +53,7 @@ const ManagePegawaiPage = () => {
     try {
       setLoading(true);
       const response = await GetAllPegawai();
-      const enhancedPegawaiList = await Promise.all(response.data.map(async (pegawai) => {
-        try {
-          const akunResponse = await GetAkunByPegawaiId(pegawai.id_pegawai);
-          return {
-            ...pegawai,
-            akun: akunResponse.data
-          };
-        } catch (error) {
-          console.error(`Failed to fetch akun for pegawai ${pegawai.id_pegawai}:`, error);
-          return {
-            ...pegawai,
-            akun: {
-              profile_picture: null,
-              role: 'Unknown'
-            }
-          };
-        }
-      }));
-      
-      setPegawaiList(enhancedPegawaiList);
+      setPegawaiList(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching pegawai data:', error);
@@ -87,31 +73,41 @@ const ManagePegawaiPage = () => {
   const handleAddPegawai = () => {
     setModalType('add');
     setCurrentPegawai({
-      id_pegawai: '',
-      id_akun: '',
       nama_pegawai: '',
       tanggal_lahir: '',
       akun: {
-        profile_picture: '',
+        profile_picture: defaultAvatar,
         email: '',
         password: '',
         role: ''
       }
     });
+    setImagePreview(null);
+    setProfilePicture(null);
     setError('');
     setShowModal(true);
   };
 
   const handleEditPegawai = async (id) => {
     try {
-      const pegawaiResponse = await GetPegawaiById(id);
-      const akunResponse = await GetAkunByPegawaiId(id);
+      const response = await GetPegawaiById(id);
+      const pegawaiData = response.data;
       
       setCurrentPegawai({
-        ...pegawaiResponse.data,
-        akun: akunResponse.data
+        id_pegawai: pegawaiData.id_pegawai,
+        nama_pegawai: pegawaiData.nama_pegawai,
+        tanggal_lahir: pegawaiData.tanggal_lahir,
+        akun: pegawaiData.Akun || pegawaiData.akun || {
+          id_akun: pegawaiData.id_akun,
+          email: '',
+          role: ''
+        }
       });
       
+      setResetPassword(false);
+      setNewPassword('');
+      setImagePreview(null);
+      setProfilePicture(null);
       setModalType('edit');
       setError('');
       setShowModal(true);
@@ -140,30 +136,84 @@ const ManagePegawaiPage = () => {
     }
   };
 
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleResetPasswordChange = (e) => {
+    setResetPassword(e.target.checked);
+  };
+
+  const handleNewPasswordChange = (e) => {
+    setNewPassword(e.target.value);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     
     try {
-      const pegawaiData = {
-        id_akun: currentPegawai.id_akun,
-        nama_pegawai: currentPegawai.nama_pegawai,
-        tanggal_lahir: currentPegawai.tanggal_lahir
-      };
-
       if (modalType === 'add') {
-        await CreatePegawai({
-          ...pegawaiData,
-          akun: {
-            id_akun: currentPegawai.id_akun,
-            email: currentPegawai.akun.email,
-            password: currentPegawai.akun.password || 'defaultPassword',
-            role: currentPegawai.akun.role,
-            profile_picture: currentPegawai.akun.profile_picture || defaultAvatar
-          }
-        });
+        // For new employee creation
+        const formData = new FormData();
+        formData.append('nama_pegawai', currentPegawai.nama_pegawai);
+        formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
+        formData.append('akun[email]', currentPegawai.akun.email);
+        formData.append('akun[password]', currentPegawai.akun.password || 'defaultPassword');
+        formData.append('akun[role]', currentPegawai.akun.role);
+        
+        if (profilePicture) {
+          formData.append('akun[profile_picture]', profilePicture);
+        } else {
+          formData.append('akun[profile_picture]', defaultAvatar);
+        }
+        
+        await CreatePegawai(formData);
       } else {
-        await UpdatePegawai(currentPegawai.id_pegawai, pegawaiData);
+        // For employee update
+        const updateData = {
+          nama_pegawai: currentPegawai.nama_pegawai,
+          tanggal_lahir: currentPegawai.tanggal_lahir,
+          akun: {
+            email: currentPegawai.akun.email,
+            role: currentPegawai.akun.role
+          }
+        };
+        
+        // Add password to update data if reset password is checked
+        if (resetPassword && newPassword) {
+          updateData.akun.password = newPassword;
+        }
+        
+        // Add profile picture to update data if a new one is selected
+        if (profilePicture) {
+          const formData = new FormData();
+          
+          // Append all data to formData
+          formData.append('nama_pegawai', updateData.nama_pegawai);
+          formData.append('tanggal_lahir', updateData.tanggal_lahir);
+          formData.append('akun[email]', updateData.akun.email);
+          formData.append('akun[role]', updateData.akun.role);
+          
+          if (resetPassword && newPassword) {
+            formData.append('akun[password]', updateData.akun.password);
+          }
+          
+          formData.append('akun[profile_picture]', profilePicture);
+          
+          await UpdatePegawai(currentPegawai.id_pegawai, formData);
+        } else {
+          await UpdatePegawai(currentPegawai.id_pegawai, updateData);
+        }
       }
       
       setShowModal(false);
@@ -185,39 +235,40 @@ const ManagePegawaiPage = () => {
       }
     }
   };
-
+  // ini buat logika pencarian, berdasarkan nama, id, sama email
   const filteredPegawai = pegawaiList.filter(pegawai => {
     const matchesSearch = pegawai.nama_pegawai?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          pegawai.id_pegawai?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === '' || (pegawai.akun && pegawai.akun.role === selectedRole);
+                          pegawai.id_pegawai?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          pegawai.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const pegawaiRole = pegawai.Akun?.role || pegawai.akun?.role;
+    const matchesRole = selectedRole === '' || pegawaiRole === selectedRole;
+    
     return matchesSearch && matchesRole;
   });
 
+  // logika buat pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredPegawai.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredPegawai.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
+  const getRoleName = (roleId) => {
+    const role = roles.find(r => r.id === roleId);
+    return role ? role.name : roleId;
+  };
+
+  const getProfilePicture = (pegawai) => {
+    if (pegawai.Akun?.profile_picture) return pegawai.Akun.profile_picture;
+    if (pegawai.akun?.profile_picture) return pegawai.akun.profile_picture;
+    return defaultAvatar;
+  };
 
   return (
     <Container fluid className="p-0 bg-white">
       {/* Navigation atas */}
-      <div className="bg-white pt-4 px-3">
-        <div className="max-width-container mx-auto">
-          <Nav className="nav-tabs-custom border-0">
-            <Nav.Item>
-              <Nav.Link active className="px-5 py-2">Data Pegawai</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link className="px-5 py-2">Data Organisasi</Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link className="px-5 py-2">Data Merchandise</Nav.Link>
-            </Nav.Item>
-          </Nav>
-        </div>
-      </div>
+      <TopNavigation activeTab="pegawai" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (
@@ -302,32 +353,28 @@ const ManagePegawaiPage = () => {
                         <Col xs={12} md={9}>
                           <div className="mb-1">
                             <span className="employee-id">#{pegawai.id_pegawai}</span>
-                            {pegawai.akun && (
-                              <span className="badge bg-light text-dark ms-2 role-badge">
-                                {roles.find(r => r.id === pegawai.akun.role)?.name || pegawai.akun.role}
-                              </span>
-                            )}
+                            <span className="badge bg-light text-dark ms-2 role-badge">
+                              {getRoleName(pegawai.Akun?.role || pegawai.akun?.role || 'Unknown')}
+                            </span>
                           </div>
                           <h5 className="employee-name mb-2">{pegawai.nama_pegawai}</h5>
                           <div className="mb-1">
                             <span className="text-muted">ID Akun: </span>
                             <span>{pegawai.id_akun}</span>
                           </div>
-                          {pegawai.akun && pegawai.akun.email && (
-                            <div className="mb-1">
-                              <span className="text-muted">Email: </span>
-                              <span>{pegawai.akun.email}</span>
-                            </div>
-                          )}
+                          <div className="mb-1">
+                            <span className="text-muted">Email: </span>
+                            <span>{pegawai.Akun?.email || pegawai.akun?.email || '-'}</span>
+                          </div>
                           <div className="mb-0">
                             <span className="text-muted">Tanggal Lahir: </span>
-                            <span>{new Date(pegawai.tanggal_lahir).toLocaleDateString('id-ID')}</span>
+                            <span>{pegawai.tanggal_lahir ? new Date(pegawai.tanggal_lahir).toLocaleDateString('id-ID') : '-'}</span>
                           </div>
                         </Col>
                         <Col xs={12} md={3} className="d-flex justify-content-center justify-content-md-end mt-3 mt-md-0">
                           <div className="avatar-container">
                             <img 
-                              src={(pegawai.akun && pegawai.akun.profile_picture) || defaultAvatar} 
+                              src={getProfilePicture(pegawai)} 
                               alt={pegawai.nama_pegawai || 'Employee Avatar'} 
                               className="employee-avatar"
                               onError={(e) => {e.target.src = defaultAvatar}}
@@ -398,19 +445,29 @@ const ManagePegawaiPage = () => {
         </Modal.Header>
         <Modal.Body className="p-4">
           <Form onSubmit={handleSubmit}>
+            {/* Profile Picture Upload Section */}
+            <Form.Group className="mb-4 text-center">
+              <div className="profile-pic-container">
+                <img 
+                  src={imagePreview || (currentPegawai.akun?.profile_picture || defaultAvatar)} 
+                  alt="Profile Preview" 
+                  className="profile-preview mb-3"
+                />
+                <Form.Label className="d-block profile-upload-label">Foto Profil</Form.Label>
+                <div className="d-flex justify-content-center">
+                  <Form.Control
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfilePictureChange}
+                    className="form-control-file"
+                    style={{ width: '220px' }}
+                  />
+                </div>
+              </div>
+            </Form.Group>
+
             {modalType === 'add' && (
               <>
-                <Form.Group className="mb-3">
-                  <Form.Label>ID Akun</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="id_akun"
-                    value={currentPegawai.id_akun || ''}
-                    onChange={handleInputChange}
-                    required
-                    className="form-control-custom"
-                  />
-                </Form.Group>
                 <Form.Group className="mb-3">
                   <Form.Label>Email</Form.Label>
                   <Form.Control
@@ -450,6 +507,57 @@ const ManagePegawaiPage = () => {
                 </Form.Group>
               </>
             )}
+
+            {modalType === 'edit' && (
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="akun.email"
+                    value={currentPegawai.akun?.email || ''}
+                    onChange={handleInputChange}
+                    required
+                    className="form-control-custom"
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Role</Form.Label>
+                  <Form.Select
+                    name="akun.role"
+                    value={currentPegawai.akun?.role || ''}
+                    onChange={handleInputChange}
+                    className="form-control-custom"
+                  >
+                    <option value="">Pilih Role</option>
+                    {roles.map(role => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Check 
+                    type="checkbox"
+                    id="reset-password"
+                    label="Reset Password"
+                    checked={resetPassword}
+                    onChange={handleResetPasswordChange}
+                    className="mb-2"
+                  />
+                  {resetPassword && (
+                    <Form.Control
+                      type="password"
+                      placeholder="New Password"
+                      value={newPassword}
+                      onChange={handleNewPasswordChange}
+                      required={resetPassword}
+                      className="form-control-custom"
+                    />
+                  )}
+                </Form.Group>
+              </>
+            )}
+
             <Form.Group className="mb-3">
               <Form.Label>Nama Pegawai</Form.Label>
               <Form.Control
@@ -461,6 +569,7 @@ const ManagePegawaiPage = () => {
                 className="form-control-custom"
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Tanggal Lahir</Form.Label>
               <Form.Control
@@ -472,6 +581,7 @@ const ManagePegawaiPage = () => {
                 className="form-control-custom"
               />
             </Form.Group>
+
             <div className="d-flex justify-content-end">
               <Button 
                 variant="outline-secondary" 
@@ -491,6 +601,25 @@ const ManagePegawaiPage = () => {
       <style jsx>{`
         .max-width-container {
           max-width: 1200px;
+        }
+        
+        /* Profile Picture Styles */
+        .profile-pic-container {
+          margin-bottom: 15px;
+        }
+        
+        .profile-preview {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 3px solid #E7E7E7;
+        }
+        
+        .profile-upload-label {
+          font-weight: 500;
+          color: #03081F;
+          margin-bottom: 10px;
         }
         
         /* Navigation Tab Styles */
@@ -683,6 +812,11 @@ const ManagePegawaiPage = () => {
             width: 60px;
             height: 60px;
             margin-top: 10px;
+          }
+          
+          .profile-preview {
+            width: 100px;
+            height: 100px;
           }
         }
       `}</style>

@@ -7,9 +7,9 @@ export const GetAllPegawai = () =>
 export const GetPegawaiById = (id) =>
     apiClient.get(ENDPOINTS.SHOW_PEGAWAI(id));
 
-export const CreatePegawai = (pegawaiData) =>
-    apiClient.post(ENDPOINTS.CREATE_PEGAWAI, pegawaiData);
-
+export const CreatePegawai = (data) => {
+    return apiClient.post(ENDPOINTS.CREATE_PEGAWAI, data);
+};
 export const UpdatePegawai = (id, pegawaiData) =>
     apiClient.put(ENDPOINTS.UPDATE_PEGAWAI(id), pegawaiData);
 

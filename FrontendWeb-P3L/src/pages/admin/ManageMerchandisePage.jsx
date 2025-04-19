@@ -3,12 +3,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Container } from 'react-bootstrap';
 import TopNavigation from "../../components/navigation/TopNavigation";
 
-const ManageOrganisasiPage = () => {
+const ManageMerchandisePage = () => {
     return(
         <Container fluid className="p-0 bg-white">
-            <TopNavigation activeTab="organisasi" />
+            <TopNavigation activeTab="merchandise" />
         </Container>
     )
 };
 
-export default ManageOrganisasiPage;
+export default ManageMerchandisePage;

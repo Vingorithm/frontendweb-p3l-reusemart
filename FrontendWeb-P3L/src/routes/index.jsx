@@ -3,6 +3,8 @@ import { Toaster } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import HomePage from "../pages/HomePage";
 import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
+import ManageOrganisasiPage from "../pages/admin/ManageOrganisasiPage";
+import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
 
 const router = createBrowserRouter([
   {
@@ -20,6 +22,14 @@ const router = createBrowserRouter([
       {
         path: "/pegawai",
         element: <ManagePegawaiPage />,
+      },
+      {
+        path: "/organisasi",
+        element: <ManageOrganisasiPage />,
+      },
+      {
+        path: "/merchandise",
+        element: <ManageMerchandisePage />,
       },
     ],
   },

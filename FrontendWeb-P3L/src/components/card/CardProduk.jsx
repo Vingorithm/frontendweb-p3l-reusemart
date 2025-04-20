@@ -22,10 +22,10 @@ const CardProduk = ({
 
   const imageContainerStyle = {
     width: '100%',
-    height: '200px', // Fixed height for images
+    height: '200px',
     overflow: 'hidden',
     position: 'relative',
-    backgroundColor: '#f5f5f5', // Light background for images that don't fill container
+    backgroundColor: '#f5f5f5',
   };
 
   const imageStyle = {

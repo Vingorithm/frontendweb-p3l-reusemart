@@ -4,8 +4,8 @@ import { ENDPOINTS } from "../api/endpoints";
 export const GetAllBarang = () =>
     apiClient.get(ENDPOINTS.GET_ALL_BARANG);
 
-// export const GetBarangById = () =>
-//     apiClient.get(ENDPOINTS.ADMIN_GET_ALL_AUCTION);
+export const GetBarangById = (id) =>
+    apiClient.get(ENDPOINTS.SHOW_BARANG(id));
 
 // export const UpdateUserAuction = (id, data) =>
 //   apiClient.put(ENDPOINTS.ADMIN_UPDATE_AUCTION(id), data);

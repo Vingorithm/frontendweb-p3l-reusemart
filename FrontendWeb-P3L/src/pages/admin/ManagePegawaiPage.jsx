@@ -11,6 +11,10 @@ import { Container, Row, Col, Form, Button, Card, Modal, Pagination, Nav } from 
 import defaultAvatar from '../../assets/images/logo.png';
 import { Link } from "react-router-dom";
 import TopNavigation from "../../components/navigation/TopNavigation";
+import ToastNotification from "../../components/toast/ToastNotification";
+import RoleSidebar from "../../components/navigation/Sidebar";
+import EmployeeCard from "../../components/card/CardPegawai";
+import PaginationComponent from "../../components/pagination/Pagination";
 
 const ManagePegawaiPage = () => {
   const [pegawaiList, setPegawaiList] = useState([]);
@@ -37,6 +41,10 @@ const ManagePegawaiPage = () => {
   const [itemsPerPage] = useState(3);
   const [error, setError] = useState('');
 
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
+
   const roles = [
     { id: 'Pegawai Gudang', name: 'Pegawai Gudang' },
     { id: 'Kurir', name: 'Kurir' },
@@ -49,15 +57,30 @@ const ManagePegawaiPage = () => {
     fetchPegawai();
   }, []);
 
+  const showNotification = (message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 5000);
+  };
+
   const fetchPegawai = async () => {
     try {
       setLoading(true);
+      console.log('Fetching all employees data...');
       const response = await GetAllPegawai();
+      console.log('Employees data fetched successfully:', response.data);
       setPegawaiList(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching pegawai data:', error);
+      console.log('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       setError('Failed to load employee data. Please try again.');
+      showNotification('Failed to load employee data. Please try again.', 'danger');
       setLoading(false);
     }
   };
@@ -90,8 +113,10 @@ const ManagePegawaiPage = () => {
 
   const handleEditPegawai = async (id) => {
     try {
+      console.log(`Fetching employee details for ID: ${id}`);
       const response = await GetPegawaiById(id);
       const pegawaiData = response.data;
+      console.log('Employee details fetched successfully:', pegawaiData);
       
       setCurrentPegawai({
         id_pegawai: pegawaiData.id_pegawai,
@@ -113,7 +138,14 @@ const ManagePegawaiPage = () => {
       setShowModal(true);
     } catch (error) {
       console.error('Error fetching pegawai details:', error);
+      console.log('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        employee_id: id
+      });
       setError('Failed to load employee details. Please try again.');
+      showNotification('Failed to load employee details. Please try again.', 'danger');
     }
   };
 
@@ -164,6 +196,14 @@ const ManagePegawaiPage = () => {
     try {
       if (modalType === 'add') {
         // For new employee creation
+        console.log('Creating new employee with data:', {
+          nama_pegawai: currentPegawai.nama_pegawai,
+          tanggal_lahir: currentPegawai.tanggal_lahir,
+          email: currentPegawai.akun.email,
+          role: currentPegawai.akun.role,
+          has_profile_picture: !!profilePicture
+        });
+        
         const formData = new FormData();
         formData.append('nama_pegawai', currentPegawai.nama_pegawai);
         formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
@@ -177,9 +217,20 @@ const ManagePegawaiPage = () => {
           formData.append('akun[profile_picture]', defaultAvatar);
         }
         
-        await CreatePegawai(formData);
+        const response = await CreatePegawai(formData);
+        console.log('Employee created successfully:', response.data);
+        showNotification('Pegawai berhasil ditambahkan!', 'success');
       } else {
-        // For employee update
+        // For updating existing employee
+        console.log('Updating employee with ID:', currentPegawai.id_pegawai, {
+          nama_pegawai: currentPegawai.nama_pegawai,
+          tanggal_lahir: currentPegawai.tanggal_lahir,
+          email: currentPegawai.akun.email,
+          role: currentPegawai.akun.role,
+          reset_password: resetPassword,
+          has_new_profile_picture: !!profilePicture
+        });
+        
         const updateData = {
           nama_pegawai: currentPegawai.nama_pegawai,
           tanggal_lahir: currentPegawai.tanggal_lahir,
@@ -189,16 +240,15 @@ const ManagePegawaiPage = () => {
           }
         };
         
-        // Add password to update data if reset password is checked
         if (resetPassword && newPassword) {
           updateData.akun.password = newPassword;
+          console.log('Password reset included in update');
         }
         
-        // Add profile picture to update data if a new one is selected
         if (profilePicture) {
+          console.log('Profile picture included in update');
           const formData = new FormData();
           
-          // Append all data to formData
           formData.append('nama_pegawai', updateData.nama_pegawai);
           formData.append('tanggal_lahir', updateData.tanggal_lahir);
           formData.append('akun[email]', updateData.akun.email);
@@ -210,31 +260,56 @@ const ManagePegawaiPage = () => {
           
           formData.append('akun[profile_picture]', profilePicture);
           
-          await UpdatePegawai(currentPegawai.id_pegawai, formData);
+          const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
+          console.log('Employee updated successfully with new profile picture:', response.data);
         } else {
-          await UpdatePegawai(currentPegawai.id_pegawai, updateData);
+          const response = await UpdatePegawai(currentPegawai.id_pegawai, updateData);
+          console.log('Employee updated successfully:', response.data);
         }
+        
+        showNotification('Data pegawai berhasil diperbarui!', 'success');
       }
       
       setShowModal(false);
       fetchPegawai();
     } catch (error) {
       console.error('Error saving pegawai data:', error);
-      setError(error.response?.data?.error || 'Failed to save employee data. Please try again.');
+      console.log('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        operation: modalType === 'add' ? 'create' : 'update',
+        employee_data: currentPegawai
+      });
+      
+      const errorMessage = error.response?.data?.error || 'Failed to save employee data. Please try again.';
+      setError(errorMessage);
+      showNotification(errorMessage, 'danger');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        await DeletePegawai(id);
+        console.log(`Deleting employee with ID: ${id}`);
+        const response = await DeletePegawai(id);
+        console.log('Employee deleted successfully:', response.data);
+        showNotification('Pegawai berhasil dihapus!', 'success');
         fetchPegawai();
       } catch (error) {
         console.error('Error deleting pegawai:', error);
+        console.log('Error details:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+          employee_id: id
+        });
         setError('Failed to delete employee. Please try again.');
+        showNotification('Gagal menghapus pegawai. Silakan coba lagi.', 'danger');
       }
     }
   };
+  
   // ini buat logika pencarian, berdasarkan nama, id, sama email
   const filteredPegawai = pegawaiList.filter(pegawai => {
     const matchesSearch = pegawai.nama_pegawai?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -268,6 +343,12 @@ const ManagePegawaiPage = () => {
   return (
     <Container fluid className="p-0 bg-white">
       {/* Navigation atas */}
+      <ToastNotification 
+        show={showToast} 
+        setShow={setShowToast} 
+        message={toastMessage} 
+        type={toastType} 
+      />
       <TopNavigation activeTab="pegawai" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
@@ -292,29 +373,13 @@ const ManagePegawaiPage = () => {
         </Row>
 
         <Row>
-          {/* bagian siderbar buat role */}
+          {/* panggil siderbar buat role */}
           <Col md={3}>
-            <Card className="border role-card">
-              <Card.Header className="bg-white border-bottom p-3">
-                <div className="d-flex align-items-center">
-                  <i className="bi bi-list-ul me-2" style={{ color: '#03081F' }}></i>
-                  <strong style={{ color: '#03081F' }}>Role</strong>
-                </div>
-              </Card.Header>
-              <Card.Body className="p-0">
-                <ul className="list-group list-group-flush role-list">
-                  {roles.map(role => (
-                    <li 
-                      key={role.id} 
-                      className={`list-group-item px-3 py-3 ${selectedRole === role.id ? 'active-role' : ''}`}
-                      onClick={() => handleRoleChange(role.id)}
-                    >
-                      {role.name}
-                    </li>
-                  ))}
-                </ul>
-              </Card.Body>
-            </Card>
+            <RoleSidebar 
+              roles={roles} 
+              selectedRole={selectedRole} 
+              handleRoleChange={handleRoleChange} 
+            />
           </Col>
 
           {/* card content utamanya */}
@@ -346,91 +411,23 @@ const ManagePegawaiPage = () => {
               </div>
             ) : (
               <>
-                {currentItems.map((pegawai, index) => (
-                  <Card key={index} className="mb-3 border employee-card">
-                    <Card.Body className="p-3">
-                      <Row className="align-items-center">
-                        <Col xs={12} md={9}>
-                          <div className="mb-1">
-                            <span className="employee-id">#{pegawai.id_pegawai}</span>
-                            <span className="badge bg-light text-dark ms-2 role-badge">
-                              {getRoleName(pegawai.Akun?.role || pegawai.akun?.role || 'Unknown')}
-                            </span>
-                          </div>
-                          <h5 className="employee-name mb-2">{pegawai.nama_pegawai}</h5>
-                          <div className="mb-1">
-                            <span className="text-muted">ID Akun: </span>
-                            <span>{pegawai.id_akun}</span>
-                          </div>
-                          <div className="mb-1">
-                            <span className="text-muted">Email: </span>
-                            <span>{pegawai.Akun?.email || pegawai.akun?.email || '-'}</span>
-                          </div>
-                          <div className="mb-0">
-                            <span className="text-muted">Tanggal Lahir: </span>
-                            <span>{pegawai.tanggal_lahir ? new Date(pegawai.tanggal_lahir).toLocaleDateString('id-ID') : '-'}</span>
-                          </div>
-                        </Col>
-                        <Col xs={12} md={3} className="d-flex justify-content-center justify-content-md-end mt-3 mt-md-0">
-                          <div className="avatar-container">
-                            <img 
-                              src={getProfilePicture(pegawai)} 
-                              alt={pegawai.nama_pegawai || 'Employee Avatar'} 
-                              className="employee-avatar"
-                              onError={(e) => {e.target.src = defaultAvatar}}
-                            />
-                          </div>
-                        </Col>
-                      </Row>
-                      <div className="button-container mt-3 d-flex justify-content-end">
-                        <Button 
-                          variant="danger" 
-                          className="delete-btn me-2"
-                          onClick={() => handleDelete(pegawai.id_pegawai)}
-                        >
-                          Delete
-                        </Button>
-                        <Button 
-                          variant="success"
-                          className="edit-btn"
-                          onClick={() => handleEditPegawai(pegawai.id_pegawai)}
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                    </Card.Body>
-                  </Card>
+               {currentItems.map((pegawai, index) => (
+                  <EmployeeCard 
+                    key={pegawai.id_pegawai}
+                    employee={pegawai}
+                    onEdit={handleEditPegawai}
+                    onDelete={handleDelete}
+                    getRoleName={getRoleName}
+                  />
                 ))}
 
                 {/* Logika buat Pagination */}
                 {totalPages > 1 && (
-                  <div className="d-flex justify-content-center mt-4 pagination-container">
-                    <Pagination className="custom-pagination">
-                      <Pagination.Prev 
-                        onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-                        disabled={currentPage === 1}
-                      >
-                        <i className="bi bi-chevron-left"></i>
-                      </Pagination.Prev>
-                      
-                      {[...Array(totalPages).keys()].map(number => (
-                        <Pagination.Item
-                          key={number + 1}
-                          active={number + 1 === currentPage}
-                          onClick={() => paginate(number + 1)}
-                        >
-                          {number + 1}
-                        </Pagination.Item>
-                      ))}
-                      
-                      <Pagination.Next
-                        onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                      >
-                        <i className="bi bi-chevron-right"></i>
-                      </Pagination.Next>
-                    </Pagination>
-                  </div>
+                 <PaginationComponent 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    paginate={paginate}
+                  />
                 )}
               </>
             )}
@@ -657,36 +654,6 @@ const ManagePegawaiPage = () => {
           border-color: #026d36;
         }
         
-        /* Role Sidebar */
-        .role-card {
-          border-radius: 4px;
-          overflow: hidden;
-          border-color: #E7E7E7;
-        }
-        
-        .role-list .list-group-item {
-          border-left: none;
-          border-right: none;
-          cursor: pointer;
-          color: #686868;
-          border-color: #E7E7E7;
-          transition: all 0.2s;
-        }
-        
-        .role-list .list-group-item:first-child {
-          border-top: none;
-        }
-        
-        .role-list .list-group-item.active-role {
-          background-color: #03081F;
-          color: white;
-          font-weight: 500;
-        }
-        
-        .role-list .list-group-item:hover:not(.active-role) {
-          background-color: #f8f9fa;
-        }
-        
         /* Search Input */
         .position-relative {
           position: relative;
@@ -713,37 +680,6 @@ const ManagePegawaiPage = () => {
           border-color: #028643;
         }
         
-        /* Employee Card */
-        .employee-card {
-          border-radius: 8px;
-          border-color: #E7E7E7;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .employee-id {
-          color: #686868;
-          font-size: 0.9rem;
-        }
-        
-        .role-badge {
-          font-size: 0.75rem;
-          background-color: #f0f0f0;
-          color: #686868;
-          font-weight: 500;
-        }
-        
-        .employee-name {
-          color: #03081F;
-          font-weight: 600;
-        }
-        
-        .employee-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-        
         /* Button Styles */
         .delete-btn {
           background-color: #FF1700;
@@ -767,32 +703,6 @@ const ManagePegawaiPage = () => {
         .edit-btn:hover {
           background-color: #026d36;
           border-color: #026d36;
-        }
-        
-        /* Pagination */
-        .custom-pagination .page-item.active .page-link {
-          background-color: #028643;
-          border-color: #028643;
-          color: white;
-        }
-        
-        .custom-pagination .page-link {
-          color: #028643;
-          border-color: #E7E7E7;
-          min-width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        .custom-pagination .page-link:focus {
-          box-shadow: none;
-        }
-        
-        .custom-pagination .page-item:first-child .page-link,
-        .custom-pagination .page-item:last-child .page-link {
-          border-radius: 4px;
         }
         
         /* Form Controls */

@@ -10,7 +10,6 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Fetch data dari API
   useEffect(() => {
     const fetchBarang = async () => {
       try {

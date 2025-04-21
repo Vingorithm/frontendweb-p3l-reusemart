@@ -1,37 +1,142 @@
 import React, { useState } from "react";
+import maskot1 from "../../assets/images/maskot1.png"; 
+import maskot2 from "../../assets/images/maskot2.png"; 
+import { authService } from "../../api/authService";
 
 const LoginRegister = ({ onLoginSuccess }) => {
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
-  
-  const handleLogin = (e) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("pembeli");
+  const [alamat, setAlamat] = useState("");
+  const [error, setError] = useState(null);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // You can implement actual login logic here
     if (onLoginSuccess) {
-      onLoginSuccess();
+      await onLoginSuccess({ email, password });
     }
   };
-  
+
+  const handleSignUp = async (e) => {
+    e.preventDefault();
+    setError(null);
+    if (password !== confirmPassword) {
+      setError("Password dan Confirm Password tidak cocok.");
+      return;
+    }
+
+    const signUpData = {
+      email,
+      password,
+      role,
+      ...(role === "organisasi" && { alamat }),
+    };
+
+    try {
+      const response = await authService.register(signUpData);
+      console.log("Registrasi berhasil:", response);
+      setIsRightPanelActive(false);
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Registrasi gagal. Silakan coba lagi.");
+      }
+    }
+  };
+
   return (
     <div className="login-register-component">
       <div className="container py-5">
         <div className={`auth-container ${isRightPanelActive ? "right-panel-active" : ""}`}>
           {/* Sign Up Form */}
           <div className="auth-form sign-up">
-            <form>
-              <h1 className="mb-4">Sign Up</h1>
+            <form onSubmit={handleSignUp}>
+              <h1 className="mb-4">Daftar</h1>
               <div className="mb-3">
-                <input type="text" className="form-control" name="username" placeholder="Username" required />
+                <input
+                  type="text"
+                  className="form-control"
+                  name="username"
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
+              {role === "organisasi" && (
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="alamat"
+                    placeholder="Alamat"
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+              <div className="mb-3">
+                <input
+                  type="email"
+                  className="form-control"
+                  name="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="mb-3">
-                <input type="email" className="form-control" name="email" placeholder="Email" required />
+                <input
+                  type="password"
+                  className="form-control"
+                  name="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               <div className="mb-3">
-                <input type="password" className="form-control" name="password" placeholder="Password" required />
+                <input
+                  type="password"
+                  className="form-control"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
               </div>
-              <div className="mb-4">
-                <input type="password" className="form-control" name="confirmPassword" placeholder="Confirm Password" required />
+              <div className="mb-3 role-selection">
+                <label className="me-3">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="pembeli"
+                    checked={role === "pembeli"}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                  Pembeli
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="role"
+                    value="organisasi"
+                    checked={role === "organisasi"}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                  Organisasi Amal
+                </label>
               </div>
-              <button className="btn custom-btn" type="submit">Sign Up</button>
+              {error && <p className="error-message">{error}</p>}
+              <button className="btn custom-btn" type="submit">Daftar</button>
             </form>
           </div>
 
@@ -40,15 +145,31 @@ const LoginRegister = ({ onLoginSuccess }) => {
             <form onSubmit={handleLogin}>
               <h1 className="mb-4">Log In</h1>
               <div className="mb-3">
-                <input type="email" className="form-control" name="email" placeholder="Email" required />
+                <input
+                  type="email"
+                  className="form-control"
+                  name="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="mb-3">
-                <input type="password" className="form-control" name="password" placeholder="Password" required />
+                <input
+                  type="password"
+                  className="form-control"
+                  name="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               <div className="mb-4">
                 <a href="#" className="forgot-password">Forgot your password?</a>
               </div>
-              <button className="btn custom-btn" type="submit">Log In</button>
+              <button className="btn custom-btn" type="submit">Masuk</button>
             </form>
           </div>
 
@@ -56,14 +177,14 @@ const LoginRegister = ({ onLoginSuccess }) => {
           <div className="overlay-container">
             <div className="overlay">
               <div className="overlay-panel overlay-left">
-                <h1>Already Have an Account?</h1>
-                <p>Log in with your details to continue your journey with us</p>
-                <button className="btn ghost" onClick={() => setIsRightPanelActive(false)}>Log in</button>
+                <h4>Sudah Punya Akun? Yuk Masuk!</h4>
+                <img className="maskot" src={maskot2} alt="Login maskot" />
+                <button className="btn ghost" onClick={() => setIsRightPanelActive(false)}>Masuk</button>
               </div>
               <div className="overlay-panel overlay-right">
-                <h1>Don't Have an Account?</h1>
-                <p>Enter your personal details and start your journey with us</p>
-                <button className="btn ghost" onClick={() => setIsRightPanelActive(true)}>Sign Up</button>
+                <h4>Belom Punya Akun? Yuk Daftar!</h4>
+                <img className="maskot" src={maskot1} alt="Regis maskot" />
+                <button className="btn ghost" onClick={() => setIsRightPanelActive(true)}>Daftar</button>
               </div>
             </div>
           </div>
@@ -151,6 +272,7 @@ const LoginRegister = ({ onLoginSuccess }) => {
         }
 
         .form-control {
+          width: 250px;
           background: #FCFBF0;
           padding: 15px;
           border-radius: 8px;
@@ -250,7 +372,14 @@ const LoginRegister = ({ onLoginSuccess }) => {
           z-index: 2;
         }
 
-        .overlay-panel h1, .overlay-panel p {
+        .maskot {
+          width: 100%;
+          max-width: 300px;
+          height: auto;
+          object-fit: contain;
+        }
+
+        .overlay-panel h1, h4, .overlay-panel p {
           color: #FCFBF0;
         }
 
@@ -304,6 +433,31 @@ const LoginRegister = ({ onLoginSuccess }) => {
           color: #FCFBF0;
         }
 
+        .role-selection {
+          display: flex;
+          justify-content: center;
+          gap: 20px;
+        }
+
+        .role-selection label {
+          display: flex;
+          align-items: center;
+          font-size: 14px;
+          color: #1A1816;
+          cursor: pointer;
+        }
+
+        .role-selection input[type="radio"] {
+          margin-right: 5px;
+        }
+
+        .error-message {
+          color: red;
+          font-size: 14px;
+          text-align: center;
+          margin-bottom: 10px;
+        }
+
         @media (max-width: 768px) {
           .auth-container {
             min-height: 500px;
@@ -312,6 +466,11 @@ const LoginRegister = ({ onLoginSuccess }) => {
 
           .auth-form {
             padding: 0 30px;
+          }
+
+          .maskot {
+            max-width: 200px;
+            height: auto;
           }
         }
       `}</style>

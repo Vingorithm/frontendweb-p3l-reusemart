@@ -1,9 +1,9 @@
 export const ENDPOINTS = {
     // Authentication
-    REGISTER: "/register",
-    LOGIN: "/login",
-    LOGOUT: "/logout",
-    // GET_CURRENT_USER: "/me",
+    REGISTER: "/akun/register",
+    LOGIN: "/akun/login", 
+    LOGOUT: "/akun/logout", 
+    FORGOT_PASSWORD: "/akun/forgot-password",
 
     // Alamat Pembeli
     GET_ALL_ALAMAT_PEMBELI: "/alamat-pembeli",
@@ -14,7 +14,7 @@ export const ENDPOINTS = {
 
     // Akun
     GET_ALL_AKUN: "/akun",
-    CREATE_AKUN: "/akun",
+    CREATE_AKUN: "/akun", 
     SHOW_AKUN: (id) => `/akun/${id}`,
     UPDATE_AKUN: (id) => `/akun/${id}`,
     DELETE_AKUN: (id) => `/akun/${id}`,

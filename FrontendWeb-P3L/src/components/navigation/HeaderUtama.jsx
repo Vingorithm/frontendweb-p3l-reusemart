@@ -143,7 +143,7 @@ const HeaderUtama = () => {
               <FaBell />
             </div>
 
-            <button style={loginButtonStyle}>
+            <button style={loginButtonStyle} onClick={() => (window.location.href = '/login')}>
               <div style={userIconStyle}>
                 <span>U</span>
               </div>

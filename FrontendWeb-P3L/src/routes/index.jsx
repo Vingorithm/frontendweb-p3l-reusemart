@@ -1,6 +1,8 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import MainLayout from "../layouts/MainLayout";
+import LoginLayout from "../layouts/LoginLayout";
+
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
 import OwnerPage from "../pages/owner/OwnerPage";
@@ -14,74 +16,46 @@ import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
 import ManageOrganisasiPage from "../pages/admin/ManageOrganisasiPage";
 import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
 
+const mainRoutes = [
+  { path: "/", element: <HomePage /> },
+  { path: "/owner", element: <OwnerPage /> },
+  { path: "/admin", element: <AdminPage /> },
+  { path: "/pegawai-gudang", element: <PegawaiGudangPage /> },
+  { path: "/pembeli", element: <PembeliPage /> },
+  { path: "/penitip", element: <PenitipPage /> },
+  { path: "/cs", element: <CsPage /> },
+  { path: "/organisasi", element: <OrganisasiPage /> },
+
+  // Halaman Admin
+  { path: "/admin/pegawai", element: <ManagePegawaiPage /> },
+  { path: "/admin/organisasi", element: <ManageOrganisasiPage /> },
+  { path: "/admin/merchandise", element: <ManageMerchandisePage /> },
+];
+
+const loginRoutes = [
+  { path: "/login", element: <LoginPage /> },
+]
+
 const router = createBrowserRouter([
   {
     path: "*",
     element: <div>Routes Tidak Ditemukan!</div>,
   },
   {
-    // Main Layout: Layout buat halaman utama
     element: <MainLayout />,
-    children: [
-      {
-        path: "/",
-        element: <HomePage />,
-      },
-      {
-        path: "/login",
-        element: <LoginPage />,
-      },
-      {
-        path: "/owner",
-        element: <OwnerPage />,
-      },
-      {
-        path: "/admin",
-        element: <AdminPage />,
-      },
-      {
-        path: "/pegawai-gudang",
-        element: <PegawaiGudangPage />,
-      },
-      {
-        path: "/pembeli",
-        element: <PembeliPage />,
-      },
-      {
-        path: "/penitip",
-        element: <PenitipPage />,
-      },
-      {
-        path: "/cs",
-        element: <CsPage />,
-      },
-      {
-        path: "/organisasi",
-        element: <OrganisasiPage />,
-      },
-      {
-        path: "/admin/pegawai",
-        element: <ManagePegawaiPage />,
-      },
-      {
-        path: "/admin/organisasi",
-        element: <ManageOrganisasiPage />,
-      },
-      {
-        path: "/admin/merchandise",
-        element: <ManageMerchandisePage />,
-      },
-    ],
+    children: mainRoutes,
+  },
+  {
+    element: <LoginLayout />,
+    children: loginRoutes,
   },
 ]);
 
-const AppRouter = () => {
-  return (
-    <>
-      <Toaster position="top-center" richColors />
-      <RouterProvider router={router} />
-    </>
-  );
-};
+const AppRouter = () => (
+  <>
+    <Toaster position="top-center" richColors />
+    <RouterProvider router={router} />
+  </>
+);
 
 export default AppRouter;

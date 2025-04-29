@@ -23,7 +23,7 @@ const LoginPage = () => {
         throw new Error("Role tidak ditemukan di token.");
       }
 
-      switch (role.toLowerCase()) {
+      switch (role) {
         case "Owner":
           navigate("/owner");
           break;
@@ -71,7 +71,7 @@ const LoginPage = () => {
         throw new Error("Role tidak ditemukan di token.");
       }
 
-      switch (role.toLowerCase()) {
+      switch (role) {
         case "Pembeli":
           navigate("/pembeli");
           break;
@@ -81,6 +81,7 @@ const LoginPage = () => {
         default:
           throw new Error("Role tidak valid.");
       }
+      
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);

@@ -15,15 +15,40 @@ import OrganisasiPage from "../pages/organisasi/OrganisasiPage";
 import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
 import ManageOrganisasiPage from "../pages/admin/ManageOrganisasiPage";
 import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
+import PenitipProfile from "../pages/penitip/PenitipProfile";
+import PenitipHistory from "../pages/penitip/PenitipHistory";
+import ManageAlamat from "../pages/pembeli/ManageAlamat";
+import ResetPassword from "../pages/ResetPassword";
 
 const mainRoutes = [
+  // Halaman Utama
   { path: "/", element: <HomePage /> },
+
+  // Halama Reset Password 
+  { path: "/reset-password", element: <ResetPassword /> },
+
+  // Halaman Owner
   { path: "/owner", element: <OwnerPage /> },
+
+  // Halaman Admin
   { path: "/admin", element: <AdminPage /> },
+
+  // Halaman Pegawai Gudang
   { path: "/pegawai-gudang", element: <PegawaiGudangPage /> },
+
+  // Halaman Pembeli
   { path: "/pembeli", element: <PembeliPage /> },
+  {  path: "/pembeli/alamat", element: <ManageAlamat />},
+
+  // Halaman penitip
   { path: "/penitip", element: <PenitipPage /> },
+  { path: "/penitip/profile", element: <PenitipProfile /> },
+  { path: "/penitip/history", element: <PenitipHistory /> },
+
+  // Halaman Customer Service
   { path: "/cs", element: <CsPage /> },
+
+  // Halaman Organisasi
   { path: "/organisasi", element: <OrganisasiPage /> },
 
   // Halaman Admin

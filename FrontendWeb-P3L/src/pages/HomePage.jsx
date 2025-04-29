@@ -54,19 +54,19 @@ const HomePage = () => {
     {
       id: 1,
       name: "Elektronik & Gadget",
-      image: "../src/assets/images/electronic-category.jpg",
+      image: "../src/assets/images/electronic-category.png",
       discount: "30%"
     },
     {
       id: 2,
       name: "Pakaian & Aksesoris",
-      image: "../src/assets/images/fashion-category.jpg",
+      image: "../src/assets/images/fashion-category.png",
       discount: "25%"
     },
     {
       id: 3,
       name: "Perabot Rumah Tangga",
-      image: "../src/assets/images/furniture-category.jpg",
+      image: "../src/assets/images/furniture-category.png",
       discount: "40%"
     }
   ];

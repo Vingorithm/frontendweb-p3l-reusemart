@@ -3,13 +3,13 @@ import maskot1 from "../../assets/images/maskot1.png";
 import maskot2 from "../../assets/images/maskot2.png"; 
 import { authService } from "../../api/authService";
 
-const LoginRegister = ({ onLoginSuccess }) => {
+const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
   const [isRightPanelActive, setIsRightPanelActive] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("pembeli");
+  const [role, setRole] = useState("Pembeli");
   const [alamat, setAlamat] = useState("");
   const [error, setError] = useState(null);
 
@@ -29,16 +29,19 @@ const LoginRegister = ({ onLoginSuccess }) => {
     }
 
     const signUpData = {
+      username,
       email,
       password,
       role,
-      ...(role === "organisasi" && { alamat }),
+      ...(role === "Organisasi Amal" && { alamat }),
     };
 
     try {
       const response = await authService.register(signUpData);
       console.log("Registrasi berhasil:", response);
       setIsRightPanelActive(false);
+
+      if(!response) onRegisterSuccess({ email, password });
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
@@ -67,7 +70,7 @@ const LoginRegister = ({ onLoginSuccess }) => {
                   required
                 />
               </div>
-              {role === "organisasi" && (
+              {role === "Organisasi Amal" && (
                 <div className="mb-3">
                   <input
                     type="text"
@@ -118,8 +121,8 @@ const LoginRegister = ({ onLoginSuccess }) => {
                   <input
                     type="radio"
                     name="role"
-                    value="pembeli"
-                    checked={role === "pembeli"}
+                    value="Pembeli"
+                    checked={role === "Pembeli"}
                     onChange={(e) => setRole(e.target.value)}
                   />
                   Pembeli
@@ -128,8 +131,8 @@ const LoginRegister = ({ onLoginSuccess }) => {
                   <input
                     type="radio"
                     name="role"
-                    value="organisasi"
-                    checked={role === "organisasi"}
+                    value="Organisasi Amal"
+                    checked={role === "Organisasi Amal"}
                     onChange={(e) => setRole(e.target.value)}
                   />
                   Organisasi Amal

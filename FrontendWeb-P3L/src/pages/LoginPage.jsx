@@ -24,25 +24,25 @@ const LoginPage = () => {
       }
 
       switch (role.toLowerCase()) {
-        case "owner":
+        case "Owner":
           navigate("/owner");
           break;
-        case "admin":
+        case "Admin":
           navigate("/admin");
           break;
-        case "pegawai gudang":
+        case "Pegawai Gudang":
           navigate("/pegawai-gudang");
           break;
-        case "pembeli":
+        case "Pembeli":
           navigate("/pembeli");
           break;
-        case "penitip":
+        case "Penitip":
           navigate("/penitip");
           break;
-        case "cs":
+        case "Customer Service":
           navigate("/cs");
           break;
-        case "organisasi":
+        case "Organisasi Amal":
           navigate("/organisasi");
           break;
         default:
@@ -57,10 +57,43 @@ const LoginPage = () => {
     }
   };
 
+  const handleRegisterSuccess = async ({ email, password }) => {
+    try {
+      const token = await authService.login({ email, password });
+
+      const storedToken = localStorage.getItem("authToken");
+      if (!storedToken) {
+        throw new Error("Token tidak ditemukan setelah login.");
+      }
+
+      const role = decodeToken(storedToken);
+      if (!role) {
+        throw new Error("Role tidak ditemukan di token.");
+      }
+
+      switch (role.toLowerCase()) {
+        case "Pembeli":
+          navigate("/pembeli");
+          break;
+        case "Organisasi Amal":
+          navigate("/organisasi");
+          break;
+        default:
+          throw new Error("Role tidak valid.");
+      }
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Gagal masuk ke dalam halaman akun!");
+      }
+    }
+  }
+
   return (
     <div className="login-page">
       <div className="container py-5">
-        <LoginRegister onLoginSuccess={handleLoginSuccess} />
+        <LoginRegister onLoginSuccess={handleLoginSuccess} onRegisterSuccess={handleRegisterSuccess} />
       </div>
       {error && <p className="error-message">{error}</p>}
 

@@ -36,14 +36,14 @@ const HomePage = () => {
     },
     {
       id: 2,
-      image: "../src/assets/images/hero-banner2.jpg",
+      image: "../src/assets/images/hero-banner2.png",
       alt: "Quality second hand products",
       title: "Kualitas Terjamin",
       subtitle: "Semua produk telah melalui pemeriksaan ketat"
     },
     {
       id: 3,
-      image: "../src/assets/images/hero-banner3.jpg", 
+      image: "../src/assets/images/hero-banner3.png", 
       alt: "Affordable prices",
       title: "Harga Terjangkau",
       subtitle: "Temukan barang impianmu dengan harga menarik"

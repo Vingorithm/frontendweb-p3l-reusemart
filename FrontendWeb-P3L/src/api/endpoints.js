@@ -9,6 +9,7 @@ export const ENDPOINTS = {
     GET_ALL_ALAMAT_PEMBELI: "/alamat-pembeli",
     CREATE_ALAMAT_PEMBELI: "/alamat-pembeli",
     SHOW_ALAMAT_PEMBELI: (id) => `/alamat-pembeli/${id}`,
+    SEARCH_ALAMAT_PEMBELI_BY_PEMBELI: (id) => `/alamat-pembeli/byIdPembeli/${id}`,
     UPDATE_ALAMAT_PEMBELI: (id) => `/alamat-pembeli/${id}`,
     DELETE_ALAMAT_PEMBELI: (id) => `/alamat-pembeli/${id}`,
 
@@ -25,6 +26,7 @@ export const ENDPOINTS = {
     SHOW_PEMBELI: (id) => `/pembeli/${id}`,
     UPDATE_PEMBELI: (id) => `/pembeli/${id}`,
     DELETE_PEMBELI: (id) => `/pembeli/${id}`,
+    SEARCH_PEMBELI_BY_AKUN: (id) => `/pembeli/byIdAkun/${id}`,
 
     // Organisasi Amal
     GET_ALL_ORGANISASI_AMAL: "/organisasi-amal",

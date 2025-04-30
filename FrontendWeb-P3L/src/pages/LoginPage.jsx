@@ -15,11 +15,14 @@ const LoginPage = () => {
 
       const storedToken = localStorage.getItem("authToken");
       if (!storedToken) {
+        // console.log("Token tidak ditemukan setelah login.");
         throw new Error("Token tidak ditemukan setelah login.");
       }
 
-      const role = decodeToken(storedToken);
+      const role = decodeToken(storedToken).role;
+      
       if (!role) {
+        // console.log("Role tidak ditemukan di token.");
         throw new Error("Role tidak ditemukan di token.");
       }
 

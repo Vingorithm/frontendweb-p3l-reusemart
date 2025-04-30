@@ -5,12 +5,13 @@ export const authService = {
     register: (data) => apiClient.post(ENDPOINTS.REGISTER, data),
     login: async (data) => {
         const response = await apiClient.post(ENDPOINTS.LOGIN, data);
-        const { token, user } = response.data;
+        const { token } = response.data;
 
         if (token) {
             localStorage.setItem("authToken", token);
         }
-        return user;
+
+        return token;
     },
     forgotPassword: (data) => apiClient.post(ENDPOINTS.FORGOT_PASSWORD, data),
     logout: () => {

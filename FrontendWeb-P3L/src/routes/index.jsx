@@ -19,6 +19,7 @@ import PenitipProfile from "../pages/penitip/PenitipProfile";
 import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
 import ResetPassword from "../pages/ResetPassword";
+import DetailBarangPage from "../pages/DetailBarang";
 
 const mainRoutes = [
   // Halaman Utama
@@ -55,6 +56,9 @@ const mainRoutes = [
   { path: "/admin/pegawai", element: <ManagePegawaiPage /> },
   { path: "/admin/organisasi", element: <ManageOrganisasiPage /> },
   { path: "/admin/merchandise", element: <ManageMerchandisePage /> },
+
+  // Detail Barang
+  { path: "/barang/:id", element: <DetailBarangPage /> },
 ];
 
 const loginRoutes = [

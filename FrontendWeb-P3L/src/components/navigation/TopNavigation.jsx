@@ -10,7 +10,7 @@ const TopNavigation = ({ activeTab }) => {
           <Nav.Item>
             <Nav.Link 
               as={Link} 
-              to="/pegawai" 
+              to="/admin/pegawai" 
               className="px-5 py-2" 
               active={activeTab === 'pegawai'}
             >
@@ -20,7 +20,7 @@ const TopNavigation = ({ activeTab }) => {
           <Nav.Item>
             <Nav.Link 
               as={Link} 
-              to="/organisasi" 
+              to="/admin/organisasi" 
               className="px-5 py-2" 
               active={activeTab === 'organisasi'}
             >
@@ -30,7 +30,7 @@ const TopNavigation = ({ activeTab }) => {
           <Nav.Item>
             <Nav.Link 
               as={Link} 
-              to="/merchandise" 
+              to="/admin/merchandise" 
               className="px-5 py-2" 
               active={activeTab === 'merchandise'}
             >

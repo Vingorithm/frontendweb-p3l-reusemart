@@ -38,7 +38,6 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
     try {
       const response = await authService.register(signUpData);
-      console.log("Registrasi berhasil:", response);
       setIsRightPanelActive(false);
 
       if(!response) onRegisterSuccess({ email, password });

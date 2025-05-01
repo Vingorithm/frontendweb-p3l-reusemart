@@ -17,7 +17,8 @@ const HomePage = () => {
       try {
         const response = await GetAllBarang();
         console.log(response.data);
-        setBarangList(response.data);
+        const filteredBarang = response.data.filter(item => item.status_qc !== "Tidak lulus");
+        setBarangList(filteredBarang);
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch products");

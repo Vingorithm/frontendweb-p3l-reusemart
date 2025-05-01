@@ -83,6 +83,8 @@ export const ENDPOINTS = {
     SHOW_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
     UPDATE_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
     DELETE_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
+    GET_REVIEW_BY_ID_BARANG: (id) => `/review-produk/byIdBarang/${idBarang}`,
+    GET_REVIEW_BY_ID_TRANSAKSI: (id) => `/review-produk/byIdTransaksi/${id}`,
 
     // Diskusi Produk
     GET_ALL_DISKUSI_PRODUK: "/diskusi-produk",
@@ -90,6 +92,7 @@ export const ENDPOINTS = {
     SHOW_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
     UPDATE_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
     DELETE_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
+    GET_DISKUSI_BY_ID_BARANG: (id) => `/diskusi-produk/byIdBarang/${id}`,
 
     // Keranjang
     GET_ALL_KERANJANG: "/keranjang",

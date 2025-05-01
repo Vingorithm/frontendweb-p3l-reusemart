@@ -125,7 +125,7 @@ const ManagePegawaiPage = () => {
         akun: pegawaiData.Akun || pegawaiData.akun || {
           id_akun: pegawaiData.id_akun,
           email: '',
-          role: ''
+          role: '',
         }
       });
       
@@ -172,7 +172,7 @@ const ManagePegawaiPage = () => {
     const file = e.target.files[0];
     if (file) {
       setProfilePicture(file);
-      
+      console.log(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);

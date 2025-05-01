@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GetBarangById } from "../clients/BarangService";
 import { GetPenitipById } from "../clients/PenitipService";
 import { GetReviewProdukByIdBarang } from "../clients/ReviewService";
-import { FaStar, FaShoppingCart, FaPlus, FaMinus } from 'react-icons/fa';
+import { GetDiskusiProdukByIdBarang } from "../clients/DiskusiProdukService";
+import { FaStar, FaShoppingCart, FaPlus, FaMinus, FaArrowRight } from 'react-icons/fa';
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const DetailBarang = () => {
@@ -11,6 +12,7 @@ const DetailBarang = () => {
   const navigate = useNavigate();
   const [barang, setBarang] = useState(null);
   const [penitip, setPenitip] = useState(null);
+  const [diskusi, setDiskusi] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +20,8 @@ const DetailBarang = () => {
   const [quantity, setQuantity] = useState(1);
   const [productImages, setProductImages] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState('Pengiriman');
+  const [showDiskusiForm, setShowDiskusiForm] = useState(false);
+  const [pertanyaan, setPertanyaan] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,20 +45,26 @@ const DetailBarang = () => {
           }
 
           try {
+            const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+            console.log("Diskusi response:", diskusiResponse); // Add logging
+            const sortedDiskusi = diskusiResponse.data ? 
+              diskusiResponse.data
+                .sort((a, b) => new Date(b.tanggal_pertanyaan) - new Date(a.tanggal_pertanyaan))
+                .slice(0, 2) : 
+              [];
+            setDiskusi(sortedDiskusi);
+          } catch (diskusiError) {
+            console.error("Error fetching diskusi produk:", diskusiError);
+            setDiskusi([]);
+          }
+
+          try {
             const reviewsResponse = await GetReviewProdukByIdBarang(id);
+            console.log("Reviews response:", reviewsResponse); // Add logging
             setReviews(reviewsResponse.data || []);
           } catch (reviewsError) {
             console.error("Error fetching reviews:", reviewsError);
-            // Fallback to dummy reviews if API fails
-            setReviews([
-              {
-                reviewer: "Si Gix",
-                location: "South London",
-                rating: 5,
-                tanggal_review: "2023-09-24",
-                content: "The positive aspect was undoubtedly the efficiency of the service. The queue moved quickly, the staff was friendly, and the food was up to the usual McDonald's standard – hot and satisfying."
-              }
-            ]);
+            setReviews([]);
           }
         }
       } catch (err) {

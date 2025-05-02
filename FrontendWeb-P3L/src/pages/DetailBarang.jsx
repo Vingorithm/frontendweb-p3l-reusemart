@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { decodeToken } from '../utils/jwtUtils';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GetBarangById } from "../clients/BarangService";
 import { GetPenitipById } from "../clients/PenitipService";
 import { GetReviewProdukByIdBarang } from "../clients/ReviewService";
 import { GetDiskusiProdukByIdBarang } from "../clients/DiskusiProdukService";
-import { FaStar, FaShoppingCart, FaPlus, FaMinus, FaArrowRight } from 'react-icons/fa';
+import { FaStar, FaShoppingCart, FaPlus, FaMinus, FaArrowRight, FaComment } from 'react-icons/fa';
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const DetailBarang = () => {
@@ -14,14 +15,18 @@ const DetailBarang = () => {
   const [penitip, setPenitip] = useState(null);
   const [diskusi, setDiskusi] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    penitipRating: 0,
+    penitipBadge: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [productImages, setProductImages] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState('Pengiriman');
-  const [showDiskusiForm, setShowDiskusiForm] = useState(false);
-  const [pertanyaan, setPertanyaan] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,11 +51,8 @@ const DetailBarang = () => {
 
           try {
             const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
-            console.log("Diskusi response:", diskusiResponse); // Add logging
             const sortedDiskusi = diskusiResponse.data ? 
-              diskusiResponse.data
-                .sort((a, b) => new Date(b.tanggal_pertanyaan) - new Date(a.tanggal_pertanyaan))
-                .slice(0, 2) : 
+              diskusiResponse.data.slice(0, 2) : 
               [];
             setDiskusi(sortedDiskusi);
           } catch (diskusiError) {
@@ -60,8 +62,15 @@ const DetailBarang = () => {
 
           try {
             const reviewsResponse = await GetReviewProdukByIdBarang(id);
-            console.log("Reviews response:", reviewsResponse); // Add logging
-            setReviews(reviewsResponse.data || []);
+            if (reviewsResponse.data) {
+              setReviews(reviewsResponse.data.reviews || []);
+              setReviewStats({
+                averageRating: reviewsResponse.data.averageRating || 0,
+                totalReviews: reviewsResponse.data.totalReviews || 0,
+                penitipRating: reviewsResponse.data.penitipRating || 0,
+                penitipBadge: reviewsResponse.data.penitipBadge || 0
+              });
+            }
           } catch (reviewsError) {
             console.error("Error fetching reviews:", reviewsError);
             setReviews([]);
@@ -77,6 +86,10 @@ const DetailBarang = () => {
 
     fetchData();
   }, [id]);
+
+  const handleGoToDiskusi = () => {
+    navigate(`/diskusi-produk/${id}`);
+  };
 
   const handleAddToCart = () => {
     console.log(`Added ${quantity} of ${barang.nama} to cart`);
@@ -94,6 +107,17 @@ const DetailBarang = () => {
     }).format(price);
   };
 
+  const formatDateTime = (dateTimeString) => {
+    const date = new Date(dateTimeString);
+    return new Intl.DateTimeFormat('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
   const renderRatingStars = (rating) => {
     const stars = [];
     for (let i = 0; i < 5; i++) {
@@ -105,12 +129,6 @@ const DetailBarang = () => {
       );
     }
     return stars;
-  };
-
-  const getAverageRating = () => {
-    if (reviews.length === 0) return 0;
-    const total = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
-    return (total / reviews.length).toFixed(1);
   };
 
   if (loading) {
@@ -161,7 +179,6 @@ const DetailBarang = () => {
                     style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain', transition: 'all 0.3s ease' }}
                   />
                 </div>
-                {/* Thumbnail Carousel */}
                 <div className="d-flex mt-3 gap-2 overflow-auto">
                   {productImages.map((img, index) => (
                     <img
@@ -174,7 +191,7 @@ const DetailBarang = () => {
                         objectFit: 'cover',
                         borderRadius: '8px',
                         border: selectedImage === index ? '3px solid #FC8A06' : '1px solid #D9D9D9',
-                        cursor: 'pointer',
+                        cursor:'pointer',
                         transition: 'border 0.2s ease'
                       }}
                       onClick={() => setSelectedImage(index)}
@@ -188,14 +205,6 @@ const DetailBarang = () => {
                 <h1 style={{ fontSize: '30px', fontWeight: '700', color: '#03081F', marginBottom: '12px' }}>
                   {barang.nama}
                 </h1>
-                <div className="d-flex align-items-center mb-3">
-                  <div className="d-flex me-2">
-                    {renderRatingStars(getAverageRating())}
-                  </div>
-                  <span style={{ color: '#03081F', fontSize: '14px', fontWeight: '500' }}>
-                    {getAverageRating()} ({reviews.length} Reviews)
-                  </span>
-                </div>
                 <p style={{ fontSize: '26px', fontWeight: 'bold', color: '#FC8A06', marginBottom: '16px' }}>
                   {formatPrice(barang.harga)}
                 </p>
@@ -278,7 +287,7 @@ const DetailBarang = () => {
                         <h5 style={{ color: '#03081F', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>
                           {penitip.nama_penitip}
                         </h5>
-                        {penitip.badge === 1 && (
+                        {reviewStats.penitipBadge === 1 && (
                           <span 
                             className="badge ms-2" 
                             style={{ 
@@ -295,7 +304,7 @@ const DetailBarang = () => {
                       </div>
                       <div className="d-flex align-items-center mt-1">
                         <div className="d-flex text-warning me-2">
-                          {renderRatingStars(penitip.rating || 4.9)}
+                          {renderRatingStars(penitip.rating || 0)}
                         </div>
                         <span style={{ color: '#6C757D', fontSize: '12px' }}>
                           ({penitip.total_poin || 100} Poin)
@@ -316,7 +325,7 @@ const DetailBarang = () => {
             {/* Product Discussion */}
             <div className="card shadow-sm border-0 rounded-3 mb-4">
               <div 
-                className="card-header" 
+                className="card-header d-flex justify-content-between align-items-center" 
                 style={{ 
                   backgroundColor: '#FFFFFF', 
                   borderBottom: '1px solid #E9ECEF', 
@@ -326,11 +335,6 @@ const DetailBarang = () => {
                 <h5 style={{ fontWeight: 'bold', color: '#03081F', fontSize: '18px', margin: 0 }}>
                   Diskusi Produk
                 </h5>
-              </div>
-              <div className="card-body p-4 text-center">
-                <p style={{ color: '#6C757D', fontSize: '14px', marginBottom: '16px' }}>
-                  Belum ada diskusi untuk produk ini
-                </p>
                 <button 
                   className="btn" 
                   style={{ 
@@ -339,83 +343,132 @@ const DetailBarang = () => {
                     borderRadius: '20px', 
                     padding: '8px 24px', 
                     fontWeight: 'bold',
-                    transition: 'background-color 0.3s ease'
+                    transition: 'background-color 0.3s ease',
+                    fontSize: '14px'
                   }}
+                  onClick={handleGoToDiskusi}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#026c38'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#028643'}
                 >
-                  Mulai Diskusi
+                  Lihat Semua Diskusi
                 </button>
               </div>
-            </div>
-
-            {/* Reviews */}
-            <div className="card shadow-sm border-0 rounded-3 mb-4">
-              <div 
-                className="card-header d-flex align-items-center" 
-                style={{ 
-                  backgroundColor: '#FFFFFF', 
-                  borderBottom: '1px solid #E9ECEF', 
-                  padding: '16px 24px' 
-                }}
-              >
-                <h5 style={{ fontWeight: 'bold', color: '#03081F', fontSize: '18px', margin: 0 }}>
-                  Review ({reviews.length})
-                </h5>
-              </div>
               <div className="card-body p-4">
-                {reviews.length > 0 ? (
-                  reviews.map((review, index) => (
-                    <div key={index} className="border-bottom py-3">
+                {diskusi.length > 0 ? (
+                  diskusi.map((item) => (
+                    <div key={item.id_diskusi_produk} className="border-bottom pb-3 mb-3">
+                      {/* Pembeli's Question */}
                       <div className="d-flex align-items-center mb-2">
-                        <img 
-                          src="/assets/images/default-avatar.jpg" 
-                          alt="User" 
-                          style={{ 
-                            width: '40px', 
-                            height: '40px', 
-                            borderRadius: '50%', 
-                            marginRight: '12px' 
-                          }} 
-                        />
+                        <div
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '50%',
+                            backgroundColor: '#E9ECEF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginRight: '12px',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#03081F'
+                          }}
+                        >
+                          {item.Pembeli.nama.charAt(0)}
+                        </div>
                         <div>
-                          <h6 style={{ color: '#03081F', fontSize: '14px', fontWeight: 'bold', margin: 0 }}>
-                            {review.reviewer || 'Reviewer'}
+                          <h6 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#03081F' }}>
+                            {item.Pembeli.nama}
                           </h6>
-                          <p style={{ color: '#6C757D', fontSize: '12px', margin: 0 }}>
-                            {review.location || 'Customer'}
+                          <small style={{ color: '#6C757D', fontSize: '12px' }}>
+                            {formatDateTime(item.tanggal_pertanyaan)}
+                          </small>
+                        </div>
+                      </div>
+                      <p style={{ color: '#03081F', fontSize: '14px', marginBottom: '16px', marginLeft: '52px' }}>
+                        {item.pertanyaan}
+                      </p>
+
+                      {/* Admin's Response */}
+                      {item.jawaban && (
+                        <div className="ms-5 mt-3">
+                          <div className="d-flex align-items-center mb-2">
+                            <div
+                              style={{
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                backgroundColor: '#028643',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginRight: '12px',
+                                fontSize: '14px',
+                                fontWeight: 'bold',
+                                color: '#FFFFFF'
+                              }}
+                            >
+                              {item.Pegawai.nama_pegawai.charAt(0)}
+                            </div>
+                            <div>
+                              <h6 style={{ margin: 0, fontSize: '14px', fontWeight: 'bold', color: '#03081F' }}>
+                                {item.Pegawai.nama_pegawai}
+                                <span className="ms-2 badge bg-info text-white" style={{ fontSize: '10px' }}>
+                                Customer Service
+                                </span>
+                              </h6>
+                              <small style={{ color: '#6C757D', fontSize: '12px' }}>
+                                {formatDateTime(item.tanggal_jawaban)}
+                              </small>
+                            </div>
+                          </div>
+                          <p style={{ color: '#03081F', fontSize: '14px', marginBottom: '0', marginLeft: '52px' }}>
+                            {item.jawaban}
                           </p>
                         </div>
-                      </div>
-                      <div className="d-flex align-items-center mb-2">
-                        <div className="d-flex text-warning me-2">
-                          {renderRatingStars(review.rating)}
-                        </div>
-                        <p style={{ color: '#6C757D', fontSize: '12px', margin: 0 }}>
-                          {new Date(review.tanggal_review).toLocaleDateString('id-ID', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </p>
-                      </div>
-                      <p style={{ color: '#03081F', fontSize: '14px', lineHeight: '1.6' }}>
-                        {review.content || "Good product!"}
-                      </p>
+                      )}
                     </div>
                   ))
                 ) : (
-                  <p style={{ color: '#6C757D', fontSize: '14px', textAlign: 'center' }}>
-                    Belum ada review untuk produk ini.
-                  </p>
+                  <div className="text-center py-4">
+                    <p style={{ color: '#6C757D', fontSize: '14px', margin: 0 }}>
+                      Belum ada diskusi untuk produk ini.
+                    </p>
+                  </div>
                 )}
+
+                <div className="text-center mt-4">
+                  <button 
+                    className="btn" 
+                    style={{ 
+                      backgroundColor: '#FFFFFF',
+                      border: '2px solid #028643',
+                      color: '#028643', 
+                      borderRadius: '20px', 
+                      padding: '8px 24px', 
+                      fontWeight: 'bold',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onClick={handleGoToDiskusi}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = '#028643';
+                      e.target.style.color = '#FFFFFF';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = '#FFFFFF';
+                      e.target.style.color = '#028643';
+                    }}
+                  >
+                    Mulai Diskusi Baru
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Column - Price Summary & Checkout */}
           <div className="col-lg-4">
-            <div className="sticky-top" style={{ top: '80px' }}>
+            <div className="sticky-top" style={{ top: '80px', zIndex: 100, paddingBottom: '20px' }}>
               <div className="card shadow-sm border-0 rounded-3">
                 {penitip && penitip.badge === 1 && (
                   <div 
@@ -456,7 +509,6 @@ const DetailBarang = () => {
                       Rp 100,000
                     </span>
                   </div>
-                  {/* Shipping Options */}
                   <div className="d-flex justify-content-between mb-4">
                     <button
                       className="btn d-flex align-items-center"

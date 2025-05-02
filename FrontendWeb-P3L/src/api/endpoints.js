@@ -78,21 +78,21 @@ export const ENDPOINTS = {
     DELETE_TRANSAKSI: (id) => `/transaksi/${id}`,
 
     // Review Produk
-    GET_ALL_REVIEW_PRODUK: "/review-produk",
-    CREATE_REVIEW_PRODUK: "/review-produk",
-    SHOW_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
-    UPDATE_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
-    DELETE_REVIEW_PRODUK: (id) => `/review-produk/${id}`,
-    GET_REVIEW_BY_ID_BARANG: (id) => `/review-produk/byIdBarang/${idBarang}`,
-    GET_REVIEW_BY_ID_TRANSAKSI: (id) => `/review-produk/byIdTransaksi/${id}`,
+    GET_ALL_REVIEW_PRODUK: `/review-produk`,
+    SHOW_REVIEW_PRODUK: (id) => `$/review-produk/${id}`,
+    CREATE_REVIEW_PRODUK: `/review-produk`,
+    UPDATE_REVIEW_PRODUK: `/review-produk`,
+    DELETE_REVIEW_PRODUK: `/review-produk`,
+    GET_REVIEW_BY_ID_TRANSAKSI: `/review-produk/byIdTransaksi`,
+    GET_REVIEW_BY_ID_BARANG: `/review-produk/byIdBarang`,
 
     // Diskusi Produk
-    GET_ALL_DISKUSI_PRODUK: "/diskusi-produk",
-    CREATE_DISKUSI_PRODUK: "/diskusi-produk",
+    GET_ALL_DISKUSI_PRODUK: `/diskusi-produk`,
     SHOW_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
-    UPDATE_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
-    DELETE_DISKUSI_PRODUK: (id) => `/diskusi-produk/${id}`,
-    GET_DISKUSI_BY_ID_BARANG: (id) => `/diskusi-produk/byIdBarang/${id}`,
+    CREATE_DISKUSI_PRODUK: `/diskusi-produk`,
+    UPDATE_DISKUSI_PRODUK: `/diskusi-produk`,
+    DELETE_DISKUSI_PRODUK: `/diskusi-produk`,
+    GET_DISKUSI_BY_ID_BARANG: `/diskusi-produk/byIdBarang`,
 
     // Keranjang
     GET_ALL_KERANJANG: "/keranjang",

@@ -207,21 +207,23 @@ const ManagePegawaiPage = () => {
         const formData = new FormData();
         formData.append('nama_pegawai', currentPegawai.nama_pegawai);
         formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
-        formData.append('akun[email]', currentPegawai.akun.email);
-        formData.append('akun[password]', currentPegawai.akun.password || 'defaultPassword');
-        formData.append('akun[role]', currentPegawai.akun.role);
+        formData.append('email', currentPegawai.akun.email);
+        formData.append('password', currentPegawai.akun.password || 'defaultPassword');
+        formData.append('role', currentPegawai.akun.role);
         
+        console.log(profilePicture);
+        console.log('Data form data', formData);
         if (profilePicture) {
-          formData.append('akun[profile_picture]', profilePicture);
+          formData.append('profile_picture', profilePicture);
         } else {
-          formData.append('akun[profile_picture]', defaultAvatar);
+          formData.append('profile_picture', defaultAvatar);
         }
+        console.log('Data form data', formData);
         
         const response = await CreatePegawai(formData);
         console.log('Employee created successfully:', response.data);
         showNotification('Pegawai berhasil ditambahkan!', 'success');
       } else {
-        // For updating existing employee
         console.log('Updating employee with ID:', currentPegawai.id_pegawai, {
           nama_pegawai: currentPegawai.nama_pegawai,
           tanggal_lahir: currentPegawai.tanggal_lahir,
@@ -251,14 +253,14 @@ const ManagePegawaiPage = () => {
           
           formData.append('nama_pegawai', updateData.nama_pegawai);
           formData.append('tanggal_lahir', updateData.tanggal_lahir);
-          formData.append('akun[email]', updateData.akun.email);
-          formData.append('akun[role]', updateData.akun.role);
+          formData.append('email', updateData.akun.email);
+          formData.append('role', updateData.akun.role);
           
           if (resetPassword && newPassword) {
-            formData.append('akun[password]', updateData.akun.password);
+            formData.append('password', updateData.akun.password);
           }
           
-          formData.append('akun[profile_picture]', profilePicture);
+          formData.append('profile_picture', profilePicture);
           
           const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
           console.log('Employee updated successfully with new profile picture:', response.data);

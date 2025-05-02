@@ -20,6 +20,7 @@ import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
 import ResetPassword from "../pages/ResetPassword";
 import DetailBarangPage from "../pages/DetailBarang";
+import DiskusiProdukPage from "../pages/DiskusiProduk";
 
 const mainRoutes = [
   // Halaman Utama
@@ -59,6 +60,9 @@ const mainRoutes = [
 
   // Detail Barang
   { path: "/barang/:id", element: <DetailBarangPage /> },
+
+  // Diskusi Produk
+  { path: "/diskusi-produk/:id", element: <DiskusiProdukPage /> },
 ];
 
 const loginRoutes = [

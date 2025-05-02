@@ -13,5 +13,8 @@ export const GetDiskusiProdukByIdBarang = (id) =>
 export const CreateDiskusiProduk = (data) => 
   apiClient.post(ENDPOINTS.CREATE_DISKUSI_PRODUK, data);
 
-export const UpdateDiskusiProduk = (id, data) => 
-  apiClient.put(ENDPOINTS.UPDATE_DISKUSI_PRODUK(id), data);
+export const UpdateDiskusiProduk = (id, data) =>
+  apiClient.put(`${ENDPOINTS.UPDATE_DISKUSI_PRODUK}/${id}`, data);
+
+export const DeleteDiskusiProduk = (id) =>
+  apiClient.delete(`${ENDPOINTS.DELETE_DISKUSI_PRODUK}/${id}`);

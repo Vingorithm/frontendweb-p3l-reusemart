@@ -14,6 +14,8 @@ const LoginPage = () => {
       const token = await authService.login({ email, password });
 
       const storedToken = localStorage.getItem("authToken");
+      console.log("Token di localStorage:", storedToken);
+
       if (!storedToken) {
         // console.log("Token tidak ditemukan setelah login.");
         throw new Error("Token tidak ditemukan setelah login.");

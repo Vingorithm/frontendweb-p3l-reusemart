@@ -4,15 +4,18 @@ import { ENDPOINTS } from "./endpoints";
 export const authService = {
     register: (data) => apiClient.post(ENDPOINTS.REGISTER, data),
     login: async (data) => {
-        const response = await apiClient.post(ENDPOINTS.LOGIN, data);
-        const { token } = response.data;
-
-        if (token) {
-            localStorage.setItem("authToken", token);
-        }
-
-        return token;
-    },
+      const response = await apiClient.post(ENDPOINTS.LOGIN, data);
+      const { token } = response.data;
+    
+      if (token) {
+        console.log("Token diterima:", token);  // Log token yang diterima dari API
+        localStorage.setItem("authToken", token);
+      } else {
+        throw new Error("Token tidak ditemukan di respons.");
+      }
+    
+      return token;
+    },    
     forgotPassword: (data) => apiClient.post(ENDPOINTS.FORGOT_PASSWORD, data),
     logout: () => {
       const token = localStorage.getItem("authToken");

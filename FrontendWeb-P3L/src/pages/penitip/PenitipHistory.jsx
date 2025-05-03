@@ -1,9 +1,7 @@
 import React from 'react';
 
-const PenitipHistory = () => {
-    return <>
-    
-    </>
-}
+const OwnerPage = () => {
+  return <div>Owner Page (Kosong)</div>;
+};
 
-export default PenitipHistory;
+export default OwnerPage;

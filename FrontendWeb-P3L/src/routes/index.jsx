@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import MainLayout from "../layouts/MainLayout";
 import LoginLayout from "../layouts/LoginLayout";
+import ProtectedRoute from "../routes/ProtectedRoute";
 
 import HomePage from "../pages/HomePage";
 import LoginPage from "../pages/LoginPage";
@@ -22,41 +23,131 @@ import ResetPassword from "../pages/ResetPassword";
 import DetailBarangPage from "../pages/DetailBarang";
 import DiskusiProdukPage from "../pages/DiskusiProduk";
 
+import OProduk from "../pages/organisasi/OProduk";
+import ODonasi from "../pages/organisasi/ODonasi";
+import ORequest from "../pages/organisasi/ORequest";
+
+import ProdukDisumbang from "../pages/owner/ProdukDisumbang";
+import LaporanBulanan from "../pages/owner/LaporanBulanan";
+import LaporanKomisi from "../pages/owner/LaporanKomisi";
+import LaporanStok from "../pages/owner/LaporanStok";
+import LaporanKategori from "../pages/owner/LaporanKategori";
+import PenitipanHabis from "../pages/owner/PenitipanHabis";
+import LaporanDonasi from "../pages/owner/LaporanDonasi";
+import RekapRequest from "../pages/owner/RekapRequest";
+
+import DaftarBarang from "../pages/pegawai-gudang/DaftarBarang";
+import DaftarTransaksi from "../pages/pegawai-gudang/DaftarTransaksi";
+import Pengambilan from "../pages/pegawai-gudang/Pengambilan";
+import Pengiriman from "../pages/pegawai-gudang/Pengiriman";
+
+import DataPenitip from "../pages/cs/DataPenitip";
+import BuktiTf from "../pages/cs/BuktiTf";
+import Diskusi from "../pages/cs/Diskusi";
+import Merchandise from "../pages/cs/Merchandise";
+import HistoryMerch from "../pages/cs/HistoryMerch";
+
 const mainRoutes = [
-  // Halaman Utama
   { path: "/", element: <HomePage /> },
 
-  // Halama Reset Password 
+  // Halaman Reset Password 
   { path: "/reset-password", element: <ResetPassword /> },
 
-  // Halaman Owner
-  { path: "/owner", element: <OwnerPage /> },
+  // Protected Routes for Owner
+  {
+    path: "/owner",
+    element: (
+      <ProtectedRoute allowedRoles={["Owner"]}>
+        <ProdukDisumbang />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/owner/produk", element: <ProdukDisumbang /> },
+  { path: "/owner/bulanan", element: <LaporanBulanan /> },
+  { path: "/owner/komisi", element: <LaporanKomisi /> },
+  { path: "/owner/stok", element: <LaporanStok /> },
+  { path: "/owner/kategori", element: <LaporanKategori /> },
+  { path: "/owner/penitipan", element: <PenitipanHabis /> },
+  { path: "/owner/donasi", element: <LaporanDonasi /> },
+  { path: "/owner/rekap", element: <RekapRequest /> },
 
-  // Halaman Admin
-  { path: "/admin", element: <AdminPage /> },
-
-  // Halaman Pegawai Gudang
-  { path: "/pegawai-gudang", element: <PegawaiGudangPage /> },
-
-  // Halaman Pembeli
-  { path: "/pembeli", element: <PembeliPage /> },
-  {  path: "/pembeli/alamat", element: <ManageAlamat />},
-
-  // Halaman penitip
-  { path: "/penitip", element: <PenitipPage /> },
-  { path: "/penitip/profile", element: <PenitipProfile /> },
-  { path: "/penitip/history", element: <PenitipHistory /> },
-
-  // Halaman Customer Service
-  { path: "/cs", element: <CsPage /> },
-
-  // Halaman Organisasi
-  { path: "/organisasi", element: <OrganisasiPage /> },
-
-  // Halaman Admin
+  // Protected Routes for Admin
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute allowedRoles={["Admin"]}>
+        <ManagePegawaiPage /> 
+      </ProtectedRoute>
+    ),
+  },
   { path: "/admin/pegawai", element: <ManagePegawaiPage /> },
   { path: "/admin/organisasi", element: <ManageOrganisasiPage /> },
   { path: "/admin/merchandise", element: <ManageMerchandisePage /> },
+
+  // Protected Route for Pegawai Gudang
+  {
+    path: "/pegawai-gudang",
+    element: (
+      <ProtectedRoute allowedRoles={["Pegawai Gudang"]}>
+        <DaftarBarang />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/pegawai-gudang/barang", element: <DaftarBarang /> },
+  { path: "/pegawai-gudang/transaksi", element: <DaftarTransaksi /> },
+  { path: "/pegawai-gudang/pengambilan", element: <Pengambilan /> },
+  { path: "/pegawai-gudang/pengiriman", element: <Pengiriman /> },
+
+  // Protected Route for Pembeli
+  {
+    path: "/pembeli",
+    element: (
+      <ProtectedRoute allowedRoles={["Pembeli"]}>
+        <PembeliPage />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/pembeli/alamat", element: <ManageAlamat /> },
+
+  // Protected Route for Penitip
+  {
+    path: "/penitip",
+    element: (
+      <ProtectedRoute allowedRoles={["Penitip"]}>
+        <PenitipPage />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/penitip/profile", element: <PenitipProfile /> },
+  { path: "/penitip/history", element: <PenitipHistory /> },
+
+  // Protected Route for Customer Service
+  {
+    path: "/cs",
+    element: (
+      <ProtectedRoute allowedRoles={["Customer Service"]}>
+        <DataPenitip />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/cs/penitip", element: <DataPenitip /> },
+  { path: "/cs/bukti", element: <BuktiTf /> },
+  { path: "/cs/diskusi", element: <Diskusi /> },
+  { path: "/cs/merch", element: <Merchandise /> },
+  { path: "/cs/history", element: <HistoryMerch /> },
+
+  // Protected Route for Organisasi Amal
+  {
+    path: "/organisasi",
+    element: (
+      <ProtectedRoute allowedRoles={["Organisasi Amal"]}>
+        <OProduk />
+      </ProtectedRoute>
+    ),
+  },
+  { path: "/organisasi/produk", element: <OProduk /> },
+  { path: "/organisasi/request", element: <ORequest /> },
+  { path: "/organisasi/history", element: <ODonasi /> },
 
   // Detail Barang
   { path: "/barang/:id", element: <DetailBarangPage /> },
@@ -67,7 +158,7 @@ const mainRoutes = [
 
 const loginRoutes = [
   { path: "/login", element: <LoginPage /> },
-]
+];
 
 const router = createBrowserRouter([
   {

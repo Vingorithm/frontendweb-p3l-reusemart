@@ -6,7 +6,7 @@ import TopNavigation from "../../components/navigation/TopNavigation";
 const ManageMerchandisePage = () => {
     return(
         <Container fluid className="p-0 bg-white">
-            <TopNavigation activeTab="merchandise" />
+            <TopNavigation userRole={"Admin"} />
         </Container>
     )
 };

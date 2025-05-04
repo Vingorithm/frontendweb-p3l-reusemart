@@ -6,7 +6,7 @@ import TopNavigation from "../../components/navigation/TopNavigation";
 const ManageOrganisasiPage = () => {
     return(
         <Container fluid className="p-0 bg-white">
-            <TopNavigation activeTab="organisasi" />
+            <TopNavigation userRole={"Admin"} />
         </Container>
     )
 };

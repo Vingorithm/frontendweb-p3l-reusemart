@@ -8,7 +8,7 @@ import {
   GetAkunByPegawaiId
 } from '../../clients/PegawaiService';
 import { Container, Row, Col, Form, Button, Card, Modal, Pagination, Nav } from 'react-bootstrap';
-import defaultAvatar from '../../assets/images/logo.png';
+import defaultAvatar from '../../assets/images/profile_picture/default.jpg';
 import { Link } from "react-router-dom";
 import TopNavigation from "../../components/navigation/TopNavigation";
 import ToastNotification from "../../components/toast/ToastNotification";
@@ -351,7 +351,7 @@ const ManagePegawaiPage = () => {
         message={toastMessage} 
         type={toastType} 
       />
-      <TopNavigation activeTab="pegawai" />
+      <TopNavigation userRole="Admin" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (
@@ -378,6 +378,7 @@ const ManagePegawaiPage = () => {
           {/* panggil siderbar buat role */}
           <Col md={3}>
             <RoleSidebar 
+              namaSidebar={'Role'}
               roles={roles} 
               selectedRole={selectedRole} 
               handleRoleChange={handleRoleChange} 

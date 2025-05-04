@@ -52,6 +52,7 @@ const DetailBarang = () => {
           if (barangData.id_penitip) {
             try {
               const penitipResponse = await GetPenitipById(barangData.id_penitip);
+              // console.log(penitipResponse.data.Akun.profile_picture);
               setPenitip(penitipResponse.data);
             } catch (penitipError) {
               console.error("Error fetching penitip data:", penitipError);
@@ -94,15 +95,12 @@ const DetailBarang = () => {
 
       if(localStorage.getItem(authToken)){
         try {
-          // 1. Decode token
           const token = localStorage.getItem("authToken");
           if (!token) throw new Error("Token tidak ditemukan");
           
           const decoded = decodeToken(token);
           setAkun(decoded);
           if (!decoded?.id) throw new Error("Invalid token structure");
-          
-          // 2. Get pembeli data
           if(decoded.role == "Pembeli") {
             const dataPembeli = await apiPembeli.getPembeliByIdAkun(decoded.id);
             setPembeli(dataPembeli);
@@ -110,9 +108,6 @@ const DetailBarang = () => {
             const dataPegawai = await GetPegawaiByAkunId(decoded.id);
             setCustomerService(dataPegawai.data);
           }
-          
-          // console.log('Pembeli', dataPembeli);
-          
         } catch (error) {
           setError("Gagal memuat data user!");
           console.error("Error:", err);
@@ -406,7 +401,7 @@ const DetailBarang = () => {
                 <div className="card-body d-flex align-items-center justify-content-between p-4">
                   <div className="d-flex align-items-center">
                     <img 
-                      src={penitip.foto_ktp || "/assets/images/default-avatar.jpg"} 
+                      src={penitip.Akun.profile_picture || "/assets/images/default-avatar.jpg"} 
                       alt={penitip.nama_penitip} 
                       style={{
                         width: '48px',

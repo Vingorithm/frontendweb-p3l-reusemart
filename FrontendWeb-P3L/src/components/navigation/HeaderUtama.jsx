@@ -14,7 +14,7 @@ const HeaderUtama = () => {
     const token = localStorage.getItem("authToken");
     if (!token) return; // Jika tidak ada token, tidak bisa ambil data
 
-    const idAkun = decodeToken(token).id_akun;
+    const idAkun = decodeToken(token).id;
     if (!idAkun) {
       console.error("ID Akun tidak ditemukan di token");
       return;
@@ -22,7 +22,9 @@ const HeaderUtama = () => {
 
     try {
       const response = await GetAkunById(idAkun);
-      setUserData(response.data); // Menyimpan data akun pengguna ke state
+      setUserData(response); // Menyimpan data akun pengguna ke state
+      console.log('response data', response);
+      
     } catch (error) {
       console.error('Failed to fetch user data:', error);
     }
@@ -159,7 +161,7 @@ const HeaderUtama = () => {
             </div>
 
             {/* Dropdown Menu untuk pengguna yang sudah login */}
-            {userData ? (
+            {userData != null ? (
               <button
                 style={loginButtonStyle}
                 onMouseEnter={() => setIsHovered(true)}
@@ -172,7 +174,7 @@ const HeaderUtama = () => {
                     style={{ width: '100%', height: '100%', borderRadius: '50%' }}
                   />
                 </div>
-                {userData.name} {/* Nama pengguna dari response API */}
+                {userData.email} {/* Nama pengguna dari response API */}
 
                 {/* Dropdown Menu */}
                 {isHovered && (

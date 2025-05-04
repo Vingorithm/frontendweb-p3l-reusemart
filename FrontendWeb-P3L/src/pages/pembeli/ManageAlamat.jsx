@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { decodeToken } from "../../utils/jwtUtils";
-import { apiAlamatPembeli } from '../../api/apiAlamatPembeli';
-import { apiPembeli } from '../../api/apiPembeli';
+import { apiAlamatPembeli } from '../../clients/AlamatPembeliServices';
+import { apiPembeli } from '../../clients/PembeliService';
 import DeleteAlamatModal from '../../components/modal/DeleteAlamatModal';
 import AddAlamatModal from '../../components/modal/AddAlamatModal';
 import UpdateAlamatModal from '../../components/modal/UpdateAlamatModal';

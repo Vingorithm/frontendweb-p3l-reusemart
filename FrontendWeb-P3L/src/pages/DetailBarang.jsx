@@ -4,9 +4,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { GetBarangById } from "../clients/BarangService";
 import { GetPenitipById } from "../clients/PenitipService";
 import { GetReviewProdukByIdBarang } from "../clients/ReviewService";
-import { GetDiskusiProdukByIdBarang } from "../clients/DiskusiProdukService";
+import { CreateDiskusiProduk, GetDiskusiProdukById, GetDiskusiProdukByIdBarang, UpdateDiskusiProduk } from "../clients/DiskusiProdukService";
 import { FaStar, FaShoppingCart, FaPlus, FaMinus, FaArrowRight, FaComment } from 'react-icons/fa';
 import "bootstrap/dist/css/bootstrap.min.css";
+import AddDiskusiModal from "../components/modal/AddDiskusiModal";
+import AnswerDiskusiModal from '../components/modal/AnswerDiskusiModal';
+import { apiPembeli } from "../clients/PembeliService";
+import { GetAllPegawai, GetPegawaiByAkunId, GetPegawaiById } from "../clients/PegawaiService";
 
 const DetailBarang = () => {
   const { id } = useParams();
@@ -27,6 +31,11 @@ const DetailBarang = () => {
   const [quantity, setQuantity] = useState(1);
   const [productImages, setProductImages] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState('Pengiriman');
+  const [akun, setAkun] = useState(null);
+  const [pembeli, setPembeli] = useState(null);
+  const [customerService, setCustomerService] = useState(null);
+  const [toggleDiskusi, setToggleDiskusi] = useState(false);
+  const [selectedDiscussion, setSelectedDiscussion] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +91,32 @@ const DetailBarang = () => {
       } finally {
         setLoading(false);
       }
+
+      try {
+        // 1. Decode token
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Token tidak ditemukan");
+        
+        const decoded = decodeToken(token);
+        setAkun(decoded);
+        if (!decoded?.id) throw new Error("Invalid token structure");
+        
+        // 2. Get pembeli data
+        if(decoded.role == "Pembeli") {
+          const dataPembeli = await apiPembeli.getPembeliByIdAkun(decoded.id);
+          setPembeli(dataPembeli);
+        } else if(decoded.role == "Customer Service") {
+          const dataPegawai = await GetPegawaiByAkunId(decoded.id);
+          setCustomerService(dataPegawai.data);
+        }
+        
+        // console.log('Pembeli', dataPembeli);
+        
+      } catch (error) {
+        setError("Gagal memuat data user!");
+        console.error("Error:", err);
+      }
+
     };
 
     fetchData();
@@ -130,6 +165,104 @@ const DetailBarang = () => {
     }
     return stars;
   };
+
+  const fetchDiskusi = async () => {
+    if(toggleDiskusi) {
+      try {
+        const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+        const sortedDiskusi = diskusiResponse.data ? 
+          diskusiResponse.data : 
+          [];
+        setDiskusi(sortedDiskusi);
+      } catch (diskusiError) {
+        console.error("Error fetching diskusi produk:", diskusiError);
+        setDiskusi([]);
+      }
+    } else {
+      try {
+        const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+        const sortedDiskusi = diskusiResponse.data ? 
+          diskusiResponse.data.slice(0, 2) : 
+          [];
+        setDiskusi(sortedDiskusi);
+      } catch (diskusiError) {
+        console.error("Error fetching diskusi produk:", diskusiError);
+        setDiskusi([]);
+      }
+    }
+  }
+  
+  const onSubmitPertanyaan = async (pertanyaan) => {
+    const id_barang = barang.id_barang;
+    const id_pembeli = pembeli.id_pembeli;
+
+    const dataPegawai = await GetAllPegawai();
+    const customerService = dataPegawai.data.find(p => p.Akun.role === "Customer Service");
+    const id_customer_service = customerService.id_pegawai;
+    
+    const diskusiProduk = {
+      id_barang: id_barang,
+      id_customer_service: id_customer_service,
+      id_pembeli: id_pembeli,
+      pertanyaan: pertanyaan
+    }
+
+    await CreateDiskusiProduk(diskusiProduk);
+
+    fetchDiskusi();
+  }
+
+  const onSubmitjawaban = async (jawaban) => {
+    const id_diskusi_produk = selectedDiscussion;
+    const id_customer_service = customerService.id_pegawai;
+    const data = {
+      jawaban: jawaban,
+      id_customer_service: id_customer_service
+    }
+    
+    try {
+      const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+      const sortedDiskusi = diskusiResponse.data ? 
+        diskusiResponse.data.slice(0, 2) : 
+        [];
+      setDiskusi(sortedDiskusi);
+    } catch (diskusiError) {
+      console.error("Error fetching diskusi produk:", diskusiError);
+      setDiskusi([]);
+    }
+
+    await UpdateDiskusiProduk(id_diskusi_produk, data);
+
+    fetchDiskusi();
+  }
+
+  const showAllDiskusi = async () => {
+    try {
+      const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+      const sortedDiskusi = diskusiResponse.data ? 
+        diskusiResponse.data : 
+        [];
+      setDiskusi(sortedDiskusi);
+      setToggleDiskusi(!toggleDiskusi);
+    } catch (diskusiError) {
+      console.error("Error fetching diskusi produk:", diskusiError);
+      setDiskusi([]);
+    }
+  }
+
+  const unshowAllDiskusi = async () => {
+    try {
+      const diskusiResponse = await GetDiskusiProdukByIdBarang(id);
+      const sortedDiskusi = diskusiResponse.data ? 
+        diskusiResponse.data.slice(0, 2) : 
+        [];
+      setDiskusi(sortedDiskusi);
+      setToggleDiskusi(!toggleDiskusi);
+    } catch (diskusiError) {
+      console.error("Error fetching diskusi produk:", diskusiError);
+      setDiskusi([]);
+    }
+  }
 
   if (loading) {
     return (
@@ -346,11 +479,11 @@ const DetailBarang = () => {
                     transition: 'background-color 0.3s ease',
                     fontSize: '14px'
                   }}
-                  onClick={handleGoToDiskusi}
+                  onClick={toggleDiskusi ? unshowAllDiskusi : showAllDiskusi}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#026c38'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#028643'}
                 >
-                  Lihat Semua Diskusi
+                  {toggleDiskusi ? "Tutup" : "Lihat Semua Diskusi"}
                 </button>
               </div>
               <div className="card-body p-4">
@@ -388,6 +521,9 @@ const DetailBarang = () => {
                       <p style={{ color: '#03081F', fontSize: '14px', marginBottom: '16px', marginLeft: '52px' }}>
                         {item.pertanyaan}
                       </p>
+                      { akun && akun.role == "Customer Service" && item.jawaban == "" ? <div className="d-flex w-100 justify-content-end">
+                        <button className='btn btn-success rounded-pill px-5' onClick={() => {setSelectedDiscussion(item.id_diskusi_produk)}} type="button" data-bs-toggle="modal" data-bs-target="#answer-diskusi-modal">Jawab</button>
+                      </div> : <></>}
 
                       {/* Admin's Response */}
                       {item.jawaban && (
@@ -438,7 +574,9 @@ const DetailBarang = () => {
                 )}
 
                 <div className="text-center mt-4">
-                  <button 
+                  {
+                    akun && akun.role == "Pembeli" ? 
+                    <button 
                     className="btn" 
                     style={{ 
                       backgroundColor: '#FFFFFF',
@@ -449,7 +587,7 @@ const DetailBarang = () => {
                       fontWeight: 'bold',
                       transition: 'all 0.3s ease'
                     }}
-                    onClick={handleGoToDiskusi}
+                    // onClick={handleGoToDiskusi}
                     onMouseEnter={(e) => {
                       e.target.style.backgroundColor = '#028643';
                       e.target.style.color = '#FFFFFF';
@@ -458,9 +596,13 @@ const DetailBarang = () => {
                       e.target.style.backgroundColor = '#FFFFFF';
                       e.target.style.color = '#028643';
                     }}
+                    data-bs-toggle="modal" data-bs-target="#add-diskusi-modal"
                   >
                     Mulai Diskusi Baru
                   </button>
+                  : 
+                  <></>
+                  }
                 </div>
               </div>
             </div>
@@ -596,6 +738,8 @@ const DetailBarang = () => {
           </div>
         </div>
       </div>
+      <AddDiskusiModal onSubmit={onSubmitPertanyaan} />
+      <AnswerDiskusiModal onSubmit={onSubmitjawaban} />
     </div>
   );
 };

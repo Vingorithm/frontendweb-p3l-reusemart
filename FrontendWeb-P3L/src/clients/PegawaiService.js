@@ -21,3 +21,6 @@ export const GetAkunByPegawaiId = (id) =>
 
 export const UpdateAkunByPegawaiId = (id, akunData) =>
     apiClient.put(`${ENDPOINTS.UPDATE_PEGAWAI(id)}/akun`, akunData);
+
+export const GetPegawaiByAkunId = (id) =>
+    apiClient.get(ENDPOINTS.SEARCH_PEGAWAI_BY_AKUN(id));

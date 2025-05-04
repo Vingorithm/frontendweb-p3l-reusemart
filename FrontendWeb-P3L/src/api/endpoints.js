@@ -41,6 +41,7 @@ export const ENDPOINTS = {
     SHOW_PEGAWAI: (id) => `/pegawai/${id}`,
     UPDATE_PEGAWAI: (id) => `/pegawai/${id}`,
     DELETE_PEGAWAI: (id) => `/pegawai/${id}`,
+    SEARCH_PEGAWAI_BY_AKUN: (id) => `/pegawai/byIdAkun/${id}`,
 
     // Penitip
     GET_ALL_PENITIP: "/penitip",
@@ -48,6 +49,7 @@ export const ENDPOINTS = {
     SHOW_PENITIP: (id) => `/penitip/${id}`,
     UPDATE_PENITIP: (id) => `/penitip/${id}`,
     DELETE_PENITIP: (id) => `/penitip/${id}`,
+    SEARCH_PENITIP_BY_AKUN: (id) => `/penitip/byIdAkun/${id}`,
 
     // Barang
     GET_ALL_BARANG: "/barang",

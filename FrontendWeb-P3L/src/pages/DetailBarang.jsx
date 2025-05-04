@@ -92,29 +92,31 @@ const DetailBarang = () => {
         setLoading(false);
       }
 
-      try {
-        // 1. Decode token
-        const token = localStorage.getItem("authToken");
-        if (!token) throw new Error("Token tidak ditemukan");
-        
-        const decoded = decodeToken(token);
-        setAkun(decoded);
-        if (!decoded?.id) throw new Error("Invalid token structure");
-        
-        // 2. Get pembeli data
-        if(decoded.role == "Pembeli") {
-          const dataPembeli = await apiPembeli.getPembeliByIdAkun(decoded.id);
-          setPembeli(dataPembeli);
-        } else if(decoded.role == "Customer Service") {
-          const dataPegawai = await GetPegawaiByAkunId(decoded.id);
-          setCustomerService(dataPegawai.data);
+      if(localStorage.getItem(authToken)){
+        try {
+          // 1. Decode token
+          const token = localStorage.getItem("authToken");
+          if (!token) throw new Error("Token tidak ditemukan");
+          
+          const decoded = decodeToken(token);
+          setAkun(decoded);
+          if (!decoded?.id) throw new Error("Invalid token structure");
+          
+          // 2. Get pembeli data
+          if(decoded.role == "Pembeli") {
+            const dataPembeli = await apiPembeli.getPembeliByIdAkun(decoded.id);
+            setPembeli(dataPembeli);
+          } else if(decoded.role == "Customer Service") {
+            const dataPegawai = await GetPegawaiByAkunId(decoded.id);
+            setCustomerService(dataPegawai.data);
+          }
+          
+          // console.log('Pembeli', dataPembeli);
+          
+        } catch (error) {
+          setError("Gagal memuat data user!");
+          console.error("Error:", err);
         }
-        
-        // console.log('Pembeli', dataPembeli);
-        
-      } catch (error) {
-        setError("Gagal memuat data user!");
-        console.error("Error:", err);
       }
 
     };

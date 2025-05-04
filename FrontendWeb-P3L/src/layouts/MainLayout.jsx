@@ -13,6 +13,7 @@ const MainLayout = () => {
     
     if (token) {
       const decoded = decodeToken(token);
+      console.log(decoded);
       setUserRole(decoded.role);
     }
   }, []);

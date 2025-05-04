@@ -9,6 +9,8 @@ import {
   UpdateRequestDonasi, 
   DeleteRequestDonasi 
 } from '../../clients/RequestDonasiService';
+import { GetDonasiBarangByIdRequestDonasi } from '../../clients/DonasiBarangService';
+import { UpdatePenitip } from '../../clients/PenitipService';
 
 const RekapRequest = () => {
   const [requestList, setRequestList] = useState([]);
@@ -104,6 +106,74 @@ const RekapRequest = () => {
     setShowConfirmModal(true);
   };
 
+  // Fungsi untuk menghitung dan memberikan poin kepada penitip
+  const awardPointsToDonors = async (requestId) => {
+    try {
+      // 1. Dapatkan semua donasiBarang untuk request ID ini
+      const response = await GetDonasiBarangByIdRequestDonasi(requestId);
+      const donasiBarangList = response.data;
+      console.log('Donation items retrieved:', donasiBarangList);
+      
+      if (!donasiBarangList || donasiBarangList.length === 0) {
+        console.log('No donation items found for this request');
+        return;
+      }
+
+      // Track penitip yang sudah diberi poin untuk menghindari duplikasi
+      const processedPenitips = {};
+      let pointsAwardedMessages = [];
+
+      // 2. Loop melalui setiap donasiBarang dan berikan poin ke penitip
+      for (const donasi of donasiBarangList) {
+        // Pastikan barang dan penitip ada
+        if (donasi.Barang && donasi.Barang.Penitip) {
+          const barang = donasi.Barang;
+          const penitip = barang.Penitip;
+          const penitipId = penitip.id_penitip;
+          
+          // Hitung poin yang akan diberikan (1 poin per Rp 10.000)
+          const hargaBarang = parseFloat(barang.harga) || 0;
+          const pointsToAdd = Math.floor(hargaBarang / 10000);
+          
+          // Jika penitip belum diproses dan ada poin untuk ditambahkan
+          if (!processedPenitips[penitipId] && pointsToAdd > 0) {
+            // Update total poin penitip
+            const currentPoints = parseFloat(penitip.total_poin) || 0;
+            const newTotalPoints = currentPoints + pointsToAdd;
+            
+            // Siapkan data untuk update
+            const updateData = {
+              ...penitip,
+              total_poin: newTotalPoints
+            };
+            
+            // Update poin penitip di database
+            await UpdatePenitip(penitipId, updateData);
+            console.log(`Updated points for ${penitip.nama_penitip}: +${pointsToAdd} points`);
+            
+            // Tandai penitip ini sudah diproses
+            processedPenitips[penitipId] = true;
+            
+            // Tambahkan pesan untuk notifikasi
+            pointsAwardedMessages.push(`${penitip.nama_penitip}: +${pointsToAdd} poin (Rp ${hargaBarang.toLocaleString('id-ID')})`);
+          }
+        }
+      }
+      
+      // 3. Tampilkan notifikasi jika ada poin yang diberikan
+      if (pointsAwardedMessages.length > 0) {
+        const message = `Poin berhasil ditambahkan ke penitip:\n${pointsAwardedMessages.join('\n')}`;
+        showNotification(message, 'success');
+      }
+      
+      return pointsAwardedMessages.length > 0;
+    } catch (error) {
+      console.error('Error awarding points to donors:', error);
+      showNotification('Gagal menambahkan poin ke penitip', 'danger');
+      return false;
+    }
+  };
+
   const handleConfirmAction = async () => {
     try {
       const updatedRequest = {
@@ -116,7 +186,14 @@ const RekapRequest = () => {
       const response = await UpdateRequestDonasi(currentRequest.id_request_donasi, updatedRequest);
       console.log('Request updated successfully:', response.data);
       
-      showNotification(`Request donasi berhasil ${confirmAction === 'approve' ? 'diterima' : 'ditolak'}!`, 'success');
+      // Jika permintaan diterima, berikan poin kepada penitip
+      if (confirmAction === 'approve') {
+        // Berikan poin kepada penitip
+        await awardPointsToDonors(currentRequest.id_request_donasi);
+        showNotification(`Request donasi berhasil diterima!`, 'success');
+      } else {
+        showNotification(`Request donasi berhasil ditolak!`, 'success');
+      }
       
       setShowConfirmModal(false);
       setShowDetailModal(false);
@@ -460,7 +537,7 @@ const RekapRequest = () => {
           </div>
           <p className="mb-0 small text-muted">
             {confirmAction === 'approve' 
-              ? `Setelah diterima, organisasi dapat menerima donasi barang.`
+              ? `Setelah diterima, organisasi dapat menerima donasi barang dan penitip akan mendapatkan poin reward.`
               : `Setelah ditolak, organisasi perlu mengajukan request baru.`
             }
           </p>

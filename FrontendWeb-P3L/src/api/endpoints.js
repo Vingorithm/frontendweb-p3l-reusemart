@@ -117,6 +117,14 @@ export const ENDPOINTS = {
     UPDATE_MERCHANDISE: (id) => `/merchandise/${id}`,
     DELETE_MERCHANDISE: (id) => `/merchandise/${id}`,
 
+    // Merchandise
+    GET_ALL_DONASI_BARANG: "/donasi-barang",
+    CREATE_DONASI_BARANG: "/donasi-barang",
+    SHOW_DONASI_BARANG: (id) => `/donasi-barang/${id}`,
+    SHOW_DONASI_BARANG_BY_REQUEST_PRODUK: (id) => `/donasi-barang/byIdRequest/${id}`,
+    UPDATE_DONASI_BARANG: (id) => `/donasi-barang/${id}`,
+    DELETE_DONASI_BARANG: (id) => `/donasi-barang/${id}`,
+
     // Claim Merchandise
     GET_ALL_CLAIM_MERCHANDISE: "/claim-merchandise",
     CREATE_CLAIM_MERCHANDISE: "/claim-merchandise",

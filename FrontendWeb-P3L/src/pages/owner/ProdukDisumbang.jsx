@@ -3,7 +3,7 @@ import { Container, Row, Col, Form, Button, Card, Modal, Pagination, Nav } from 
 import { Link } from "react-router-dom";
 import TopNavigation from "../../components/navigation/TopNavigation";
 
-const OwnerPage = () => {
+const ProdukDisumbangkanPage = () => {
   return (
     <Container fluid className="p-0 bg-white">
       <TopNavigation userRole={"Owner"}/>
@@ -11,4 +11,4 @@ const OwnerPage = () => {
   );
 };
 
-export default OwnerPage;
+export default ProdukDisumbangkanPage;

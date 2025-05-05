@@ -6,3 +6,6 @@ export const GetAllBarang = () =>
 
 export const GetBarangById = (id) =>
     apiClient.get(ENDPOINTS.SHOW_BARANG(id));
+
+export const GetAvailableBarangForDonation = () =>
+    apiClient.get(ENDPOINTS.GET_AVAILABLE_BARANG_FOR_DONATION);

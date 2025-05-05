@@ -6,11 +6,8 @@ import PaginationComponent from "../../components/pagination/Pagination";
 import { 
   GetAllRequestDonasi, 
   GetRequestDonasiById, 
-  UpdateRequestDonasi, 
   DeleteRequestDonasi 
 } from '../../clients/RequestDonasiService';
-import { GetDonasiBarangByIdRequestDonasi } from '../../clients/DonasiBarangService';
-import { UpdatePenitip } from '../../clients/PenitipService';
 
 const RekapRequest = () => {
   const [requestList, setRequestList] = useState([]);
@@ -26,8 +23,6 @@ const RekapRequest = () => {
 
   // Modals state
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState('');
   const [currentRequest, setCurrentRequest] = useState({
     id_request_donasi: '',
     id_organisasi: '',
@@ -61,8 +56,6 @@ const RekapRequest = () => {
       console.log('Fetching all request data...');
       const response = await GetAllRequestDonasi();
       console.log('Request data fetched successfully:', response.data);
-      // cara mengambil data organisasi dan akun melalui requestDonasi
-      console.log(response.data[0]);
       setRequestList(response.data || []);
       setLoading(false);
     } catch (error) {
@@ -98,111 +91,6 @@ const RekapRequest = () => {
       console.error('Error fetching request details:', error);
       setError('Failed to load request details. Please try again.');
       showNotification('Failed to load request details. Please try again.', 'danger');
-    }
-  };
-
-  const handleRequestAction = (action) => {
-    setConfirmAction(action);
-    setShowConfirmModal(true);
-  };
-
-  // Fungsi untuk menghitung dan memberikan poin kepada penitip
-  const awardPointsToDonors = async (requestId) => {
-    try {
-      // 1. Dapatkan semua donasiBarang untuk request ID ini
-      const response = await GetDonasiBarangByIdRequestDonasi(requestId);
-      const donasiBarangList = response.data;
-      console.log('Donation items retrieved:', donasiBarangList);
-      
-      if (!donasiBarangList || donasiBarangList.length === 0) {
-        console.log('No donation items found for this request');
-        return;
-      }
-
-      // Track penitip yang sudah diberi poin untuk menghindari duplikasi
-      const processedPenitips = {};
-      let pointsAwardedMessages = [];
-
-      // 2. Loop melalui setiap donasiBarang dan berikan poin ke penitip
-      for (const donasi of donasiBarangList) {
-        // Pastikan barang dan penitip ada
-        if (donasi.Barang && donasi.Barang.Penitip) {
-          const barang = donasi.Barang;
-          const penitip = barang.Penitip;
-          const penitipId = penitip.id_penitip;
-          
-          // Hitung poin yang akan diberikan (1 poin per Rp 10.000)
-          const hargaBarang = parseFloat(barang.harga) || 0;
-          const pointsToAdd = Math.floor(hargaBarang / 10000);
-          
-          // Jika penitip belum diproses dan ada poin untuk ditambahkan
-          if (!processedPenitips[penitipId] && pointsToAdd > 0) {
-            // Update total poin penitip
-            const currentPoints = parseFloat(penitip.total_poin) || 0;
-            const newTotalPoints = currentPoints + pointsToAdd;
-            
-            // Siapkan data untuk update
-            const updateData = {
-              ...penitip,
-              total_poin: newTotalPoints
-            };
-            
-            // Update poin penitip di database
-            await UpdatePenitip(penitipId, updateData);
-            console.log(`Updated points for ${penitip.nama_penitip}: +${pointsToAdd} points`);
-            
-            // Tandai penitip ini sudah diproses
-            processedPenitips[penitipId] = true;
-            
-            // Tambahkan pesan untuk notifikasi
-            pointsAwardedMessages.push(`${penitip.nama_penitip}: +${pointsToAdd} poin (Rp ${hargaBarang.toLocaleString('id-ID')})`);
-          }
-        }
-      }
-      
-      // 3. Tampilkan notifikasi jika ada poin yang diberikan
-      if (pointsAwardedMessages.length > 0) {
-        const message = `Poin berhasil ditambahkan ke penitip:\n${pointsAwardedMessages.join('\n')}`;
-        showNotification(message, 'success');
-      }
-      
-      return pointsAwardedMessages.length > 0;
-    } catch (error) {
-      console.error('Error awarding points to donors:', error);
-      showNotification('Gagal menambahkan poin ke penitip', 'danger');
-      return false;
-    }
-  };
-
-  const handleConfirmAction = async () => {
-    try {
-      const updatedRequest = {
-        ...currentRequest,
-        status_request: confirmAction === 'approve' ? 'Diterima' : 'Ditolak'
-      };
-
-      console.log(`Updating request with ID: ${currentRequest.id_request_donasi}`, updatedRequest);
-      
-      const response = await UpdateRequestDonasi(currentRequest.id_request_donasi, updatedRequest);
-      console.log('Request updated successfully:', response.data);
-      
-      // Jika permintaan diterima, berikan poin kepada penitip
-      if (confirmAction === 'approve') {
-        // Berikan poin kepada penitip
-        await awardPointsToDonors(currentRequest.id_request_donasi);
-        showNotification(`Request donasi berhasil diterima!`, 'success');
-      } else {
-        showNotification(`Request donasi berhasil ditolak!`, 'success');
-      }
-      
-      setShowConfirmModal(false);
-      setShowDetailModal(false);
-      fetchRequestDonasi();
-    } catch (error) {
-      console.error('Error updating request status:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to update request status. Please try again.';
-      setError(errorMessage);
-      showNotification(errorMessage, 'danger');
     }
   };
 
@@ -302,6 +190,7 @@ const RekapRequest = () => {
         <Row className="mb-4 align-items-center">
           <Col>
             <h2 className="mb-0 fw-bold" style={{ color: '#03081F' }}>Rekap Data Request Donasi</h2>
+            <p className="text-muted mt-1">Daftar request yang diajukan Organisasi Amal</p>
           </Col>
         </Row>
 
@@ -421,7 +310,7 @@ const RekapRequest = () => {
         </Row>
       </div>
 
-      {/* Detail Modal - Improved Version */}
+      {/* Detail Modal - Simplified Version without approval/rejection functionality */}
       <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg">
         <Modal.Header closeButton style={{ backgroundColor: '#028643', color: 'white' }}>
           <Modal.Title>Detail Request Donasi</Modal.Title>
@@ -493,64 +382,6 @@ const RekapRequest = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Close
-          </Button>
-          
-          {currentRequest.status_request === 'Menunggu konfirmasi' && (
-            <>
-              <Button 
-                variant="danger" 
-                onClick={() => handleRequestAction('reject')}
-              >
-                <i className="bi bi-x-circle me-1"></i> Tolak Permintaan
-              </Button>
-              <Button 
-                variant="success" 
-                onClick={() => handleRequestAction('approve')}
-              >
-                <i className="bi bi-check-circle me-1"></i> Terima Permintaan
-              </Button>
-            </>
-          )}
-        </Modal.Footer>
-      </Modal>
-
-      {/* Confirmation Modal */}
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
-        <Modal.Header closeButton style={{
-          backgroundColor: confirmAction === 'approve' ? '#028643' : '#FF1700',
-          color: 'white'
-        }}>
-          <Modal.Title>
-            {confirmAction === 'approve' ? 'Konfirmasi Penerimaan' : 'Konfirmasi Penolakan'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p className="mb-2">
-            {confirmAction === 'approve' 
-              ? `Apakah Anda yakin ingin menerima request donasi dari:`
-              : `Apakah Anda yakin ingin menolak request donasi dari:`
-            }
-          </p>
-          <div className="p-3 bg-light rounded mb-3">
-            <p className="mb-1 fw-bold">{currentRequest.OrganisasiAmal?.nama_organisasi || currentRequest.id_organisasi}</p>
-            <p className="mb-0 small">{currentRequest.deskripsi_request}</p>
-          </div>
-          <p className="mb-0 small text-muted">
-            {confirmAction === 'approve' 
-              ? `Setelah diterima, organisasi dapat menerima donasi barang dan penitip akan mendapatkan poin reward.`
-              : `Setelah ditolak, organisasi perlu mengajukan request baru.`
-            }
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
-            Batal
-          </Button>
-          <Button 
-            variant={confirmAction === 'approve' ? 'success' : 'danger'} 
-            onClick={handleConfirmAction}
-          >
-            {confirmAction === 'approve' ? 'Terima' : 'Tolak'}
           </Button>
         </Modal.Footer>
       </Modal>

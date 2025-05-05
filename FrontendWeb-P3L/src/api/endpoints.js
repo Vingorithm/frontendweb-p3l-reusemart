@@ -51,6 +51,13 @@ export const ENDPOINTS = {
     DELETE_PENITIP: (id) => `/penitip/${id}`,
     SEARCH_PENITIP_BY_AKUN: (id) => `/penitip/byIdAkun/${id}`,
 
+    // Penitipan
+    GET_ALL_PENITIPAN: "/penitipan",
+    CREATE_PENITIPAN: "/penitipan",
+    SHOW_PENITIPAN: (id) => `/penitipan/${id}`,
+    UPDATE_PENITIPAN: (id) => `/penitipan/${id}`,
+    DELETE_PENITIPAN: (id) => `/penitipan/${id}`,
+
     // Barang
     GET_ALL_BARANG: "/barang",
     CREATE_BARANG: "/barang",

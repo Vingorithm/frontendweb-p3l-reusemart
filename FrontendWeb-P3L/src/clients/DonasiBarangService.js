@@ -15,3 +15,6 @@ export const DeleteDonasiBarang = (id) =>
 
 export const GetDonasiBarangByIdRequestDonasi = (id) =>
     apiClient.get(ENDPOINTS.SHOW_DONASI_BARANG_BY_REQUEST_PRODUK(id));
+
+export const CreateDonasiBarang = (data) =>
+    apiClient.post(ENDPOINTS.CREATE_DONASI_BARANG, data);

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
-import { GetAllPenitip } from "../../clients/PenitipService"; // Make sure this API call is correctly implemented
+import { GetAllPenitip, DeletePenitip } from "../../clients/PenitipService"; 
 import { useNavigate } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa';
+import PenitipFormModal from "../../components/form/PenitipFormModal";
 
 const styles = {
   container: {
@@ -81,6 +82,15 @@ const DataPenitip = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [showModal, setShowModal] = useState(false);
+
+  const handleModalClose = () => setShowModal(false);
+  const handleModalOpen = () => setShowModal(true);
+  const refreshData = async () => {
+    const response = await GetAllPenitip();
+    setPenitipList(response.data);
+  };
+
   useEffect(() => {
     const fetchPenitip = async () => {
       try {
@@ -106,6 +116,26 @@ const DataPenitip = () => {
     return <div>{error}</div>;
   }
 
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus penitip ini?")) {
+      try {
+        await DeletePenitip(id);
+        alert("Penitip berhasil dihapus!");
+        await refreshData(); 
+      } catch (error) {
+        console.error("Gagal menghapus penitip:", error);
+        alert("Gagal menghapus penitip. Cek kembali koneksi atau server.");
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString('id-ID'); 
+    const formattedTime = date.toLocaleTimeString('id-ID', { hour12: false });  
+    return `${formattedDate} | ${formattedTime}`;
+  };
+
   return (
     <div style={styles.container}>
       <h2>Data Penitip</h2>
@@ -120,7 +150,7 @@ const DataPenitip = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={styles.searchInputStyle}
             />
-          <button style={styles.buttonStyle}>Tambah Penitip</button>
+          <button style={styles.buttonStyle} onClick={handleModalOpen}>Tambah Penitip</button>
         </div>
       </div>      
       
@@ -135,7 +165,6 @@ const DataPenitip = () => {
                 style={styles.cardImage}
               />
               <div className="card-body" style={styles.cardBody}>
-                <h5 className="card-title" style={styles.cardTitle}>{penitip.Akun.email}</h5>
                 <h5 className="card-title" style={styles.cardTitle}>{penitip.nama_penitip}</h5>
                 <p className="card-text" style={styles.cardText}>Rating: {penitip.rating} stars</p>
                 <p className="card-text" style={styles.cardText}>Total Points: {penitip.total_poin}</p>
@@ -157,22 +186,9 @@ const DataPenitip = () => {
           <li className="page-item"><a className="page-link" href="#">5</a></li>
         </ul>
       </div>
+      <PenitipFormModal show={showModal} handleClose={handleModalClose} onSuccess={refreshData} />
     </div>
   );
 };
-
-const handleDelete = (id) => {
-  console.log("Deleting penitip with id:", id);
-};
-
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  
-  const formattedDate = date.toLocaleDateString('id-ID'); 
-  const formattedTime = date.toLocaleTimeString('id-ID', { hour12: false });  
-
-  return `${formattedDate} | ${formattedTime}`;
-};
-
 
 export default DataPenitip;

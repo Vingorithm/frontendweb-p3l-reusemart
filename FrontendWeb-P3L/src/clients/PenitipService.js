@@ -18,4 +18,11 @@ export const GetPenitipByIdAkun = async (id) => {
 
 export const UpdatePenitip = (id, data) =>
     apiClient.put(ENDPOINTS.UPDATE_PENITIP(id), data);
-    
+
+export const AddPenitip = (data) =>
+    apiClient.post(ENDPOINTS.CREATE_PENITIP, data);
+
+export const DeletePenitip = async (id) => {
+    const response = await apiClient.delete(ENDPOINTS.DELETE_PENITIP(id));
+    return response;
+}

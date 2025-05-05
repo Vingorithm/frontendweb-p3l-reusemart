@@ -15,6 +15,7 @@ import ToastNotification from "../../components/toast/ToastNotification";
 import RoleSidebar from "../../components/navigation/Sidebar";
 import EmployeeCard from "../../components/card/CardPegawai";
 import PaginationComponent from "../../components/pagination/Pagination";
+import ResetEmployeePassModal from '../../components/modal/ResetEmployeePassModal';
 
 const ManagePegawaiPage = () => {
   const [pegawaiList, setPegawaiList] = useState([]);
@@ -598,6 +599,8 @@ const ManagePegawaiPage = () => {
         </Modal.Body>
       </Modal>
 
+      <ResetEmployeePassModal pegawai={currentPegawai}/>
+
       <style jsx>{`
         .max-width-container {
           max-width: 1200px;
@@ -694,6 +697,11 @@ const ManagePegawaiPage = () => {
         .delete-btn:hover {
           background-color: #e61500;
           border-color: #e61500;
+        }
+
+        .reset-btn {
+          border-radius: 4px;
+          font-weight: 500;
         }
         
         .edit-btn {

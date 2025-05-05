@@ -5,7 +5,7 @@ import defaultAvatar from '../../assets/images/logo.png';
 const EmployeeCard = ({ 
   employee, 
   onEdit, 
-  onDelete, 
+  onDelete,
   getRoleName 
 }) => {
   const getProfilePicture = (employee) => {
@@ -51,6 +51,14 @@ const EmployeeCard = ({
           </Col>
         </Row>
         <div className="button-container mt-3 d-flex justify-content-end">
+          <Button 
+            variant="primary" 
+            className="reset-btn me-2"
+            type="button"
+            data-bs-toggle="modal" data-bs-target="#reset-emmployee-pass-modal"
+          >
+            Reset Password
+          </Button>
           <Button 
             variant="danger" 
             className="delete-btn me-2"

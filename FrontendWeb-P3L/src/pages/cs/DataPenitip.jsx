@@ -4,6 +4,7 @@ import { GetAllPenitip, DeletePenitip } from "../../clients/PenitipService";
 import { FaSearch } from 'react-icons/fa';
 import PenitipFormModal from "../../components/modal/PenitipFormModal";
 import EditPenitipFormModal from "../../components/modal/EditPenitipFormModal"; // Added import
+import { Badge } from 'react-bootstrap';
 
 const styles = {
   container: {
@@ -179,9 +180,14 @@ const DataPenitip = () => {
                 style={styles.cardImage}
               />
               <div className="card-body" style={styles.cardBody}>
-                <h5 className="card-title" style={styles.cardTitle}>
-                  {penitip.nama_penitip}
-                </h5>
+              <h5 className="card-title" style={styles.cardTitle}>
+                {penitip.nama_penitip}
+                {penitip.badge && (
+                  <span className="badge text-bg-warning"  style={{ marginLeft: 8 }}>
+                    Top Seller
+                  </span>
+                )}
+              </h5>
                 <p className="card-text" style={styles.cardText}>
                   Email: {penitip.Akun.email}
                 </p>

@@ -7,6 +7,12 @@ const AddAlamatModal = ({ id_pembeli, onAdd }) => {
     const [alamatLengkap, setAlamatLengkap] = useState("");
     const [isMainAddress, setIsMainAddress] = useState(false);
 
+    const resetForm = () => {
+      setNamaAlamat("");
+      setAlamatLengkap("");
+      setIsMainAddress(false);
+    }
+
     const handleAdd = async (e) => {
       e.preventDefault();
       const alamat = {
@@ -20,28 +26,14 @@ const AddAlamatModal = ({ id_pembeli, onAdd }) => {
         await onAdd(alamat);
       }
 
-      setNamaAlamat("");
-      setAlamatLengkap("");
-      setIsMainAddress(false);
+      resetForm();
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('add-alamat-modal'));
       modal.hide();
     };
 
     useEffect(() => {
-      const modalEl = document.getElementById("add-alamat-modal");
-    
-      const handleModalShown = () => {
-        setNamaAlamat("");
-        setAlamatLengkap("");
-        setIsMainAddress(false);
-      };
-    
-      modalEl?.addEventListener("shown.bs.modal", handleModalShown);
-    
-      return () => {
-        modalEl?.removeEventListener("shown.bs.modal", handleModalShown);
-      };
+      
     }, []);
 
     return <form onSubmit={handleAdd}>
@@ -50,7 +42,7 @@ const AddAlamatModal = ({ id_pembeli, onAdd }) => {
             <div className="modal-content">
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="exampleModalLabel">Tambah Alamat</h1>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={resetForm}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -70,8 +62,8 @@ const AddAlamatModal = ({ id_pembeli, onAdd }) => {
 
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="submit" className="btn btn-success">Tambah</button>
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={resetForm}>Batal</button>
+                <button type="submit" className="btn btn-success" >Tambah</button>
               </div>
             </div>
           </div>

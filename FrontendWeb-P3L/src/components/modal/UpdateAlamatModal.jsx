@@ -8,6 +8,16 @@ const UpdateAlamatModal = ({ alamat, onEdit }) => {
     const [alamatLengkap, setAlamatLengkap] = useState("");
     const [isMainAddress, setIsMainAddress] = useState(false);
 
+    const resetForm = () => {
+      if (alamat) {
+        setIdPembeli(alamat.id_pembeli ?? "");
+        setIdAlamat(alamat.id_alamat ?? "");
+        setNamaAlamat(alamat.nama_alamat ?? "");
+        setAlamatLengkap(alamat.alamat_lengkap ?? "");
+        setIsMainAddress(Boolean(alamat.is_main_address) ?? false);
+      }
+    }
+
     const handleEdit = async (e) => {
       e.preventDefault();
       const newAlamat = {
@@ -17,8 +27,6 @@ const UpdateAlamatModal = ({ alamat, onEdit }) => {
         alamat_lengkap: alamatLengkap,
         is_main_address: isMainAddress
       }
-
-    //   console.log(newAlamat);
       
       if(onEdit){
         await onEdit(newAlamat);
@@ -44,7 +52,7 @@ const UpdateAlamatModal = ({ alamat, onEdit }) => {
             <div className="modal-content">
               <div className="modal-header">
                 <h1 className="modal-title fs-5" id="exampleModalLabel">Tambah Alamat</h1>
-                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={resetForm}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -64,7 +72,7 @@ const UpdateAlamatModal = ({ alamat, onEdit }) => {
 
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={resetForm}>Batal</button>
                 <button type="submit" className="btn btn-success">Edit</button>
               </div>
             </div>

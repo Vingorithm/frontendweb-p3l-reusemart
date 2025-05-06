@@ -1,7 +1,7 @@
 import React from 'react';
 
-const OwnerPage = () => {
+const DaftarBarang = () => {
   return <div>Owner Page (Kosong)</div>;
 };
 
-export default OwnerPage;
+export default DaftarBarang;

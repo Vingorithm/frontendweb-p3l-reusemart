@@ -5,9 +5,12 @@ import TopNavigation from "../../components/navigation/TopNavigation";
 import ToastNotification from "../../components/toast/ToastNotification";
 import PaginationComponent from "../../components/pagination/Pagination";
 import { GetAllPenitipan, GetPenitipanById } from '../../clients/PenitipanService';
+import { GetAllDonasiBarang, GetDonasiBarangById } from '../../clients/DonasiBarangService';
+import { GetAllRequestDonasi, GetRequestDonasiById } from '../../clients/RequestDonasiService';
+import { GetAllOrganisasiAmal, GetOrganisasiAmalById } from '../../clients/OrganisasiAmalService';
 
 const ProdukDisumbangkanPage = () => {
-  const [penitipanList, setPenitipanList] = useState([]);
+  const [donasiBarangList, setDonasiBarangList] = useState([]);
   const [filteredList, setFilteredList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,19 +22,14 @@ const ProdukDisumbangkanPage = () => {
   const [toastType, setToastType] = useState('success');
 
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [currentPenitipan, setCurrentPenitipan] = useState({
-    id_penitipan: '',
+  const [currentDonasi, setCurrentDonasi] = useState({
+    id_donasi_barang: '',
+    id_request_donasi: '',
+    id_owner: '',
     id_barang: '',
-    tanggal_awal_penitipan: '',
-    tanggal_akhir_penitipan: '',
-    tanggal_batas_pengambilan: '',
-    perpanjangan: 0,
-    status_penitipan: '',
     tanggal_donasi: '',
-    penerima_donasi: '',
     Barang: {
       id_barang: '',
-      id_penitip: '',
       nama: '',
       gambar: '',
       harga: 0,
@@ -39,34 +37,40 @@ const ProdukDisumbangkanPage = () => {
       tanggal_garansi: '',
       berat: 0,
       status_qc: '',
-      kategori_barang: '',
-      Penitip: {
-        id_penitip: '',
-        nama_penitip: '',
-        total_poin: 0,
+      kategori_barang: ''
+    },
+    RequestDonasi: {
+      id_request_donasi: '',
+      id_organisasi: '',
+      deskripsi_request: '',
+      tanggal_request: '',
+      status_request: '',
+      OrganisasiAmal: {
+        id_organisasi: '',
+        nama_organisasi: '',
+        alamat: '',
         tanggal_registrasi: '',
         Akun: {
           id_akun: '',
           email: '',
-          profile_picture: '',
-          role: ''
+          profile_picture: ''
         }
+      }
+    },
+    Owner: {
+      id_owner: '',
+      nama_owner: '',
+      Akun: {
+        id_akun: '',
+        email: '',
+        profile_picture: ''
       }
     }
   });
 
   useEffect(() => {
-    fetchPenitipanData();
+    fetchDonasiBarangData();
   }, []);
-
-  useEffect(() => {
-    if (penitipanList.length > 0) {
-      const donatedItems = penitipanList.filter(item => 
-        item.status_penitipan === "Didonasikan"
-      );
-      setFilteredList(donatedItems);
-    }
-  }, [penitipanList]);
 
   const showNotification = (message, type = 'success') => {
     setToastMessage(message);
@@ -75,18 +79,48 @@ const ProdukDisumbangkanPage = () => {
     setTimeout(() => setShowToast(false), 5000);
   };
 
-  const fetchPenitipanData = async () => {
+  const fetchDonasiBarangData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching all penitipan data...');
-      const response = await GetAllPenitipan();
-      console.log('Penitipan data fetched successfully:', response.data);
-      setPenitipanList(response.data || []);
+      console.log('Fetching all donasi barang data...');
+      const response = await GetAllDonasiBarang();
+      console.log('Donasi Barang data fetched successfully:', response.data);
+      
+      const enhancedData = await Promise.all(response.data.map(async (donasi) => {
+        try {
+          // Get Request Donasi details to get organization info
+          const requestDonasiResponse = await GetRequestDonasiById(donasi.id_request_donasi);
+          const requestDonasi = requestDonasiResponse.data;
+          
+          // Get Organization details
+          const organisasiResponse = await GetOrganisasiAmalById(requestDonasi.id_organisasi);
+          const organisasi = organisasiResponse.data;
+          
+          // Get Barang details
+          const barangResponse = await fetch(`http://localhost:3000/api/barang/${donasi.id_barang}`);
+          const barang = await barangResponse.json();
+          
+          return {
+            ...donasi,
+            RequestDonasi: {
+              ...requestDonasi,
+              OrganisasiAmal: organisasi
+            },
+            Barang: barang
+          };
+        } catch (error) {
+          console.error('Error fetching related data:', error);
+          return donasi;
+        }
+      }));
+      
+      setDonasiBarangList(enhancedData || []);
+      setFilteredList(enhancedData || []);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching penitipan data:', error);
-      setError('Failed to load penitipan data. Please try again.');
-      showNotification('Failed to load penitipan data. Please try again.', 'danger');
+      console.error('Error fetching donasi barang data:', error);
+      setError('Failed to load donasi barang data. Please try again.');
+      showNotification('Failed to load donasi barang data. Please try again.', 'danger');
       setLoading(false);
     }
   };
@@ -98,34 +132,38 @@ const ProdukDisumbangkanPage = () => {
 
   const handleViewDetails = async (id) => {
     try {
-      console.log(`Fetching penitipan details for ID: ${id}`);
-      const response = await GetPenitipanById(id);
-      const penitipanData = response.data;
-      console.log('Penitipan details fetched successfully:', penitipanData);
+      console.log(`Fetching donasi barang details for ID: ${id}`);
+      const response = await GetDonasiBarangById(id);
+      const donasiData = response.data;
+      console.log('Donasi details fetched successfully:', donasiData);
+      const requestResponse = await GetRequestDonasiById(donasiData.id_request_donasi);
+      const organisasiResponse = await GetOrganisasiAmalById(requestResponse.data.id_organisasi);
       
-      setCurrentPenitipan({
-        ...penitipanData,
-        tanggal_awal_penitipan: penitipanData.tanggal_awal_penitipan ? penitipanData.tanggal_awal_penitipan.split('T')[0] : '',
-        tanggal_akhir_penitipan: penitipanData.tanggal_akhir_penitipan ? penitipanData.tanggal_akhir_penitipan.split('T')[0] : '',
-        tanggal_batas_pengambilan: penitipanData.tanggal_batas_pengambilan ? penitipanData.tanggal_batas_pengambilan.split('T')[0] : '',
-        tanggal_donasi: penitipanData.tanggal_donasi ? penitipanData.tanggal_donasi.split('T')[0] : ''
+      setCurrentDonasi({
+        ...donasiData,
+        tanggal_donasi: donasiData.tanggal_donasi ? donasiData.tanggal_donasi.split('T')[0] : '',
+        RequestDonasi: {
+          ...requestResponse.data,
+          tanggal_request: requestResponse.data.tanggal_request ? requestResponse.data.tanggal_request.split('T')[0] : '',
+          OrganisasiAmal: organisasiResponse.data
+        }
       });
       
       setShowDetailModal(true);
     } catch (error) {
-      console.error('Error fetching penitipan details:', error);
-      setError('Failed to load penitipan details. Please try again.');
-      showNotification('Failed to load penitipan details. Please try again.', 'danger');
+      console.error('Error fetching donasi details:', error);
+      setError('Failed to load donasi details. Please try again.');
+      showNotification('Failed to load donasi details. Please try again.', 'danger');
     }
   };
 
   const searchedItems = filteredList.filter(item => {
     return (
-      (item.id_penitipan && item.id_penitipan.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.id_donasi_barang && item.id_donasi_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.id_barang && item.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (item.Barang?.nama && item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.Barang?.Penitip?.nama_penitip && item.Barang.Penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.penerima_donasi && item.penerima_donasi.toLowerCase().includes(searchTerm.toLowerCase()))
+      (item.RequestDonasi?.OrganisasiAmal?.nama_organisasi && 
+        item.RequestDonasi.OrganisasiAmal.nama_organisasi.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -174,7 +212,7 @@ const ProdukDisumbangkanPage = () => {
         <Row className="mb-4 align-items-center">
           <Col>
             <h2 className="mb-0 fw-bold" style={{ color: '#03081F' }}>Barang Yang Telah Didonasikan</h2>
-            <p className="text-muted mt-1">Daftar barang yang sudah disalurkan sebagai donasi</p>
+            <p className="text-muted mt-1">Daftar barang yang sudah disalurkan sebagai donasi dan organisasi penerimanya</p>
           </Col>
         </Row>
 
@@ -187,7 +225,7 @@ const ProdukDisumbangkanPage = () => {
                   <i className="bi bi-search search-icon"></i>
                   <Form.Control
                     type="search"
-                    placeholder="Cari ID penitipan, nama barang, penerima..."
+                    placeholder="Cari ID donasi, nama barang, organisasi penerima..."
                     value={searchTerm}
                     onChange={handleSearchChange}
                     className="search-input"
@@ -201,7 +239,7 @@ const ProdukDisumbangkanPage = () => {
                 <div className="spinner-border" style={{ color: '#028643' }} role="status">
                   <span className="visually-hidden">Loading...</span>
                 </div>
-                <p className="mt-3 text-muted">Memuat data penitipan...</p>
+                <p className="mt-3 text-muted">Memuat data donasi barang...</p>
               </div>
             ) : currentItems.length === 0 ? (
               <div className="text-center py-5">
@@ -211,14 +249,16 @@ const ProdukDisumbangkanPage = () => {
             ) : (
               <>
                 {currentItems.map((item) => (
-                  <Card key={item.id_penitipan} className="mb-3 border penitipan-card">
+                  <Card key={item.id_donasi_barang} className="mb-3 border penitipan-card">
                     <Card.Body className="p-3">
                       <Row className="align-items-center">
                         <Col xs={12} md={2} className="mb-3 mb-md-0">
                           <div className="item-image-container">
                             {item.Barang?.gambar ? (
                               <img 
-                                src={item.Barang.gambar.split(',')[1].trim()} 
+                                src={item.Barang.gambar.includes(',') ? 
+                                  item.Barang.gambar.split(',')[1].trim() : 
+                                  item.Barang.gambar} 
                                 alt={item.Barang.nama} 
                                 className="item-image" 
                               />
@@ -231,9 +271,9 @@ const ProdukDisumbangkanPage = () => {
                         </Col>
                         <Col xs={12} md={7}>
                           <div className="mb-1">
-                            <span className="penitipan-id">#{item.id_penitipan}</span>
+                            <span className="penitipan-id">#{item.id_donasi_barang}</span>
                             <span className="ms-2 donated-badge">
-                              {item.status_penitipan || 'Unknown'}
+                              Didonasikan
                             </span>
                           </div>
                           
@@ -242,25 +282,29 @@ const ProdukDisumbangkanPage = () => {
                           </h5>
                           
                           <div className="mb-1">
-                            <span className="text-muted">Pemilik: </span>
-                            <span>{item.Barang?.Penitip?.nama_penitip || "-"}</span>
-                          </div>
-                          
-                          <div className="mb-1">
                             <span className="text-muted">Tanggal Donasi: </span>
                             <span>{formatDate(item.tanggal_donasi) || "-"}</span>
                           </div>
                           
                           <div className="mb-1">
                             <span className="text-muted">Penerima: </span>
-                            <span className="fw-bold">{item.penerima_donasi || "-"}</span>
+                            <span className="fw-bold">
+                              {item.RequestDonasi?.OrganisasiAmal?.nama_organisasi || "-"}
+                            </span>
+                          </div>
+                          
+                          <div className="mb-1">
+                            <span className="text-muted">Status Request: </span>
+                            <span className={`status-badge ${item.RequestDonasi?.status_request === 'Selesai' ? 'success' : 'pending'}`}>
+                              {item.RequestDonasi?.status_request || "-"}
+                            </span>
                           </div>
                         </Col>
                         <Col xs={12} md={3} className="text-md-end mt-3 mt-md-0">
                           <Button 
                             variant="primary"
                             className="view-btn"
-                            onClick={() => handleViewDetails(item.id_penitipan)}
+                            onClick={() => handleViewDetails(item.id_donasi_barang)}
                           >
                             View Details
                           </Button>
@@ -294,47 +338,38 @@ const ProdukDisumbangkanPage = () => {
           <div className="mb-4">
             <h5 className="border-bottom pb-2 mb-3">Informasi Barang</h5>
             <Row className="mb-3">
-              <Col md={4} className="text-muted">ID Penitipan:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.id_penitipan || '-'}</Col>
+              <Col md={4} className="text-muted">ID Donasi Barang:</Col>
+              <Col md={8} className="fw-bold">{currentDonasi.id_donasi_barang || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">ID Barang:</Col>
-              <Col md={8}>{currentPenitipan.id_barang || '-'}</Col>
+              <Col md={8}>{currentDonasi.id_barang || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Nama Barang:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.Barang?.nama || '-'}</Col>
+              <Col md={8} className="fw-bold">{currentDonasi.Barang?.nama || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Kategori:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.kategori_barang || '-'}</Col>
+              <Col md={8}>{currentDonasi.Barang?.kategori_barang || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Harga:</Col>
-              <Col md={8}>{formatCurrency(currentPenitipan.Barang?.harga || 0)}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Status:</Col>
-              <Col md={8}>
-                <span className="donated-badge">
-                  {currentPenitipan.status_penitipan || 'Unknown'}
-                </span>
-              </Col>
+              <Col md={8}>{formatCurrency(currentDonasi.Barang?.harga || 0)}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Berat:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.berat || 0} kg</Col>
+              <Col md={8}>{currentDonasi.Barang?.berat || 0} kg</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Status QC:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.status_qc || '-'}</Col>
+              <Col md={8}>{currentDonasi.Barang?.status_qc || '-'}</Col>
             </Row>
           </div>
           
@@ -343,65 +378,60 @@ const ProdukDisumbangkanPage = () => {
             <h5 className="border-bottom pb-2 mb-3">Informasi Donasi</h5>
             <Row className="mb-3">
               <Col md={4} className="text-muted">Tanggal Donasi:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_donasi) || '-'}</Col>
+              <Col md={8}>{formatDate(currentDonasi.tanggal_donasi) || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
-              <Col md={4} className="text-muted">Penerima Donasi:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.penerima_donasi || '-'}</Col>
+              <Col md={4} className="text-muted">ID Request Donasi:</Col>
+              <Col md={8}>{currentDonasi.id_request_donasi || '-'}</Col>
+            </Row>
+            
+            <Row className="mb-3">
+              <Col md={4} className="text-muted">Tanggal Request:</Col>
+              <Col md={8}>{formatDate(currentDonasi.RequestDonasi?.tanggal_request) || '-'}</Col>
+            </Row>
+            
+            <Row className="mb-3">
+              <Col md={4} className="text-muted">Status Request:</Col>
+              <Col md={8}>
+                <span className={`status-badge ${currentDonasi.RequestDonasi?.status_request === 'Selesai' ? 'success' : 'pending'}`}>
+                  {currentDonasi.RequestDonasi?.status_request || '-'}
+                </span>
+              </Col>
+            </Row>
+            
+            <Row className="mb-3">
+              <Col md={4} className="text-muted">Deskripsi Request:</Col>
+              <Col md={8}>{currentDonasi.RequestDonasi?.deskripsi_request || '-'}</Col>
             </Row>
           </div>
           
-          {/* Penitipan Information Section */}
-          <div className="mb-4">
-            <h5 className="border-bottom pb-2 mb-3">Informasi Masa Penitipan</h5>
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Tanggal Awal:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_awal_penitipan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Tanggal Akhir:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_akhir_penitipan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Batas Pengambilan:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_batas_pengambilan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Perpanjangan:</Col>
-              <Col md={8}>{currentPenitipan.perpanjangan || 0} kali</Col>
-            </Row>
-          </div>
-          
-          {/* Owner Information Section */}
+          {/* Organization Information Section */}
           <div>
-            <h5 className="border-bottom pb-2 mb-3">Informasi Pemilik</h5>
+            <h5 className="border-bottom pb-2 mb-3">Informasi Organisasi Penerima</h5>
             <Row className="mb-3">
-              <Col md={4} className="text-muted">ID Penitip:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.id_penitip || '-'}</Col>
+              <Col md={4} className="text-muted">ID Organisasi:</Col>
+              <Col md={8}>{currentDonasi.RequestDonasi?.OrganisasiAmal?.id_organisasi || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
-              <Col md={4} className="text-muted">Nama Penitip:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.Barang?.Penitip?.nama_penitip || '-'}</Col>
+              <Col md={4} className="text-muted">Nama Organisasi:</Col>
+              <Col md={8} className="fw-bold">{currentDonasi.RequestDonasi?.OrganisasiAmal?.nama_organisasi || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Email:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.Akun?.email || '-'}</Col>
+              <Col md={8}>{currentDonasi.RequestDonasi?.OrganisasiAmal?.Akun?.email || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
-              <Col md={4} className="text-muted">Total Poin:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.total_poin || 0} poin</Col>
+              <Col md={4} className="text-muted">Alamat:</Col>
+              <Col md={8}>{currentDonasi.RequestDonasi?.OrganisasiAmal?.alamat || '-'}</Col>
             </Row>
             
             <Row className="mb-3">
               <Col md={4} className="text-muted">Terdaftar Sejak:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.Barang?.Penitip?.tanggal_registrasi) || '-'}</Col>
+              <Col md={8}>{formatDate(currentDonasi.RequestDonasi?.OrganisasiAmal?.tanggal_registrasi) || '-'}</Col>
             </Row>
           </div>
         </Modal.Body>
@@ -446,6 +476,23 @@ const ProdukDisumbangkanPage = () => {
           border-radius: 10px;
           font-weight: 400;
           font-size: 0.75rem;
+        }
+        
+        .status-badge {
+          padding: 3px 7px;
+          border-radius: 10px;
+          font-weight: 400;
+          font-size: 0.75rem;
+          color: white;
+        }
+        
+        .status-badge.success {
+          background-color: #28a745;
+        }
+        
+        .status-badge.pending {
+          background-color: #ffc107;
+          color: #212529;
         }
         
         .item-name {

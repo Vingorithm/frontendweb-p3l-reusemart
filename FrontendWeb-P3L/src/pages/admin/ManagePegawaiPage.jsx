@@ -212,19 +212,15 @@ const ManagePegawaiPage = () => {
         formData.append('password', currentPegawai.akun.password || 'defaultPassword');
         formData.append('role', currentPegawai.akun.role);
         
-        console.log(profilePicture);
-        console.log('Data form data', formData);
         if (profilePicture) {
           formData.append('profile_picture', profilePicture);
-        } else {
-          formData.append('profile_picture', defaultAvatar);
         }
-        console.log('Data form data', formData);
         
         const response = await CreatePegawai(formData);
         console.log('Employee created successfully:', response.data);
         showNotification('Pegawai berhasil ditambahkan!', 'success');
       } else {
+        // For updating existing employee
         console.log('Updating employee with ID:', currentPegawai.id_pegawai, {
           nama_pegawai: currentPegawai.nama_pegawai,
           tanggal_lahir: currentPegawai.tanggal_lahir,
@@ -234,42 +230,28 @@ const ManagePegawaiPage = () => {
           has_new_profile_picture: !!profilePicture
         });
         
-        const updateData = {
-          nama_pegawai: currentPegawai.nama_pegawai,
-          tanggal_lahir: currentPegawai.tanggal_lahir,
-          akun: {
-            email: currentPegawai.akun.email,
-            role: currentPegawai.akun.role
-          }
-        };
+        const formData = new FormData();
         
+        // Add basic employee data
+        formData.append('nama_pegawai', currentPegawai.nama_pegawai);
+        formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
+        
+        // Add account info
+        formData.append('email', currentPegawai.akun.email);
+        formData.append('role', currentPegawai.akun.role);
+        
+        // Add password if reset is requested
         if (resetPassword && newPassword) {
-          updateData.akun.password = newPassword;
-          console.log('Password reset included in update');
+          formData.append('password', newPassword);
         }
         
+        // Add profile picture if selected
         if (profilePicture) {
-          console.log('Profile picture included in update');
-          const formData = new FormData();
-          
-          formData.append('nama_pegawai', updateData.nama_pegawai);
-          formData.append('tanggal_lahir', updateData.tanggal_lahir);
-          formData.append('email', updateData.akun.email);
-          formData.append('role', updateData.akun.role);
-          
-          if (resetPassword && newPassword) {
-            formData.append('password', updateData.akun.password);
-          }
-          
           formData.append('profile_picture', profilePicture);
-          
-          const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
-          console.log('Employee updated successfully with new profile picture:', response.data);
-        } else {
-          const response = await UpdatePegawai(currentPegawai.id_pegawai, updateData);
-          console.log('Employee updated successfully:', response.data);
         }
         
+        const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
+        console.log('Employee updated successfully:', response.data);
         showNotification('Data pegawai berhasil diperbarui!', 'success');
       }
       

@@ -15,4 +15,4 @@ export const DeleteRequestDonasi = (id) =>
 
 export const UpdateStatusRequestDonasi = (id, newStatus) => {
     return apiClient.put(ENDPOINTS.UPDATE_REQUEST_DONASI(id), { status_request: newStatus });
-  };
+};

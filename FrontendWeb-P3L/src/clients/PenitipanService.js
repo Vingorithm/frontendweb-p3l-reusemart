@@ -16,3 +16,6 @@ export const DeletePenitipan = (id) =>
 export const UpdateStatusPenitipan = (id, newStatus) => {
     return apiClient.put(ENDPOINTS.UPDATE_PENITIPAN(id), { status_penitipan: newStatus });
 };
+
+export const CreatePenitipan = (data) => 
+    apiClient.post(ENDPOINTS.CREATE_PENITIPAN, data);

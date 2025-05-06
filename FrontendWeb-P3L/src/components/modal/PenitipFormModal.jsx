@@ -27,15 +27,15 @@ const PenitipFormModal = ({ show, handleClose, onSuccess }) => {
       const data = new FormData();
       data.append("nama_penitip", formData.nama_penitip);
       data.append("nomor_ktp", formData.nomor_ktp);
-      data.append("foto_ktp", formData.foto_ktp); // match with multer field name
-      data.append("profile_picture", formData.profile_picture); // match with multer field name
-      data.append("akun[email]", formData.email); // nested akun object
+      data.append("foto_ktp", formData.foto_ktp); 
+      data.append("profile_picture", formData.profile_picture);
+      data.append("akun[email]", formData.email); 
       data.append("akun[password]", formData.password);
 
       await AddPenitip(data);
 
-      onSuccess();     // Refresh list
-      handleClose();   // Close modal
+      onSuccess();     
+      handleClose();   
     } catch (error) {
       console.error("Gagal menambah penitip:", error);
       alert("Gagal menambah penitip. Cek kembali inputan atau server.");

@@ -144,6 +144,10 @@ const ManageAlamat = () => {
         }));
     }    
 
+    useEffect(() => {
+        searchAlamat();
+    }, [dataAlamat]);
+
     return (
         <main className="w-75 mx-auto mb-5 mt-8 px-4">
             <h1 className="fs-2 fw-bold mb-6">Halaman Kelola Alamat</h1>

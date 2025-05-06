@@ -3,7 +3,8 @@ export const ENDPOINTS = {
     REGISTER: "/akun/register",
     LOGIN: "/akun/login", 
     LOGOUT: "/akun/logout", 
-    FORGOT_PASSWORD: "/akun/forgot-password",
+    CHANGE_PASSWORD: (id) => `/akun/change-password/${id}`,
+    SEND_VERIFICATION_EMAIL: "/akun/send-verification-email",
 
     // Alamat Pembeli
     GET_ALL_ALAMAT_PEMBELI: "/alamat-pembeli",

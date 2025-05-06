@@ -19,7 +19,6 @@ import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
 import PenitipProfile from "../pages/penitip/PenitipProfile";
 import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
-import ResetPassword from "../pages/ResetPassword";
 import DetailBarangPage from "../pages/DetailBarang";
 import DiskusiProdukPage from "../pages/DiskusiProduk";
 
@@ -46,12 +45,13 @@ import BuktiTf from "../pages/cs/BuktiTf";
 import Diskusi from "../pages/cs/Diskusi";
 import Merchandise from "../pages/cs/Merchandise";
 import HistoryMerch from "../pages/cs/HistoryMerch";
+import ForgotPassword from "../pages/ForgotPassword";
 
 const mainRoutes = [
   { path: "/", element: <HomePage /> },
 
   // Halaman Reset Password 
-  { path: "/reset-password", element: <ResetPassword /> },
+  { path: "/forgot-password", element: <ForgotPassword /> },
 
   // Protected Routes for Owner
   {

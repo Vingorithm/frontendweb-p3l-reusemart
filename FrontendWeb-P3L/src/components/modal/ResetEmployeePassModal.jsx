@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { UpdatePegawai } from "../../clients/PegawaiService";
+import { ChangePassword } from "../../clients/AkunService";
 
 const ResetEmployeePassModal = ({ pegawai }) => {
 
@@ -7,9 +7,12 @@ const ResetEmployeePassModal = ({ pegawai }) => {
 
     const resetPassword = async () => {
       const newPass = new Date(dataPegawai.tanggal_lahir).toLocaleDateString('id-ID');
-      dataPegawai.Akun.password = newPass;
-      const response = await UpdatePegawai(dataPegawai.id_pegawai, dataPegawai);
-      console.log("data pegawai", dataPegawai);
+      const newData = {
+        newPassword: newPass,
+      }
+      
+      const response = await ChangePassword(dataPegawai.id_akun, newData);
+      
       if(response) {
         const modal = bootstrap.Modal.getInstance(document.getElementById('reset-emmployee-pass-modal'));
         modal.hide();

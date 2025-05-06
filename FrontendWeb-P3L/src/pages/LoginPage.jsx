@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "../api/authService";
 import { decodeToken } from "../utils/jwtUtils";
 import LoginRegister from '../components/form/LoginRegister';
+import ForgotPasswordModal from '../components/modal/ForgotPasswordModal';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -98,6 +99,8 @@ const LoginPage = () => {
 
   return (
     <div className="login-page">
+      <ForgotPasswordModal />
+      
       <div className="container py-5">
         <LoginRegister onLoginSuccess={handleLoginSuccess} onRegisterSuccess={handleRegisterSuccess} />
       </div>

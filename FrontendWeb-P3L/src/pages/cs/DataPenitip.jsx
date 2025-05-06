@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import "bootstrap/dist/css/bootstrap.min.css";
 import { GetAllPenitip, DeletePenitip } from "../../clients/PenitipService"; 
-import { useNavigate } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa';
-import PenitipFormModal from "../../components/form/PenitipFormModal";
+import PenitipFormModal from "../../components/modal/PenitipFormModal";
+import EditPenitipFormModal from "../../components/modal/EditPenitipFormModal"; // Added import
 
 const styles = {
   container: {
@@ -45,7 +45,7 @@ const styles = {
     justifyContent: 'center',
     marginTop: '30px',
   },
-  searchContainerStyle : {
+  searchContainerStyle: {
     display: 'flex',
     justifyContent: 'space-between', 
     alignItems: 'center',
@@ -56,7 +56,7 @@ const styles = {
     transform: 'translateX(200%)',
     color: '#D9D9D9',
   },
-  searchInputStyle : {
+  searchInputStyle: {
     padding: '10px 15px 10px 40px',
     borderRadius: '25px',
     border: '1px solid #D9D9D9',
@@ -77,15 +77,21 @@ const styles = {
 
 const DataPenitip = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
   const [penitipList, setPenitipList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // Added state for edit modal
+  const [selectedPenitip, setSelectedPenitip] = useState(null); // Added state for selected penitip
 
   const handleModalClose = () => setShowModal(false);
   const handleModalOpen = () => setShowModal(true);
+  const handleEditModalClose = () => setShowEditModal(false); // Added handler for edit modal close
+  const handleEditModalOpen = (penitip) => { // Added handler for edit modal open
+    setSelectedPenitip(penitip);
+    setShowEditModal(true);
+  };
+
   const refreshData = async () => {
     const response = await GetAllPenitip();
     setPenitipList(response.data);
@@ -136,6 +142,12 @@ const DataPenitip = () => {
     return `${formattedDate} | ${formattedTime}`;
   };
 
+  const filteredPenitipList = penitipList.filter((penitip) =>
+    penitip.nama_penitip.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    penitip.Akun.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    penitip.id_penitip.toString().includes(searchQuery)
+  );
+
   return (
     <div style={styles.container}>
       <h2>Data Penitip</h2>
@@ -143,19 +155,21 @@ const DataPenitip = () => {
       <div className="col">
         <div style={styles.searchContainerStyle}>
           <FaSearch style={styles.searchIconStyle} />
-            <input
-                type="text"
-                placeholder='Cari Penitip..'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={styles.searchInputStyle}
-            />
-          <button style={styles.buttonStyle} onClick={handleModalOpen}>Tambah Penitip</button>
+          <input
+            type="text"
+            placeholder="Cari Penitip (Nama, Email, atau ID)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={styles.searchInputStyle}
+          />
+          <button style={styles.buttonStyle} onClick={handleModalOpen}>
+            Tambah Penitip
+          </button>
         </div>
-      </div>      
-      
+      </div>
+
       <div className="row">
-        {penitipList.map((penitip, index) => (
+        {filteredPenitipList.map((penitip, index) => (
           <div className="col-md-4" key={penitip.id_penitip}>
             <div className="card" style={styles.card}>
               <img
@@ -165,13 +179,40 @@ const DataPenitip = () => {
                 style={styles.cardImage}
               />
               <div className="card-body" style={styles.cardBody}>
-                <h5 className="card-title" style={styles.cardTitle}>{penitip.nama_penitip}</h5>
-                <p className="card-text" style={styles.cardText}>Rating: {penitip.rating} stars</p>
-                <p className="card-text" style={styles.cardText}>Total Points: {penitip.total_poin}</p>
-                <p className="card-text" style={styles.cardText}>Keuntungan: {penitip.keuntungan}</p>
-                <p className="card-text" style={styles.cardText}>Tanggal Registrasi: {formatDate(penitip.tanggal_registrasi)}</p>
-                <button className="btn btn-primary" style={styles.buttonPrimary} onClick={() => navigate(`/edit/${penitip.id_penitip}`)}>Edit</button>
-                <button className="btn btn-danger" onClick={() => handleDelete(penitip.id_penitip)}>Hapus</button>
+                <h5 className="card-title" style={styles.cardTitle}>
+                  {penitip.nama_penitip}
+                </h5>
+                <p className="card-text" style={styles.cardText}>
+                  Email: {penitip.Akun.email}
+                </p>
+                <p className="card-text" style={styles.cardText}>
+                  ID: {penitip.id_penitip}
+                </p>
+                <p className="card-text" style={styles.cardText}>
+                  Rating: {penitip.rating} stars
+                </p>
+                <p className="card-text" style={styles.cardText}>
+                  Total Points: {penitip.total_poin}
+                </p>
+                <p className="card-text" style={styles.cardText}>
+                  Keuntungan: {penitip.keuntungan}
+                </p>
+                <p className="card-text" style={styles.cardText}>
+                  Tanggal Registrasi: {formatDate(penitip.tanggal_registrasi)}
+                </p>
+                <button
+                  className="btn btn-primary"
+                  style={styles.buttonPrimary}
+                  onClick={() => handleEditModalOpen(penitip)} // Updated to open edit modal
+                >
+                  Edit
+                </button>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => handleDelete(penitip.id_penitip)}
+                >
+                  Hapus
+                </button>
               </div>
             </div>
           </div>
@@ -187,6 +228,12 @@ const DataPenitip = () => {
         </ul>
       </div>
       <PenitipFormModal show={showModal} handleClose={handleModalClose} onSuccess={refreshData} />
+      <EditPenitipFormModal
+        show={showEditModal}
+        handleClose={handleEditModalClose}
+        penitip={selectedPenitip}
+        onSuccess={refreshData}
+      /> {/* Added edit modal */}
     </div>
   );
 };

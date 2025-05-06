@@ -11,7 +11,7 @@ const EditPenitipFormModal = ({ show, handleClose, penitip, onSuccess }) => {
     profile_picture: null,
     keuntungan: "",
     rating: "",
-    badge: "0", // Default to '0'
+    badge: "",
     total_poin: "",
     tanggal_registrasi: "",
   });
@@ -26,8 +26,8 @@ const EditPenitipFormModal = ({ show, handleClose, penitip, onSuccess }) => {
         profile_picture: null,
         keuntungan: penitip.keuntungan || "",
         rating: penitip.rating || "",
-        badge: penitip.badge === 1 || penitip.badge === '1' ? '1' : '0', 
-        total_poin: penitip.total_poin !== undefined ? penitip.total_poin.toString() : "", 
+        badge: penitip.badge || "",
+        total_poin: penitip.total_poin || "",
         tanggal_registrasi: penitip.tanggal_registrasi
           ? new Date(penitip.tanggal_registrasi).toISOString().slice(0, 16)
           : "",

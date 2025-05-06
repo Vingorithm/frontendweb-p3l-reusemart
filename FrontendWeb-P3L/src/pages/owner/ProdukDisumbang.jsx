@@ -163,7 +163,6 @@ const ProdukDisumbangkanPage = () => {
         message={toastMessage} 
         type={toastType} 
       />
-      <TopNavigation userRole="Owner" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (
@@ -219,7 +218,7 @@ const ProdukDisumbangkanPage = () => {
                           <div className="item-image-container">
                             {item.Barang?.gambar ? (
                               <img 
-                                src={item.Barang.gambar} 
+                                src={item.Barang.gambar.split(',')[1].trim()} 
                                 alt={item.Barang.nama} 
                                 className="item-image" 
                               />
@@ -410,7 +409,7 @@ const ProdukDisumbangkanPage = () => {
           <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
             Close
           </Button>
-          <Link to="/donasi-history">
+          <Link to="/owner/rekap">
             <Button variant="success">
               Lihat History Donasi
             </Button>

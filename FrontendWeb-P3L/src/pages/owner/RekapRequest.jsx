@@ -178,7 +178,6 @@ const RekapRequest = () => {
         message={toastMessage} 
         type={toastType} 
       />
-      <TopNavigation userRole="Owner" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (

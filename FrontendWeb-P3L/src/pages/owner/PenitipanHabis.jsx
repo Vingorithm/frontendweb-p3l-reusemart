@@ -4,7 +4,13 @@ import { Link } from "react-router-dom";
 import TopNavigation from "../../components/navigation/TopNavigation";
 import ToastNotification from "../../components/toast/ToastNotification";
 import PaginationComponent from "../../components/pagination/Pagination";
-import { GetAllPenitipan, GetPenitipanById } from '../../clients/PenitipanService';
+import { GetAllPenitipan, GetPenitipanById, UpdatePenitipan } from '../../clients/PenitipanService';
+import DetailPenitipanHabis from '../../components/modal/DetailPenitipanHabisModal';
+import KonfirmasiDonasi from '../../components/modal/KonfirmasiDonasiModal';
+import PilihRequestDonasiModal from '../../components/modal/PilihRequestDonasiModal';
+import { decodeToken } from '../../utils/jwtUtils';
+import { GetPegawaiByAkunId } from '../../clients/PegawaiService';
+import { UpdateTotalPoinPenitip } from '../../clients/PenitipService';
 
 const PenitipanHabisPage = () => {
   const [penitipanList, setPenitipanList] = useState([]);
@@ -17,9 +23,13 @@ const PenitipanHabisPage = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [akun, setAkun] = useState(null);
+  const [owner, setOwner] = useState(null);
 
   // Modals state
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [showRequestDonasiModal, setShowRequestDonasiModal] = useState(false);
   const [currentPenitipan, setCurrentPenitipan] = useState({
     id_penitipan: '',
     id_barang: '',
@@ -53,22 +63,48 @@ const PenitipanHabisPage = () => {
       }
     }
   });
-  
-  const [showDonationModal, setShowDonationModal] = useState(false);
 
   useEffect(() => {
     fetchPenitipanData();
+    fetchCurrentUser();
   }, []);
 
   useEffect(() => {
-    // Filter penitipan items with status "Menunggu didonasikan"
     if (penitipanList.length > 0) {
-      const expiredItems = penitipanList.filter(item => 
-        item.status_penitipan === "Menunggu didonasikan"
-      );
+      const expiredItems = penitipanList
+        .filter(item => item.status_penitipan === "Menunggu didonasikan")
+        .map(item => {
+          const gambarArray = item.Barang?.gambar.split(',').map(g => g.trim()) || [];
+          const gambarKedua = gambarArray[1] || gambarArray[0] || '';
+          return {
+            ...item,
+          };
+        });
+  
+      console.log("Penitipan list (gambar displit): ", expiredItems);
       setFilteredList(expiredItems);
     }
-  }, [penitipanList]);
+  }, [penitipanList]);  
+
+  const fetchCurrentUser = async () => {
+    if(localStorage.getItem("authToken")) {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("Token tidak ditemukan");
+        
+        const decoded = decodeToken(token);
+        setAkun(decoded);
+        if (!decoded?.id) throw new Error("Invalid token structure");
+        if(decoded.role === "Owner") {
+          const response = await GetPegawaiByAkunId(decoded.id);
+          setOwner(response.data);
+        }
+      } catch (err) {
+        setError("Gagal memuat data user!");
+        console.error("Error:", err);
+      }
+    }
+  };
 
   const showNotification = (message, type = 'success') => {
     setToastMessage(message);
@@ -126,11 +162,49 @@ const PenitipanHabisPage = () => {
     setShowDonationModal(true);
   };
 
-  const handleDonate = () => {
-    showNotification(`Barang dengan ID ${currentPenitipan.id_barang} telah berhasil didonasikan!`, 'success');
+  const handleConfirmDonation = () => {
     setShowDonationModal(false);
-    fetchPenitipanData();
+    setShowRequestDonasiModal(true);
   };
+
+  const handleDonationSuccess = async () => {
+    try {
+      const hargaBarang = parseFloat(currentPenitipan.Barang.harga);
+      const poinTambahan = Math.floor(hargaBarang / 10000);
+  
+      const updatedPenitip = {
+        ...currentPenitipan.Barang.Penitip,
+        total_poin: currentPenitipan.Barang.Penitip.total_poin + poinTambahan,
+      };
+  
+      const updatedBarang = {
+        ...currentPenitipan.Barang,
+        Penitip: updatedPenitip,
+      };
+  
+      const updateData = {
+        ...currentPenitipan,
+        status_penitipan: "Didonasikan",
+        Barang: updatedBarang,
+      };
+  
+      console.log("Update Data:", updateData);
+  
+      await UpdatePenitipan(currentPenitipan.id_penitipan, updateData);
+      await UpdateTotalPoinPenitip(currentPenitipan.Barang.Penitip.id_penitip, currentPenitipan.Barang.Penitip.total_poin + poinTambahan);
+  
+      showNotification(
+        `Barang dengan ID ${currentPenitipan.id_barang} telah berhasil didonasikan! Penitip mendapatkan tambahan ${poinTambahan} poin.`,
+        'success'
+      );      
+      setShowRequestDonasiModal(false);
+      fetchPenitipanData(); // Refresh list
+    } catch (error) {
+      console.error('Error updating penitipan status:', error);
+      setError('Failed to update penitipan status. Please try again.');
+      showNotification('Failed to update penitipan status. Please try again.', 'danger');
+    }
+  };  
 
   const searchedItems = filteredList.filter(item => {
     return (
@@ -176,7 +250,6 @@ const PenitipanHabisPage = () => {
         message={toastMessage} 
         type={toastType} 
       />
-      <TopNavigation userRole="Owner" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (
@@ -232,7 +305,7 @@ const PenitipanHabisPage = () => {
                           <div className="item-image-container">
                             {item.Barang?.gambar ? (
                               <img 
-                                src={item.Barang.gambar} 
+                                src={item.Barang.gambar.split(',')[0].trim()} 
                                 alt={item.Barang.nama} 
                                 className="item-image" 
                               />
@@ -298,176 +371,29 @@ const PenitipanHabisPage = () => {
         </Row>
       </div>
 
-      {/* Detail Modal */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} centered size="lg">
-        <Modal.Header closeButton style={{ backgroundColor: '#028643', color: 'white' }}>
-          <Modal.Title>Detail Barang Penitipan</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-4">
-          {/* Item Information Section */}
-          <div className="mb-4">
-            <h5 className="border-bottom pb-2 mb-3">Informasi Barang</h5>
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">ID Penitipan:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.id_penitipan || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">ID Barang:</Col>
-              <Col md={8}>{currentPenitipan.id_barang || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Nama Barang:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.Barang?.nama || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Kategori:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.kategori_barang || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Harga:</Col>
-              <Col md={8}>{formatCurrency(currentPenitipan.Barang?.harga || 0)}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Status Penitipan:</Col>
-              <Col md={8}>
-                <span className="donation-badge">
-                  {currentPenitipan.status_penitipan || 'Unknown'}
-                </span>
-              </Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Berat:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.berat || 0} kg</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Status QC:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.status_qc || '-'}</Col>
-            </Row>
-          </div>
-          
-          {/* Penitipan Information Section */}
-          <div className="mb-4">
-            <h5 className="border-bottom pb-2 mb-3">Informasi Masa Penitipan</h5>
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Tanggal Awal:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_awal_penitipan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Tanggal Akhir:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_akhir_penitipan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Batas Pengambilan:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.tanggal_batas_pengambilan) || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Perpanjangan:</Col>
-              <Col md={8}>{currentPenitipan.perpanjangan || 0} kali</Col>
-            </Row>
-          </div>
-          
-          {/* Owner Information Section */}
-          <div>
-            <h5 className="border-bottom pb-2 mb-3">Informasi Pemilik</h5>
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">ID Penitip:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.id_penitip || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Nama Penitip:</Col>
-              <Col md={8} className="fw-bold">{currentPenitipan.Barang?.Penitip?.nama_penitip || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Email:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.Akun?.email || '-'}</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Total Poin:</Col>
-              <Col md={8}>{currentPenitipan.Barang?.Penitip?.total_poin || 0} poin</Col>
-            </Row>
-            
-            <Row className="mb-3">
-              <Col md={4} className="text-muted">Terdaftar Sejak:</Col>
-              <Col md={8}>{formatDate(currentPenitipan.Barang?.Penitip?.tanggal_registrasi) || '-'}</Col>
-            </Row>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-            Close
-          </Button>
-          <Button 
-            variant="success" 
-            onClick={() => handleDonateClick(currentPenitipan)}
-          >
-            Donasikan Barang
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* Detail Penitipan Modal */}
+      <DetailPenitipanHabis
+        show={showDetailModal}
+        onHide={() => setShowDetailModal(false)}
+        penitipan={currentPenitipan}
+        onDonateClick={handleDonateClick}
+      />
 
-      {/* Donation Confirmation Modal */}
-      <Modal show={showDonationModal} onHide={() => setShowDonationModal(false)} centered>
-        <Modal.Header closeButton style={{ backgroundColor: '#FC8A06', color: 'white' }}>
-          <Modal.Title>Konfirmasi Donasi</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-4">
-          <div className="text-center mb-4">
-            <i className="bi bi-gift-fill" style={{ fontSize: '3rem', color: '#FC8A06' }}></i>
-          </div>
-          
-          <p className="text-center">
-            Apakah Anda yakin ingin mendonasikan barang dengan nama <strong>{currentPenitipan.Barang?.nama || '-'}</strong>?
-          </p>
-          
-          <div className="donation-details p-3 bg-light rounded mb-3">
-            <Row className="mb-2">
-              <Col xs={5} className="text-muted">ID Penitipan:</Col>
-              <Col xs={7}>{currentPenitipan.id_penitipan}</Col>
-            </Row>
-            <Row className="mb-2">
-              <Col xs={5} className="text-muted">Nama Barang:</Col>
-              <Col xs={7} className="fw-bold">{currentPenitipan.Barang?.nama}</Col>
-            </Row>
-            <Row className="mb-2">
-              <Col xs={5} className="text-muted">Pemilik:</Col>
-              <Col xs={7}>{currentPenitipan.Barang?.Penitip?.nama_penitip}</Col>
-            </Row>
-            <Row>
-              <Col xs={5} className="text-muted">Nilai Barang:</Col>
-              <Col xs={7}>{formatCurrency(currentPenitipan.Barang?.harga || 0)}</Col>
-            </Row>
-          </div>
-          
-          <p className="text-muted small">
-            Barang yang telah didonasikan tidak dapat dikembalikan dan akan disalurkan ke pihak yang membutuhkan.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDonationModal(false)}>
-            Batal
-          </Button>
-          <Button 
-            variant="warning" 
-            style={{ backgroundColor: '#FC8A06', borderColor: '#FC8A06' }}
-            onClick={handleDonate}
-          >
-            Ya, Donasikan
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* Konfirmasi Donasi Modal */}
+      <KonfirmasiDonasi
+        show={showDonationModal}
+        onHide={() => setShowDonationModal(false)}
+        penitipan={currentPenitipan}
+        onConfirm={handleConfirmDonation}
+      />
+
+      {/* Pilih Request Donasi Modal */}
+      <PilihRequestDonasiModal
+        show={showRequestDonasiModal}
+        onHide={() => setShowRequestDonasiModal(false)}
+        penitipan={currentPenitipan}
+        onSuccess={handleDonationSuccess}
+      />
 
       <style jsx>{`
         .max-width-container {

@@ -6,7 +6,6 @@ import TopNavigation from "../../components/navigation/TopNavigation";
 const OwnerPage = () => {
   return (
     <Container fluid className="p-0 bg-white">
-      <TopNavigation userRole={"Owner"}/>
     </Container> 
   );
 };

@@ -26,3 +26,6 @@ export const DeletePenitip = async (id) => {
     const response = await apiClient.delete(ENDPOINTS.DELETE_PENITIP(id));
     return response;
 }
+
+export const UpdateTotalPoinPenitip = (id, newPoin) =>
+    apiClient.put(ENDPOINTS.UPDATE_PENITIP(id), { total_poin: newPoin });

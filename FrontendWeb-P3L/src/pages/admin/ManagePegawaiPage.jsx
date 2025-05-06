@@ -352,7 +352,6 @@ const ManagePegawaiPage = () => {
         message={toastMessage} 
         type={toastType} 
       />
-      <TopNavigation userRole="Admin" />
 
       <div className="max-width-container mx-auto pt-4 px-3">
         {error && (
@@ -422,6 +421,7 @@ const ManagePegawaiPage = () => {
                     onEdit={handleEditPegawai}
                     onDelete={handleDelete}
                     getRoleName={getRoleName}
+                    setSelectedEmployee={setCurrentPegawai}
                   />
                 ))}
 

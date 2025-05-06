@@ -6,7 +6,8 @@ const EmployeeCard = ({
   employee, 
   onEdit, 
   onDelete,
-  getRoleName 
+  getRoleName,
+  setSelectedEmployee
 }) => {
   const getProfilePicture = (employee) => {
     if (employee.Akun?.profile_picture) return employee.Akun.profile_picture;
@@ -42,7 +43,7 @@ const EmployeeCard = ({
           <Col xs={12} md={3} className="d-flex justify-content-center justify-content-md-end mt-3 mt-md-0">
             <div className="avatar-container">
               <img 
-                src={getProfilePicture(employee)} 
+                src={employee.Akun.profile_picture == "" ? "http://localhost:3000/uploads/profile_picture/default.jpg" : `http://localhost:3000/uploads/profile_picture/${employee.Akun.profile_picture}`} 
                 alt={employee.nama_pegawai || 'Employee Avatar'} 
                 className="employee-avatar"
                 onError={(e) => {e.target.src = defaultAvatar}}
@@ -56,6 +57,7 @@ const EmployeeCard = ({
             className="reset-btn me-2"
             type="button"
             data-bs-toggle="modal" data-bs-target="#reset-emmployee-pass-modal"
+            onClick={() => {setSelectedEmployee(employee)}}
           >
             Reset Password
           </Button>

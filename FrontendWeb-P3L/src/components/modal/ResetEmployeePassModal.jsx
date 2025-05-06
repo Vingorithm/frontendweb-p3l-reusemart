@@ -6,9 +6,14 @@ const ResetEmployeePassModal = ({ pegawai }) => {
     const [dataPegawai, setDataPegawai] = useState(null);
 
     const resetPassword = async () => {
-        const newPass = dataPegawai.tanggal_lahir;
-        dataPegawai.Akun.password = newPass;
-        await UpdatePegawai(dataPegawai.id_pegawai, dataPegawai);
+      const newPass = new Date(dataPegawai.tanggal_lahir).toLocaleDateString('id-ID');
+      dataPegawai.Akun.password = newPass;
+      const response = await UpdatePegawai(dataPegawai.id_pegawai, dataPegawai);
+      console.log("data pegawai", dataPegawai);
+      if(response) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('reset-emmployee-pass-modal'));
+        modal.hide();
+      }
     };
 
     useEffect(() => {
@@ -29,7 +34,7 @@ const ResetEmployeePassModal = ({ pegawai }) => {
         </div>
         <div className="modal-footer">
           <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-          <button type="button" className="btn btn-primary" onClick={resetPassword} data-bs-dismiss="modal" aria-label="Close">Reset</button>
+          <button type="button" className="btn btn-primary" onClick={resetPassword}>Reset</button>
         </div>
       </div>
     </div>

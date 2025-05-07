@@ -7,18 +7,19 @@ export const GetAllOrganisasiAmal = () =>
 export const GetOrganisasiAmalById = (id) =>
     apiClient.get(ENDPOINTS.SHOW_ORGANISASI_AMAL(id));
 
+export const GetOrganisasiAmalByAkun = (id) =>
+    apiClient.get(ENDPOINTS.GET_ORGANISASI_AMAL_BY_AKUN(id));
+
 export const UpdateOrganisasiAmal = (id, formData) => {
     const response = apiClient.put(ENDPOINTS.UPDATE_ORGANISASI_AMAL(id), formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
     }).then(response => {
-        // Menangani response jika sukses
-        return response.data; // Mengembalikan data response untuk digunakan lebih lanjut
+        return response.data;
     }).catch(error => {
-        // Menangani error jika request gagal
         console.error("Gagal mengupdate data organisasi amal:", error);
-        throw error; // Melempar error agar bisa ditangani di tempat lain
+        throw error; 
     });
     return response;
 }

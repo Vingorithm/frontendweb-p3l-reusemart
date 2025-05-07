@@ -3,8 +3,7 @@ export const ENDPOINTS = {
     REGISTER: "/akun/register",
     LOGIN: "/akun/login", 
     LOGOUT: "/akun/logout", 
-    CHANGE_PASSWORD: (id) => `/akun/change-password/${id}`,
-    SEND_VERIFICATION_EMAIL: "/akun/send-verification-email",
+    FORGOT_PASSWORD: "/akun/forgot-password",
 
     // Alamat Pembeli
     GET_ALL_ALAMAT_PEMBELI: "/alamat-pembeli",
@@ -35,6 +34,7 @@ export const ENDPOINTS = {
     SHOW_ORGANISASI_AMAL: (id) => `/organisasi-amal/${id}`,
     UPDATE_ORGANISASI_AMAL: (id) => `/organisasi-amal/${id}`,
     DELETE_ORGANISASI_AMAL: (id) => `/organisasi-amal/${id}`,
+    GET_ORGANISASI_AMAL_BY_AKUN: (id) => `/organisasi-amal/byIdAkun/${id}`,
 
     // Pegawai
     GET_ALL_PEGAWAI: "/pegawai",
@@ -117,6 +117,7 @@ export const ENDPOINTS = {
     SHOW_REQUEST_DONASI: (id) => `/request-donasi/${id}`,
     UPDATE_REQUEST_DONASI: (id) => `/request-donasi/${id}`,
     DELETE_REQUEST_DONASI: (id) => `/request-donasi/${id}`,
+    GET_REQUEST_DONASI_BY_ORGANISASI: (id) => `/request-donasi/byIdOrganisasi/${id}`,
 
     // Merchandise
     GET_ALL_MERCHANDISE: "/merchandise",

@@ -16,3 +16,11 @@ export const DeleteRequestDonasi = (id) =>
 export const UpdateStatusRequestDonasi = (id, newStatus) => {
     return apiClient.put(ENDPOINTS.UPDATE_REQUEST_DONASI(id), { status_request: newStatus });
 };
+
+export const GetRequestDonasiByOrganisasi = (id) =>
+    apiClient.get(ENDPOINTS.GET_REQUEST_DONASI_BY_ORGANISASI(id));
+
+export const AddRequestDonasi = (data) => {
+    return apiClient.post(ENDPOINTS.CREATE_REQUEST_DONASI, data);
+};
+    

@@ -17,6 +17,7 @@ import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
 import ManageOrganisasiPage from "../pages/admin/ManageOrganisasiPage";
 import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
 import PenitipProfile from "../pages/penitip/PenitipProfile";
+import PembeliProfile from "../pages/pembeli/PembeliProfile";
 import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
 import DetailBarangPage from "../pages/DetailBarang";
@@ -47,11 +48,39 @@ import Merchandise from "../pages/cs/Merchandise";
 import HistoryMerch from "../pages/cs/HistoryMerch";
 import ForgotPassword from "../pages/ForgotPassword";
 
+import { Navigate } from "react-router-dom"; 
+import { decodeToken } from "../utils/jwtUtils";
+
+const ProfileRedirect = () => {
+  const token = localStorage.getItem("authToken");
+  if (!token) return <Navigate to="/login" replace />;
+  const role = decodeToken(token)?.role;
+
+  switch (role) {
+    case "Pembeli":
+      return <Navigate to="/pembeli/profile" replace />;
+    case "Penitip":
+      return <Navigate to="/penitip/profile" replace />;
+    default:
+      return <div>Role not recognized</div>;
+  }
+};
+
 const mainRoutes = [
   { path: "/", element: <HomePage /> },
 
   // Halaman Reset Password 
   { path: "/forgot-password", element: <ForgotPassword /> },
+
+  //universal profile route
+  {
+    path: "/profile",
+    element: (
+      <ProtectedRoute allowedRoles={["Pembeli", "Penitip"]}>
+        <ProfileRedirect />
+      </ProtectedRoute>
+    ),
+  },
 
   // Protected Routes for Owner
   {
@@ -107,6 +136,7 @@ const mainRoutes = [
       </ProtectedRoute>
     ),
   },
+  { path: "/pembeli/profile", element: <PembeliProfile /> },
   { path: "/pembeli/alamat", element: <ManageAlamat /> },
 
   // Protected Route for Penitip

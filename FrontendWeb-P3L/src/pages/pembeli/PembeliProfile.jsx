@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Button } from "react-bootstrap";
-import axios from "axios";
+import { apiPembeli } from "../../clients/PembeliService";
+import { decodeToken } from '../../utils/jwtUtils';
 
 const PembeliProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -9,11 +10,11 @@ const PembeliProfile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("authToken");
-        
-        // Ganti ID ini dengan dinamis sesuai login user atau dari localStorage
-        const idPembeli = localStorage.getItem(token.id); 
-        const response = await axios.get(`/api/pembeli/${idPembeli}`);
-        setProfile(response.data);
+        const decoded = decodeToken(token);
+        const idAkun = decoded.id;
+
+        const dataPembeli = await apiPembeli.getPembeliByIdAkun(idAkun);
+        setProfile(dataPembeli);
       } catch (error) {
         console.error("Gagal mengambil data profil pembeli:", error);
       }
@@ -24,7 +25,7 @@ const PembeliProfile = () => {
 
   if (!profile) return <p>Memuat profil...</p>;
 
-  const { nama, total_poin, tanggal_registrasi, akun } = profile;
+  const { nama, total_poin, tanggal_registrasi, Akun: akun } = profile;
 
   const formatTanggal = (tanggal) => {
     const date = new Date(tanggal);
@@ -40,7 +41,11 @@ const PembeliProfile = () => {
       <h4 className="mb-3">Halaman Profil</h4>
       <Card className="d-flex flex-row align-items-center p-3 shadow-sm">
         <img
-          src={akun?.profile_picture || "/default-profile.jpg"}
+          src={
+            akun?.profile_picture
+              ? `http://localhost:3000/uploads/profile_picture/${akun.profile_picture}`
+              : "/default-profile.jpg"
+          }
           alt="Profile"
           className="rounded-circle"
           width="100"
@@ -49,7 +54,7 @@ const PembeliProfile = () => {
         <div className="ms-4 flex-grow-1">
           <h5 className="mb-1">{nama}</h5>
           <p className="mb-1 text-warning">{akun?.email}</p>
-          <p className="mb-1">Total_poin: {total_poin} Poin</p>
+          <p className="mb-1">Total poin: {total_poin} Poin</p>
           <small className="text-muted">
             Terdaftar sejak {formatTanggal(tanggal_registrasi)}
           </small>

@@ -15,13 +15,14 @@ import {
 import { GetAllBarang, CreateBarang, UpdateBarang, DeleteBarang } from '../../clients/BarangService';
 import { CreatePenitipan } from '../../clients/PenitipanService';
 import { GetAllPenitip } from '../../clients/PenitipService';
-import { GetAllPegawai } from '../../clients/PegawaiService';
+import { GetAllPegawai, GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
 import RoleSidebar from '../../components/navigation/Sidebar';
 import ToastNotification from "../../components/toast/ToastNotification";
 import PaginationComponent from '../../components/pagination/Pagination';
 import AddEditBarangModal from '../../components/modal/AddEditBarangModal';
 import BarangCard from '../../components/card/CardListBarang';
+import { data } from 'react-router-dom';
 
 const ManageBarang = () => {
   const [barangList, setBarangList] = useState([]);
@@ -41,15 +42,14 @@ const ManageBarang = () => {
   const [toastType, setToastType] = useState('success');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
-  
-  const token = localStorage.getItem("authToken");
-  const currentUser = decodeToken(token);
-  const loggedInPegawaiId = currentUser?.id_pegawai;
+  const [akun, setAkun] = useState(null);
+  const [pegawai, setPegawai] = useState(null);
+  const [loggedInPegawaiId, setLoggedInPegawaiId] = useState('');
  
   const [formData, setFormData] = useState({
     id_penitip: '',
     id_hunter: '',
-    id_pegawai_gudang: loggedInPegawaiId,
+    id_pegawai_gudang: '',
     nama: '',
     deskripsi: '',
     harga: '',
@@ -61,7 +61,7 @@ const ManageBarang = () => {
   });
 
   const kategoriOptions = [
-    'Elektronik', 'Furniture', 'Pakaian', 'Aksesoris', 'Mainan', 'Buku', 'Lainnya'
+    'Elektronik & Gadget', 'Pakaian & Aksesori', 'Perabotan Rumah Tangga', 'Buku, Alat Tulis, & Peralatan Sekolah', 'Hobi, Mainan, & Koleksi', 'Perlengkapan Bayi & Anak', 'Otomotif & Aksesori', 'Perlengkapan Taman & Outdoor', 'Peralatan Kantor & Industri', 'Kosmetik & Perawatan diri' 
   ];
   const statusQCOptions = ['Lulus', 'Tidak lulus'];
   const barangViews = [
@@ -78,7 +78,38 @@ const ManageBarang = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          throw new Error("Token tidak ditemukan");
+        }
+        
+        const decoded = decodeToken(token);
+        setAkun(decoded);
+        
+        if (!decoded?.id) {
+          throw new Error("Invalid token structure");
+        }
+        
+        if (decoded.role === "Pegawai Gudang") {
+          const response = await GetPegawaiByAkunId(decoded.id);
+          const dataPegawai = response.data;
+          setPegawai(dataPegawai);
+          setLoggedInPegawaiId(dataPegawai.id_pegawai);
+          setFormData(prevData => ({
+            ...prevData,
+            id_pegawai_gudang: dataPegawai.id_pegawai
+          }));
+        }
+      } catch (err) {
+        setError("Gagal memuat data user!");
+        console.error("Error:", err);
+      }
+    };
+
+    fetchUserData();
+    fetchData(); // Fetch initial data
   }, []);
 
   useEffect(() => {
@@ -99,10 +130,6 @@ const ManageBarang = () => {
         GetAllPenitip(),
         GetAllPegawai()
       ]);
-      
-      console.log(barangResponse.data);
-      console.log(penitipResponse.data);
-      console.log(pegawaiResponse.data);
 
       setBarangList(barangResponse.data);
       setPenitipList(penitipResponse.data);
@@ -141,7 +168,7 @@ const ManageBarang = () => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value === '' ? null : value
     });
   };
 
@@ -186,10 +213,11 @@ const ManageBarang = () => {
   };
 
   const openModal = (barang = null) => {
+    console.log('Id Pegawai: ', loggedInPegawaiId);
     if (barang) {
       setFormData({
         id_penitip: barang.id_penitip,
-        id_hunter: barang.id_hunter || '',
+        id_hunter: barang.id_hunter || null,
         id_pegawai_gudang: loggedInPegawaiId,
         nama: barang.nama,
         deskripsi: barang.deskripsi,
@@ -201,8 +229,6 @@ const ManageBarang = () => {
         kategori_barang: barang.kategori_barang
       });
       setCurrentBarang(barang);
-      
-      // Handle images from existing data
       if (barang.gambar) {
         const imageUrls = barang.gambar.split(',').map(img => img.trim());
         setImagePreview(imageUrls);
@@ -210,7 +236,6 @@ const ManageBarang = () => {
         setImagePreview([]);
       }
     } else {
-      // Add mode - reset form
       resetForm();
     }
     setShowModal(true);
@@ -246,7 +271,8 @@ const ManageBarang = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
+    // Validasi form
     if (!formData.id_penitip || !formData.nama || 
         !formData.deskripsi || !formData.harga || !formData.berat || !formData.kategori_barang) {
       setError('Harap isi semua field yang diperlukan!');
@@ -262,8 +288,11 @@ const ManageBarang = () => {
 
     try {
       const formDataObj = new FormData();
+      console.log('Form data: ', Object.fromEntries(formDataObj.entries()));
       Object.keys(formData).forEach(key => {
-        if (formData[key] !== null) {
+        if (key === 'id_hunter' && formData[key] === '') {
+          formDataObj.append(key, null);
+        } else if (formData[key] !== null && formData[key] !== undefined) {
           formDataObj.append(key, formData[key]);
         }
       });
@@ -272,13 +301,13 @@ const ManageBarang = () => {
           formDataObj.append('gambar', image);
         });
       }
-
+      
       let response;
       if (currentBarang) {
         response = await UpdateBarang(currentBarang.id_barang, formDataObj);
         showNotification('Data barang berhasil diperbarui!', 'success');
       } else {
-        // Create new barang
+        console.log('Form data: ', Object.fromEntries(formDataObj.entries()));
         response = await CreateBarang(formDataObj);
         try {
           const barangId = response.data.id_barang;
@@ -289,11 +318,10 @@ const ManageBarang = () => {
           showNotification('Barang berhasil ditambahkan, tetapi gagal membuat data penitipan!', 'warning');
         }
       }
-      
+
       setShowModal(false);
       resetForm();
       fetchData();
-      
     } catch (error) {
       console.error('Error submitting form:', error);
       setError('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.');

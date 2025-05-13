@@ -288,26 +288,35 @@ const ManageBarang = () => {
 
     try {
       const formDataObj = new FormData();
-      console.log('Form data: ', Object.fromEntries(formDataObj.entries()));
+      
+      // Fix: Better handling of form data, especially for id_hunter
       Object.keys(formData).forEach(key => {
-        if (key === 'id_hunter' && formData[key] === '') {
-          formDataObj.append(key, null);
+        if (key === 'id_hunter') {
+          // Don't append anything if it's empty or "null"
+          if (formData[key] !== '' && formData[key] !== 'null' && formData[key] !== null) {
+            formDataObj.append(key, formData[key]);
+          }
         } else if (formData[key] !== null && formData[key] !== undefined) {
           formDataObj.append(key, formData[key]);
         }
       });
+      
+      // Add images to form data
       if (selectedImages.length > 0) {
         selectedImages.forEach(image => {
           formDataObj.append('gambar', image);
         });
       }
       
+      // Debug the form data
+      console.log('Form data keys:', [...formDataObj.keys()]);
+      console.log('Form data entries:', [...formDataObj.entries()].map(entry => `${entry[0]}: ${entry[1]}`));
+      
       let response;
       if (currentBarang) {
         response = await UpdateBarang(currentBarang.id_barang, formDataObj);
         showNotification('Data barang berhasil diperbarui!', 'success');
       } else {
-        console.log('Form data: ', Object.fromEntries(formDataObj.entries()));
         response = await CreateBarang(formDataObj);
         try {
           const barangId = response.data.id_barang;

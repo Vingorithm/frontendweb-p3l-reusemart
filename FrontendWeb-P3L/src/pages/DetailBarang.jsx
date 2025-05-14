@@ -591,21 +591,26 @@ const DetailBarang = () => {
                   </div>
                 )}
 
-                <nav aria-label="Page navigation example" className='my-4'>
-                  <ul class="pagination justify-content-center">
-                    <li className={`page-item ${currentSection === 1 ? 'disabled' : ''}`}>
-                      <button className={`page-link ${currentSection === 1 ? '' : 'text-success'}`} onClick={() => setCurrentSection(currentSection - 1)} href="#diskusi-produk">Previous</button>
-                    </li>
-                    {[...Array(Math.ceil(diskusi.length / discussionPerPage))].map((_, index) => (
-                      <li className={`page-item ${currentSection === index + 1 ? 'active' : ''}`} key={index}>
-                        <button className={`page-link ${currentSection === index + 1 ? 'bg-success text-white border-success' : 'text-success'}`} onClick={() => setCurrentSection(index + 1)} href="#diskusi-produk">{index + 1}</button>
+                { diskusi.length == 0 ? <></> 
+                : 
+                <>
+                  <nav aria-label="Page navigation example" className='my-4'>
+                    <ul class="pagination justify-content-center">
+                      <li className={`page-item ${currentSection === 1 ? 'disabled' : ''}`}>
+                        <button className={`page-link ${currentSection === 1 ? '' : 'text-success'}`} onClick={() => setCurrentSection(currentSection - 1)} href="#diskusi-produk">Previous</button>
                       </li>
-                    ))}
-                    <li className={`page-item ${currentSection === (Math.ceil(diskusi.length/discussionPerPage)) ? 'disabled' : ''}`}>
-                      <button className={`page-link ${currentSection === (Math.ceil(diskusi.length/discussionPerPage)) ? '' : 'text-success'}`} onClick={() => setCurrentSection(currentSection + 1)} href="#diskusi-produk">Next</button>
-                    </li>
-                  </ul>
-                </nav>
+                      {[...Array(Math.ceil(diskusi.length / discussionPerPage))].map((_, index) => (
+                        <li className={`page-item ${currentSection === index + 1 ? 'active' : ''}`} key={index}>
+                          <button className={`page-link ${currentSection === index + 1 ? 'bg-success text-white border-success' : 'text-success'}`} onClick={() => setCurrentSection(index + 1)} href="#diskusi-produk">{index + 1}</button>
+                        </li>
+                      ))}
+                      <li className={`page-item ${currentSection === (Math.ceil(diskusi.length/discussionPerPage)) ? 'disabled' : ''}`}>
+                        <button className={`page-link ${currentSection === (Math.ceil(diskusi.length/discussionPerPage)) ? '' : 'text-success'}`} onClick={() => setCurrentSection(currentSection + 1)} href="#diskusi-produk">Next</button>
+                      </li>
+                    </ul>
+                  </nav>
+                </>}
+
 
                 <div className="text-center mt-4">
                   {

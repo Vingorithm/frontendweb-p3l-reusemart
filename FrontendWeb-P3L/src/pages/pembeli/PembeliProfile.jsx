@@ -665,6 +665,11 @@ const PembeliProfile = () => {
             <button style={sharedStyles.buttonSecondary}>
               <FaEdit /> Edit Profil
             </button>
+            <a href="/pembeli/alamat">
+              <button className="btn btn-success rounded-pill p-2 ms-2">
+                <i class="bi bi-house-door-fill"></i> Kelola Alamat
+              </button>
+            </a>
           </div>
         </div>
       )}

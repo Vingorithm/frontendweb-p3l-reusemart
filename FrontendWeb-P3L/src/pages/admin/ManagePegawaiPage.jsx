@@ -16,6 +16,7 @@ import RoleSidebar from "../../components/navigation/Sidebar";
 import EmployeeCard from "../../components/card/CardPegawai";
 import PaginationComponent from "../../components/pagination/Pagination";
 import ResetEmployeePassModal from '../../components/modal/ResetEmployeePassModal';
+import ConfirmationModal from "../../components/modal/ConfirmationModal";
 
 const ManagePegawaiPage = () => {
   const [pegawaiList, setPegawaiList] = useState([]);
@@ -45,6 +46,12 @@ const ManagePegawaiPage = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  
+  // Confirmation modal states
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState(null);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [confirmationTitle, setConfirmationTitle] = useState('');
 
   const roles = [
     { id: 'Pegawai Gudang', name: 'Pegawai Gudang' },
@@ -94,6 +101,7 @@ const ManagePegawaiPage = () => {
     setSelectedRole(role === selectedRole ? '' : role);
   };
 
+  // modal buat add, set semuanya kosong dulu
   const handleAddPegawai = () => {
     setModalType('add');
     setCurrentPegawai({
@@ -197,66 +205,41 @@ const ManagePegawaiPage = () => {
     try {
       if (modalType === 'add') {
         // For new employee creation
-        console.log('Creating new employee with data:', {
-          nama_pegawai: currentPegawai.nama_pegawai,
-          tanggal_lahir: currentPegawai.tanggal_lahir,
-          email: currentPegawai.akun.email,
-          role: currentPegawai.akun.role,
-          has_profile_picture: !!profilePicture
-        });
-        
-        const formData = new FormData();
-        formData.append('nama_pegawai', currentPegawai.nama_pegawai);
-        formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
-        formData.append('email', currentPegawai.akun.email);
-        formData.append('password', currentPegawai.akun.password || 'defaultPassword');
-        formData.append('role', currentPegawai.akun.role);
-        
-        if (profilePicture) {
-          formData.append('profile_picture', profilePicture);
+        if(currentPegawai.tanggal_lahir > Date.now()){
+          showNotification("Tanggal Lebih dari waktu saat ini!", 'danger');
+        } else {
+          console.log('Creating new employee with data:', {
+            nama_pegawai: currentPegawai.nama_pegawai,
+            tanggal_lahir: currentPegawai.tanggal_lahir,
+            email: currentPegawai.akun.email,
+            role: currentPegawai.akun.role,
+            has_profile_picture: !!profilePicture
+          });
+  
+          const formData = new FormData();
+          formData.append('nama_pegawai', currentPegawai.nama_pegawai);
+          formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
+          formData.append('email', currentPegawai.akun.email);
+          formData.append('password', currentPegawai.akun.password || 'defaultPassword');
+          formData.append('role', currentPegawai.akun.role);
+          
+          if (profilePicture) {
+            formData.append('profile_picture', profilePicture);
+          }
+          
+          const response = await CreatePegawai(formData);
+          console.log('Employee created successfully:', response.data);
+          showNotification('Pegawai berhasil ditambahkan!', 'success');
+          setShowModal(false);
+          fetchPegawai(); 
         }
-        
-        const response = await CreatePegawai(formData);
-        console.log('Employee created successfully:', response.data);
-        showNotification('Pegawai berhasil ditambahkan!', 'success');
       } else {
-        // For updating existing employee
-        console.log('Updating employee with ID:', currentPegawai.id_pegawai, {
-          nama_pegawai: currentPegawai.nama_pegawai,
-          tanggal_lahir: currentPegawai.tanggal_lahir,
-          email: currentPegawai.akun.email,
-          role: currentPegawai.akun.role,
-          reset_password: resetPassword,
-          has_new_profile_picture: !!profilePicture
-        });
-        
-        const formData = new FormData();
-        
-        // Add basic employee data
-        formData.append('nama_pegawai', currentPegawai.nama_pegawai);
-        formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
-        
-        // Add account info
-        formData.append('email', currentPegawai.akun.email);
-        formData.append('role', currentPegawai.akun.role);
-        
-        // Add password if reset is requested
-        if (resetPassword && newPassword) {
-          formData.append('password', newPassword);
-        }
-        
-        // Add profile picture if selected
-        if (profilePicture) {
-          formData.append('profile_picture', profilePicture);
-        }
-        
-        const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
-        console.log('Employee updated successfully:', response.data);
-        showNotification('Data pegawai berhasil diperbarui!', 'success');
+        // Show confirmation modal for update
+        setConfirmationTitle('Update Pegawai');
+        setConfirmationMessage('Yakin ingin melakukan update pegawai?');
+        setConfirmationAction(() => updatePegawai);
+        setShowConfirmationModal(true);
       }
-      
-      setShowModal(false);
-      fetchPegawai();
     } catch (error) {
       console.error('Error saving pegawai data:', error);
       console.log('Error details:', {
@@ -273,33 +256,87 @@ const ManagePegawaiPage = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
-      try {
-        console.log(`Deleting employee with ID: ${id}`);
-        const response = await DeletePegawai(id);
-        console.log('Employee deleted successfully:', response.data);
-        showNotification('Pegawai berhasil dihapus!', 'success');
-        fetchPegawai();
-      } catch (error) {
-        console.error('Error deleting pegawai:', error);
-        console.log('Error details:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-          employee_id: id
-        });
-        setError('Failed to delete employee. Please try again.');
-        showNotification('Gagal menghapus pegawai. Silakan coba lagi.', 'danger');
+  // Function to update employee after confirmation
+  const updatePegawai = async () => {
+    try {
+      // For updating existing employee
+      console.log('Updating employee with ID:', currentPegawai.id_pegawai, {
+        nama_pegawai: currentPegawai.nama_pegawai,
+        tanggal_lahir: currentPegawai.tanggal_lahir,
+        email: currentPegawai.akun.email,
+        role: currentPegawai.akun.role,
+        reset_password: resetPassword,
+        has_new_profile_picture: !!profilePicture
+      });
+      
+      const formData = new FormData();
+      
+      // Add basic employee data
+      formData.append('nama_pegawai', currentPegawai.nama_pegawai);
+      formData.append('tanggal_lahir', currentPegawai.tanggal_lahir);
+      
+      // Add account info
+      formData.append('email', currentPegawai.akun.email);
+      formData.append('role', currentPegawai.akun.role);
+      
+      // Add password if reset is requested
+      if (resetPassword && newPassword) {
+        formData.append('password', newPassword);
       }
+      
+      // Add profile picture if selected
+      if (profilePicture) {
+        formData.append('profile_picture', profilePicture);
+      }
+      
+      const response = await UpdatePegawai(currentPegawai.id_pegawai, formData);
+      console.log('Employee updated successfully:', response.data);
+      showNotification('Data pegawai berhasil diperbarui!', 'success');
+      setShowModal(false);
+      fetchPegawai();
+    } catch (error) {
+      console.error('Error updating pegawai:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to update employee data.';
+      setError(errorMessage);
+      showNotification(errorMessage, 'danger');
     }
   };
-  
+
+  const handleDelete = (id) => {
+    // Show confirmation modal for delete
+    setCurrentPegawai(prev => ({ ...prev, id_pegawai: id }));
+    setConfirmationTitle('Hapus Pegawai');
+    setConfirmationMessage('Yakin ingin melakukan delete pegawai?');
+    setConfirmationAction(() => deletePegawai);
+    setShowConfirmationModal(true);
+  };
+
+  // Function to delete employee after confirmation
+  const deletePegawai = async () => {
+    try {
+      console.log(`Deleting employee with ID: ${currentPegawai.id_pegawai}`);
+      const response = await DeletePegawai(currentPegawai.id_pegawai);
+      console.log('Employee deleted successfully:', response.data);
+      showNotification('Pegawai berhasil dihapus!', 'success');
+      fetchPegawai();
+    } catch (error) {
+      console.error('Error deleting pegawai:', error);
+      console.log('Error details:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        employee_id: currentPegawai.id_pegawai
+      });
+      setError('Failed to delete employee. Please try again.');
+      showNotification('Gagal menghapus pegawai. Silakan coba lagi.', 'danger');
+    }
+  };
+
   // ini buat logika pencarian, berdasarkan nama, id, sama email
   const filteredPegawai = pegawaiList.filter(pegawai => {
     const matchesSearch = pegawai.nama_pegawai?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           pegawai.id_pegawai?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          pegawai.email?.toLowerCase().includes(searchTerm.toLowerCase());
+                          pegawai.Akun.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const pegawaiRole = pegawai.Akun?.role || pegawai.akun?.role;
     const matchesRole = selectedRole === '' || pegawaiRole === selectedRole;
@@ -319,6 +356,7 @@ const ManagePegawaiPage = () => {
     return role ? role.name : roleId;
   };
 
+  // function buat get gambar profpic pegawai
   const getProfilePicture = (pegawai) => {
     if (pegawai.Akun?.profile_picture) return pegawai.Akun.profile_picture;
     if (pegawai.akun?.profile_picture) return pegawai.akun.profile_picture;
@@ -434,7 +472,7 @@ const ManagePegawaiPage = () => {
                 <img 
                   src={imagePreview || (currentPegawai.akun?.profile_picture || defaultAvatar)} 
                   alt="Profile Preview" 
-                  className="profile-preview mb-3"
+                  className="profile-preview mb-3 center"
                 />
                 <Form.Label className="d-block profile-upload-label">Foto Profil</Form.Label>
                 <div className="d-flex justify-content-center">
@@ -580,6 +618,17 @@ const ManagePegawaiPage = () => {
           </Form>
         </Modal.Body>
       </Modal>
+      
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        show={showConfirmationModal}
+        onHide={() => setShowConfirmationModal(false)}
+        onConfirm={confirmationAction}
+        title={confirmationTitle}
+        message={confirmationMessage}
+        confirmButtonText={confirmationTitle === 'Update Pegawai' ? 'Update' : 'Hapus'}
+        confirmButtonVariant={confirmationTitle === 'Update Pegawai' ? 'success' : 'danger'}
+      />
 
       <ResetEmployeePassModal pegawai={currentPegawai}/>
 

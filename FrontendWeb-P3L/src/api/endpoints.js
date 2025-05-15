@@ -63,6 +63,7 @@ export const ENDPOINTS = {
 
     // Barang
     GET_ALL_BARANG: "/barang",
+    GET_ALL_BARANG_GARANSI: "/barang/garansi/",
     CREATE_BARANG: "/barang",
     SHOW_BARANG: (id) => `/barang/${id}`,
     UPDATE_BARANG: (id) => `/barang/${id}`,

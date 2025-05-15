@@ -66,8 +66,8 @@ const ManageBarang = () => {
   const statusQCOptions = ['Lulus', 'Tidak lulus'];
   const barangViews = [
     { id: 'all', name: 'Semua Barang' },
-    { id: 'Lulus', name: 'Lulus QC' },
-    { id: 'Tidak lulus', name: 'Tidak Lulus QC' }
+    { id: 'Lulus', name: 'Lulus Quality Check' },
+    { id: 'Tidak lulus', name: 'Tidak Lulus Quality Check' }
   ];
 
   const showNotification = (message, type = 'success') => {

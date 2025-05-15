@@ -20,10 +20,14 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota }) => {
     switch (status) {
       case 'Dalam masa penitipan':
         return <Badge bg="info">Dalam Penitipan</Badge>;
-      case 'Selesai':
-        return <Badge bg="success">Selesai</Badge>;
-      case 'Tidak diambil':
-        return <Badge bg="danger">Tidak Diambil</Badge>;
+      case 'Terjual':
+        return <Badge bg="primary">Terjual</Badge>;
+      case 'Dibeli':
+        return <Badge bg="primary">Dibeli</Badge>;
+      case 'Didonasikan':
+        return <Badge bg="success">Didonasikan</Badge>;
+      case 'Menunggu didonasikan':
+        return <Badge bg="warning">Menunggu Didonasikan</Badge>;
       default:
         return <Badge bg="secondary">{status}</Badge>;
     }

@@ -49,13 +49,14 @@ const DaftarTransaksi = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'table'
+  const [viewMode, setViewMode] = useState('grid');
 
   const statusViews = [
-    { id: 'all', name: 'Semua Transaksi' },
+    { id: 'all', name: 'Semua Penitipan' },
     { id: 'Dalam masa penitipan', name: 'Dalam Penitipan' },
-    { id: 'Selesai', name: 'Selesai' },
-    { id: 'Tidak diambil', name: 'Tidak Diambil' }
+    { id: 'Terjual', name: 'Terjual' },
+    { id: 'Didonasikan', name: 'Didonasikan' },
+    { id: 'Menunggu didonasikan', name: 'Menunggu Didonasikan' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -186,10 +187,14 @@ const DaftarTransaksi = () => {
     switch (status) {
       case 'Dalam masa penitipan':
         return <Badge bg="info">Dalam Penitipan</Badge>;
-      case 'Selesai':
-        return <Badge bg="success">Selesai</Badge>;
-      case 'Tidak diambil':
-        return <Badge bg="danger">Tidak Diambil</Badge>;
+      case 'Terjual':
+        return <Badge bg="primary">Terjual</Badge>;
+      case 'Dibeli':
+        return <Badge bg="primary">Dibeli</Badge>;
+      case 'Didonasikan':
+        return <Badge bg="success">Didonasikan</Badge>;
+      case 'Menunggu didonasikan':
+        return <Badge bg="warning">Menunggu Didonasikan</Badge>;
       default:
         return <Badge bg="secondary">{status}</Badge>;
     }
@@ -336,7 +341,7 @@ const DaftarTransaksi = () => {
         <Row>
           <Col md={3}>
             <RoleSidebar 
-              namaSidebar={'Status Transaksi'}
+              namaSidebar={'Status Penitipan'}
               roles={statusViews} 
               selectedRole={selectedView} 
               handleRoleChange={setSelectedView} 

@@ -5,6 +5,9 @@ import LoginLayout from "../layouts/LoginLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
 
 import HomePage from "../pages/HomePage";
+import ListProdukPage from "../pages/ListProdukPage";
+import BarangGaransiPage from "../pages/BarangGaransiPage";
+import DetailGaransiPage from "../pages/DetailGaransiBarang";
 import LoginPage from "../pages/LoginPage";
 import OwnerPage from "../pages/owner/OwnerPage";
 import AdminPage from "../pages/admin/AdminPage";
@@ -68,6 +71,9 @@ const ProfileRedirect = () => {
 
 const mainRoutes = [
   { path: "/", element: <HomePage /> },
+  { path: "/produk", element: <ListProdukPage /> },
+  { path: "/garansi", element: <BarangGaransiPage /> },
+  { path: "/garansi/:id", element: <DetailGaransiPage /> },
 
   // Halaman Reset Password 
   { path: "/forgot-password", element: <ForgotPassword /> },

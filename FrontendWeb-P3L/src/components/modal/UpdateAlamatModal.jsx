@@ -20,20 +20,25 @@ const UpdateAlamatModal = ({ alamat, onEdit }) => {
 
     const handleEdit = async (e) => {
       e.preventDefault();
-      const newAlamat = {
-        id_pembeli: idPembeli,
-        id_alamat: idAlamat,
-        nama_alamat: namaAlamat,
-        alamat_lengkap: alamatLengkap,
-        is_main_address: isMainAddress
-      }
-      
-      if(onEdit){
-        await onEdit(newAlamat);
-      }
+
+      let ressult = confirm("Apakah anda yakin ingin mengubah data?");
+      if(ressult) {
+        const newAlamat = {
+          id_pembeli: idPembeli,
+          id_alamat: idAlamat,
+          nama_alamat: namaAlamat,
+          alamat_lengkap: alamatLengkap,
+          is_main_address: isMainAddress
+        }
+        
+        if(onEdit){
+          await onEdit(newAlamat);
+        }
+      } 
 
       const modal = bootstrap.Modal.getInstance(document.getElementById('update-alamat-modal'));
       modal.hide();
+      resetForm();
     };
 
     useEffect(() => {

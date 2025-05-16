@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Container, 
-  Row, 
-  Col, 
-  Button, 
-  Form, 
-  Badge, 
+import {
+  Container,
+  Row,
+  Col,
+  Button,
+  Form,
+  Badge,
   Spinner,
   Table,
-  Nav
+  Nav,
 } from 'react-bootstrap';
-import { 
-  BsSearch, 
+import {
+  BsSearch,
   BsExclamationTriangle,
   BsPrinter,
   BsFilter,
   BsCalendar,
   BsGrid,
-  BsListUl
+  BsListUl,
 } from 'react-icons/bs';
 import { GetAllPenitipan } from '../../clients/PenitipanService';
 import { GetAllPenitip } from '../../clients/PenitipService';
 import { GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
 import RoleSidebar from '../../components/navigation/Sidebar';
-import ToastNotification from "../../components/toast/ToastNotification";
+import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaModal from '../../components/pdf/NotaPenitipanPdf';
 import TransaksiCard from '../../components/card/CardTransaksiPenitipan';
@@ -69,26 +69,26 @@ const DaftarTransaksi = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem("authToken");
+        const token = localStorage.getItem('authToken');
         if (!token) {
-          throw new Error("Token tidak ditemukan");
+          throw new Error('Token tidak ditemukan');
         }
-        
+
         const decoded = decodeToken(token);
         setAkun(decoded);
-        
+
         if (!decoded?.id) {
-          throw new Error("Invalid token structure");
+          throw new Error('Invalid token structure');
         }
-        
-        if (decoded.role === "Pegawai Gudang") {
+
+        if (decoded.role === 'Pegawai Gudang') {
           const response = await GetPegawaiByAkunId(decoded.id);
-          const dataPegawai = response.data;
-          setPegawai(dataPegawai);
+          setPegawai(response.data);
         }
       } catch (err) {
-        setError("Gagal memuat data user!");
-        console.error("Error:", err);
+        setError('Gagal memuat data user!');
+        console.error('Error:', err);
+        showNotification('Gagal memuat data user!', 'danger');
       }
     };
 
@@ -111,12 +111,11 @@ const DaftarTransaksi = () => {
     try {
       const [penitipanResponse, penitipResponse] = await Promise.all([
         GetAllPenitipan(),
-        GetAllPenitip()
+        GetAllPenitip(),
       ]);
 
-      // Filter penitipan untuk barang yang lulus QC
-      const filteredPenitipan = penitipanResponse.data.filter(item => 
-        item.Barang && item.Barang.status_qc === 'Lulus'
+      const filteredPenitipan = penitipanResponse.data.filter(
+        (item) => item.Barang && item.Barang.status_qc === 'Lulus'
       );
 
       setPenitipanList(filteredPenitipan);
@@ -137,43 +136,51 @@ const DaftarTransaksi = () => {
 
   const filterPenitipanData = () => {
     let filtered = [...penitipanList];
-    
+
     if (selectedView !== 'all') {
-      filtered = filtered.filter(item => item.status_penitipan === selectedView);
+      filtered = filtered.filter((item) => item.status_penitipan === selectedView);
     }
-    
+
     if (searchTerm) {
-      filtered = filtered.filter(item => 
-        (item.id_penitipan && item.id_penitipan.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.Barang && item.Barang.nama && item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.Barang && item.Barang.id_barang && item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (item.Barang && item.Barang.Penitip && item.Barang.Penitip.nama_penitip && item.Barang.Penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(
+        (item) =>
+          (item.id_penitipan &&
+            item.id_penitipan.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.Barang &&
+            item.Barang.nama &&
+            item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.Barang &&
+            item.Barang.id_barang &&
+            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.Barang &&
+            item.Barang.Penitip &&
+            item.Barang.Penitip.nama_penitip &&
+            item.Barang.Penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
-    // Date filtering
     if (startDate && endDate) {
       const startDateTime = new Date(startDate).setHours(0, 0, 0, 0);
       const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
-      
-      filtered = filtered.filter(item => {
+
+      filtered = filtered.filter((item) => {
         const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
         return itemDate >= startDateTime && itemDate <= endDateTime;
       });
     } else if (startDate) {
       const startDateTime = new Date(startDate).setHours(0, 0, 0, 0);
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
         return itemDate >= startDateTime;
       });
     } else if (endDate) {
       const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
-      filtered = filtered.filter(item => {
+      filtered = filtered.filter((item) => {
         const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
         return itemDate <= endDateTime;
       });
     }
-    
+
     setFilteredPenitipan(filtered);
     setCurrentPage(1);
   };
@@ -181,6 +188,14 @@ const DaftarTransaksi = () => {
   const handleCetakNota = (penitipan) => {
     setSelectedPenitipan(penitipan);
     setShowModal(true);
+    // Update penitipan to mark nota as printed
+    setPenitipanList((prev) =>
+      prev.map((item) =>
+        item.id_penitipan === penitipan.id_penitipan
+          ? { ...item, cetakNotaDone: true }
+          : item
+      )
+    );
   };
 
   const getStatusBadge = (status) => {
@@ -213,16 +228,17 @@ const DaftarTransaksi = () => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
-      minimumFractionDigits: 0
+      minimumFractionDigits: 0,
     }).format(angka);
   };
 
   const renderTransaksiCard = (penitipan) => {
     return (
       <Col xs={12} md={6} lg={4} key={penitipan.id_penitipan} className="mb-4">
-        <TransaksiCard 
-          penitipan={penitipan} 
-          handleCetakNota={handleCetakNota} 
+        <TransaksiCard
+          penitipan={penitipan}
+          handleCetakNota={handleCetakNota}
+          pegawai={pegawai}
         />
       </Col>
     );
@@ -239,7 +255,7 @@ const DaftarTransaksi = () => {
         </div>
       );
     }
-    
+
     if (filteredPenitipan.length === 0) {
       return (
         <div className="text-center py-5">
@@ -248,13 +264,9 @@ const DaftarTransaksi = () => {
         </div>
       );
     }
-    
+
     if (viewMode === 'grid') {
-      return (
-        <Row>
-          {currentItems.map((penitipan) => renderTransaksiCard(penitipan))}
-        </Row>
-      );
+      return <Row>{currentItems.map((penitipan) => renderTransaksiCard(penitipan))}</Row>;
     } else {
       return (
         <div className="table-responsive">
@@ -277,10 +289,13 @@ const DaftarTransaksi = () => {
                   <td>
                     <div className="d-flex align-items-center">
                       {penitipan.Barang?.gambar ? (
-                        <div className="me-2" style={{ width: '40px', height: '40px', overflow: 'hidden' }}>
-                          <img 
-                            src={penitipan.Barang.gambar.split(',')[0]} 
-                            alt={penitipan.Barang.nama} 
+                        <div
+                          className="me-2"
+                          style={{ width: '40px', height: '40px', overflow: 'hidden' }}
+                        >
+                          <img
+                            src={penitipan.Barang.gambar.split(',')[0]}
+                            alt={penitipan.Barang.nama}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             className="rounded"
                           />
@@ -294,14 +309,17 @@ const DaftarTransaksi = () => {
                   </td>
                   <td>{penitipan.Barang?.Penitip?.nama_penitip || '-'}</td>
                   <td>{formatDate(penitipan.tanggal_awal_penitipan)}</td>
-                  <td className="fw-bold" style={{ color: '#028643' }}>{formatRupiah(penitipan.Barang?.harga || 0)}</td>
+                  <td className="fw-bold" style={{ color: '#028643' }}>
+                    {formatRupiah(penitipan.Barang?.harga || 0)}
+                  </td>
                   <td>{getStatusBadge(penitipan.status_penitipan)}</td>
                   <td>
-                    <Button 
-                      variant="outline-primary" 
+                    <Button
+                      variant="outline-primary"
                       size="sm"
                       className="cetak-nota-btn"
                       onClick={() => handleCetakNota(penitipan)}
+                      disabled={penitipan.cetakNotaDone}
                     >
                       <BsPrinter className="me-1" /> Cetak Nota
                     </Button>
@@ -317,11 +335,11 @@ const DaftarTransaksi = () => {
 
   return (
     <Container fluid className="p-0 bg-white">
-      <ToastNotification 
-        show={showToast} 
-        setShow={setShowToast} 
-        message={toastMessage} 
-        type={toastType} 
+      <ToastNotification
+        show={showToast}
+        setShow={setShowToast}
+        message={toastMessage}
+        type={toastType}
       />
 
       <div className="max-width-container mx-auto pt-4 px-3">
@@ -330,21 +348,23 @@ const DaftarTransaksi = () => {
             {error}
           </div>
         )}
-        
+
         <Row className="mb-4 align-items-center">
           <Col>
-            <h2 className="mb-0 fw-bold" style={{ color: '#03081F' }}>Daftar Transaksi</h2>
+            <h2 className="mb-0 fw-bold" style={{ color: '#03081F' }}>
+              Daftar Transaksi
+            </h2>
             <p className="text-muted mt-1">Daftar transaksi barang yang lulus QC</p>
           </Col>
         </Row>
 
         <Row>
           <Col md={3}>
-            <RoleSidebar 
+            <RoleSidebar
               namaSidebar={'Status Penitipan'}
-              roles={statusViews} 
-              selectedRole={selectedView} 
-              handleRoleChange={setSelectedView} 
+              roles={statusViews}
+              selectedRole={selectedView}
+              handleRoleChange={setSelectedView}
             />
           </Col>
 
@@ -364,7 +384,7 @@ const DaftarTransaksi = () => {
                   </div>
                 </Col>
                 <Col xs="auto" className="d-flex gap-2">
-                  <Button 
+                  <Button
                     variant="outline-secondary"
                     onClick={toggleDateFilter}
                     className="filter-btn"
@@ -372,13 +392,13 @@ const DaftarTransaksi = () => {
                     <BsFilter /> Filter Tanggal
                   </Button>
                   <Nav className="view-mode-toggle">
-                    <Nav.Link 
+                    <Nav.Link
                       className={`view-mode-btn ${viewMode === 'grid' ? 'active' : ''}`}
                       onClick={() => setViewMode('grid')}
                     >
                       <BsGrid />
                     </Nav.Link>
-                    <Nav.Link 
+                    <Nav.Link
                       className={`view-mode-btn ${viewMode === 'table' ? 'active' : ''}`}
                       onClick={() => setViewMode('table')}
                     >
@@ -387,15 +407,17 @@ const DaftarTransaksi = () => {
                   </Nav>
                 </Col>
               </Row>
-              
+
               {showDateFilter && (
                 <Row className="mt-3">
                   <Col md={5}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small"><BsCalendar className="me-1" /> Tanggal Mulai</Form.Label>
-                      <Form.Control 
-                        type="date" 
-                        value={startDate} 
+                      <Form.Label className="small">
+                        <BsCalendar className="me-1" /> Tanggal Mulai
+                      </Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="date-input"
                       />
@@ -403,18 +425,20 @@ const DaftarTransaksi = () => {
                   </Col>
                   <Col md={5}>
                     <Form.Group className="mb-3">
-                      <Form.Label className="small"><BsCalendar className="me-1" /> Tanggal Akhir</Form.Label>
-                      <Form.Control 
-                        type="date" 
-                        value={endDate} 
+                      <Form.Label className="small">
+                        <BsCalendar className="me-1" /> Tanggal Akhir
+                      </Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="date-input"
                       />
                     </Form.Group>
                   </Col>
                   <Col md={2} className="d-flex align-items-end">
-                    <Button 
-                      variant="outline-danger" 
+                    <Button
+                      variant="outline-danger"
                       className="mb-3 w-100 clear-btn"
                       onClick={clearDateFilter}
                     >
@@ -426,9 +450,9 @@ const DaftarTransaksi = () => {
             </div>
 
             {renderContent()}
-            
+
             {!loading && filteredPenitipan.length > 0 && totalPages > 1 && (
-              <PaginationComponent 
+              <PaginationComponent
                 currentPage={currentPage}
                 totalPages={totalPages}
                 paginate={paginate}
@@ -450,42 +474,40 @@ const DaftarTransaksi = () => {
         .max-width-container {
           max-width: 1200px;
         }
-        
-        /* Button Styles */
+
         .filter-btn {
           padding: 8px 16px;
           border-radius: 6px;
           border-color: #E7E7E7;
           color: #686868;
         }
-        
+
         .filter-btn:hover {
           background-color: #f8f9fa;
           border-color: #E7E7E7;
           color: #03081F;
         }
-        
+
         .cetak-nota-btn {
           border-color: #028643;
           color: #028643;
         }
-        
+
         .cetak-nota-btn:hover {
           background-color: #028643;
           color: white;
           border-color: #028643;
         }
-        
+
         .clear-btn:hover {
           background-color: #dc3545;
           color: white;
         }
-        
-        /* Search Input */
+
         .position-relative {
           position: relative;
         }
-        
+
         .search-icon {
           position: absolute;
           left: 15px;
@@ -494,61 +516,59 @@ const DaftarTransaksi = () => {
           color: #686868;
           z-index: 10;
         }
-        
+
         .search-input {
           height: 45px;
           padding-left: 45px;
           border-radius: 25px;
           border: 1px solid #E7E7E7;
         }
-        
+
         .search-input:focus {
           box-shadow: none;
           border-color: #028643;
         }
-        
-        /* Date Inputs */
+
         .date-input {
           border-radius: 6px;
           border: 1px solid #E7E7E7;
           padding: 8px 12px;
         }
-        
+
         .date-input:focus {
           box-shadow: none;
           border-color: #028643;
         }
-        
-        /* View Mode Toggle */
+
         .view-mode-toggle {
           display: flex;
           border: 1px solid #E7E7E7;
           border-radius: 6px;
           overflow: hidden;
         }
-        
+
         .view-mode-btn {
           padding: 8px 12px;
           color: #686868;
           transition: background-color 0.2s, color 0.2s;
         }
-        
-        .view-mode-btn:hover, .view-mode-btn.active {
+
+        .view-mode-btn:hover,
+        .view-mode-btn.active {
           background-color: #f8f9fa;
           color: #03081F;
         }
-        
+
         .view-mode-btn.active {
           font-weight: 500;
           color: #028643;
         }
-        
-        /* Table Styles */
+
         .table {
           border-collapse: separate;
           border-spacing: 0;
         }
-        
+
         .table th {
           background-color: #f8f9fa;
           border-bottom: 2px solid #e9ecef;
@@ -556,44 +576,42 @@ const DaftarTransaksi = () => {
           color: #495057;
           padding: 12px 16px;
         }
-        
+
         .table td {
           vertical-align: middle;
           border-top: 1px solid #e9ecef;
           padding: 12px 16px;
         }
-        
+
         .table tbody tr:hover {
           background-color: #f8f9fa;
         }
 
-        /* Pagination Style */
         .pagination .page-item.active .page-link {
           background-color: #028643;
           border-color: #028643;
         }
-        
+
         .pagination .page-link {
           color: #028643;
         }
-        
+
         .pagination .page-link:hover {
           color: #026d36;
         }
-        
-        /* Responsive adjustments */
+
         @media (max-width: 768px) {
           .filter-btn {
             margin-top: 10px;
             width: 100%;
           }
-          
+
           .view-mode-toggle {
             margin-top: 10px;
             width: 100%;
             justify-content: space-between;
           }
-          
+
           .view-mode-btn {
             flex: 1;
             text-align: center;

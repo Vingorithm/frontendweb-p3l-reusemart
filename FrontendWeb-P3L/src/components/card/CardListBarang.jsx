@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsPencil, BsTrash, BsBox } from 'react-icons/bs';
+import { BsPencil, BsTrash, BsBox, BsPrinter } from 'react-icons/bs';
 
 const CardListBarang = ({ 
   barang, 
   getPenitipName, 
   onEdit, 
   onDelete, 
+  onPrintNota,
   getStatusBadge 
 }) => {
   // Parse image URLs safely
@@ -85,10 +86,18 @@ const CardListBarang = ({
             <BsPencil /> Edit
           </Button>
           <Button 
+            variant="outline-primary" 
+            size="sm"
+            className="print-btn me-2"
+            onClick={() => onPrintNota(barang.id_barang)}
+          >
+            <BsPrinter /> Cetak
+          </Button>
+          <Button 
             variant="outline-danger" 
             size="sm"
             className="delete-btn"
-            onClick={() => onDelete(barang.id_barang)}
+            onClick={() => onDelete(barang.id_barang, barang.nama)}
           >
             <BsTrash /> Hapus
           </Button>
@@ -152,7 +161,7 @@ const CardListBarang = ({
         .fw-medium {
           font-weight: 500;
         }
-        .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn, .print-btn {
           display: flex;
           align-items: center;
           gap: 5px;

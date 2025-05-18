@@ -58,6 +58,7 @@ export const ENDPOINTS = {
     GET_ALL_PENITIPAN: "/penitipan",
     CREATE_PENITIPAN: "/penitipan",
     SHOW_PENITIPAN: (id) => `/penitipan/${id}`,
+    GET_PENITIPAN_BY_BARANG: (id) => `/penitipan/byIdBarang/${id}`,
     UPDATE_PENITIPAN: (id) => `/penitipan/${id}`,
     DELETE_PENITIPAN: (id) => `/penitipan/${id}`,
 

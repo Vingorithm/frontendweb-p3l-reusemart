@@ -262,7 +262,7 @@ const AturPengirimanModal = ({ show, handleClose, penitipan, pegawai, onSuccess 
                 <Form.Label>Pengkonfirmasi</Form.Label>
                 <Form.Control
                   type="text"
-                  value={pegawai?.nama_pegawai || '-'}
+                  value={pegawai?.id_pegawai || '-'}
                   disabled
                   className="bg-light"
                 />

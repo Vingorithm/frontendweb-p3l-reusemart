@@ -53,6 +53,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 
 import { Navigate } from "react-router-dom"; 
 import { decodeToken } from "../utils/jwtUtils";
+import Keranjang from "../pages/pembeli/Keranjang";
 
 const ProfileRedirect = () => {
   const token = localStorage.getItem("authToken");
@@ -144,6 +145,7 @@ const mainRoutes = [
   },
   { path: "/pembeli/profile", element: <PembeliProfile /> },
   { path: "/pembeli/alamat", element: <ManageAlamat /> },
+  { path: "/pembeli/keranjang", element: <Keranjang /> },
 
   // Protected Route for Penitip
   {

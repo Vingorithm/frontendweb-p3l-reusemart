@@ -11,17 +11,17 @@ const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
     const handleEdit = async (e) => {
       e.preventDefault();
 
-      const updateModalEl = document.getElementById("update-organisasi-modal");
-      const updateModal = bootstrap.Modal.getInstance(updateModalEl);
-      updateModal.hide();
+      const currentModalEl = document.getElementById("update-organisasi-modal");
+      const currentModal = bootstrap.Modal.getInstance(currentModalEl);
+      currentModal.hide();
 
-      updateModalEl.addEventListener("hidden.bs.modal", async function handler() {
-        updateModalEl.removeEventListener("hidden.bs.modal", handler);
+      currentModalEl.addEventListener("hidden.bs.modal", async function handler() {
+        currentModalEl.removeEventListener("hidden.bs.modal", handler);
 
         const confirmed = await ConfirmModal.show("Apakah Anda yakin ingin menyimpan perubahan?");
         
         if (!confirmed) {
-          updateModal.show();
+          currentModal.show();
           return;
         }
 
@@ -34,7 +34,7 @@ const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
         if (file) {
           if (!file.type.startsWith("image/")) {
             alert("File harus berupa gambar!");
-            updateModal.show();
+            currentModal.show();
             return;
           }
           formData.append("profile_picture", file);
@@ -76,7 +76,7 @@ const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
     return <>
       <ConfirmModal />
       <form onSubmit={handleEdit}>
-        <div className="modal fade" id="update-organisasi-modal" tabIndex="-1" aria-hidden="true">
+        <div className="modal fade" id="update-organisasi-modal" tabIndex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel">
             <div className="modal-dialog modal-dialog-centered">
               <div className="modal-content">
                 <div className="modal-header">

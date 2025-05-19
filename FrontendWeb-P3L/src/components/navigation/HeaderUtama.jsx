@@ -161,12 +161,14 @@ const HeaderUtama = () => {
           </div>
 
           <div className="col-auto d-flex align-items-center">
-            <div style={cartIconStyle}>
-              <FaShoppingCart />
-              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '10px' }}>
-                10
-              </span>
-            </div>
+            <a href="/pembeli/keranjang">
+              <div style={cartIconStyle}>
+                <FaShoppingCart />
+                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '10px' }}>
+                  10
+                </span>
+              </div>
+            </a>
 
             <div style={notificationIconStyle}>
               <FaBell />

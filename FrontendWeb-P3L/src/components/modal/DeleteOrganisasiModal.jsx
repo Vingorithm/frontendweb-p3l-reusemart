@@ -3,17 +3,17 @@ import ConfirmModal from "./ConfirmModal";
 const DeleteOrganisasiModal = ({ organisasi, onDelete }) => {
 
     const handleDelete = async () => {
-      const CurrentModalEl = document.getElementById("delete-organisasi-modal");
-      const CurrentModal = bootstrap.Modal.getInstance(CurrentModalEl);
-      CurrentModal.hide();
+      const currentModalEl = document.getElementById("delete-organisasi-modal");
+      const currentModal = bootstrap.Modal.getInstance(currentModalEl);
+      currentModal.hide();
 
-      CurrentModalEl.addEventListener("hidden.bs.modal", async function handler() {
-              CurrentModalEl.removeEventListener("hidden.bs.modal", handler);
+      currentModalEl.addEventListener("hidden.bs.modal", async function handler() {
+              currentModalEl.removeEventListener("hidden.bs.modal", handler);
       
               const confirmed = await ConfirmModal.show("Apakah Anda yakin ingin menghapus data?");
               
               if (!confirmed) {
-                CurrentModal.show();
+                currentModal.show();
                 return;
               }
               
@@ -23,7 +23,7 @@ const DeleteOrganisasiModal = ({ organisasi, onDelete }) => {
 
     return <>
       <ConfirmModal />
-      <div className="modal fade" id="delete-organisasi-modal" tabIndex="-1" aria-hidden="true">
+      <div className="modal fade" id="delete-organisasi-modal" tabIndex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">

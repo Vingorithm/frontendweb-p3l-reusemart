@@ -13,7 +13,7 @@ import {
   BsExclamationTriangle, 
 } from 'react-icons/bs';
 import { GetAllBarang, CreateBarang, UpdateBarang, DeleteBarang } from '../../clients/BarangService';
-import { CreatePenitipan, GetPenitipanByIdBarang } from '../../clients/PenitipanService';
+import { CreatePenitipan, GetPenitipanByIdBarang, GetAllPenitipan } from '../../clients/PenitipanService';
 import { GetAllPenitip } from '../../clients/PenitipService';
 import { GetAllPegawai, GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
@@ -30,6 +30,7 @@ const ManageBarang = () => {
   const [filteredBarang, setFilteredBarang] = useState([]);
   const [penitipList, setPenitipList] = useState([]);
   const [pegawaiList, setPegawaiList] = useState([]);
+  const [penitipanList, setPenitipanList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -88,6 +89,19 @@ const ManageBarang = () => {
     setTimeout(() => setShowToast(false), 5000);
   };
 
+  // Function to calculate remaining days
+  const calculateRemainingDays = (barangId) => {
+    const penitipan = penitipanList.find(p => p.id_barang === barangId);
+    if (!penitipan || !penitipan.tanggal_akhir_penitipan) return null;
+    
+    const today = new Date();
+    const endDate = new Date(penitipan.tanggal_akhir_penitipan);
+    const diffTime = endDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  };
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -136,15 +150,17 @@ const ManageBarang = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [barangResponse, penitipResponse, pegawaiResponse] = await Promise.all([
+      const [barangResponse, penitipResponse, pegawaiResponse, penitipanResponse] = await Promise.all([
         GetAllBarang(),
         GetAllPenitip(),
-        GetAllPegawai()
+        GetAllPegawai(),
+        GetAllPenitipan()
       ]);
 
       setBarangList(barangResponse.data);
       setPenitipList(penitipResponse.data);
       setPegawaiList(pegawaiResponse.data);
+      setPenitipanList(penitipanResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Gagal memuat data. Silakan coba lagi nanti.');
@@ -436,6 +452,7 @@ const ManageBarang = () => {
           onDelete={handleDeleteBarang}
           onPrintNota={handlePrintNota}
           getStatusBadge={getStatusBadge}
+          remainingDays={calculateRemainingDays(barang.id_barang)}
         />
       </Col>
     );

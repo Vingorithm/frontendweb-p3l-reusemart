@@ -9,46 +9,44 @@ const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
     const fileInputRef = useRef(null);
 
     const handleEdit = async (e) => {
-  e.preventDefault();
+      e.preventDefault();
 
-  const updateModalEl = document.getElementById("update-organisasi-modal");
-  const updateModal = bootstrap.Modal.getInstance(updateModalEl);
-  updateModal.hide();
+      const updateModalEl = document.getElementById("update-organisasi-modal");
+      const updateModal = bootstrap.Modal.getInstance(updateModalEl);
+      updateModal.hide();
 
-  // Tunggu backdrop benar-benar hilang sebelum tampilkan confirm modal
-  updateModalEl.addEventListener("hidden.bs.modal", async function handler() {
-    updateModalEl.removeEventListener("hidden.bs.modal", handler);
+      updateModalEl.addEventListener("hidden.bs.modal", async function handler() {
+        updateModalEl.removeEventListener("hidden.bs.modal", handler);
 
-    const confirmed = await ConfirmModal.show("Apakah Anda yakin ingin menyimpan perubahan?");
-    
-    if (!confirmed) {
-      updateModal.show(); // tampilkan kembali jika batal
-      return;
-    }
+        const confirmed = await ConfirmModal.show("Apakah Anda yakin ingin menyimpan perubahan?");
+        
+        if (!confirmed) {
+          updateModal.show();
+          return;
+        }
 
-    const formData = new FormData();
-    formData.append("nama_organisasi", namaOrganisasi);
-    formData.append("alamat", alamat);
+        const formData = new FormData();
+        formData.append("nama_organisasi", namaOrganisasi);
+        formData.append("alamat", alamat);
 
-    const fileInput = document.getElementById("profile-picture");
-    const file = fileInput.files[0];
-    if (file) {
-      if (!file.type.startsWith("image/")) {
-        alert("File harus berupa gambar!");
-        updateModal.show();
-        return;
-      }
-      formData.append("profile_picture", file);
-    }
+        const fileInput = document.getElementById("profile-picture");
+        const file = fileInput.files[0];
+        if (file) {
+          if (!file.type.startsWith("image/")) {
+            alert("File harus berupa gambar!");
+            updateModal.show();
+            return;
+          }
+          formData.append("profile_picture", file);
+        }
 
-    if (onEdit) {
-      await onEdit(formData);
-    }
+        if (onEdit) {
+          await onEdit(formData);
+        }
 
-    resetForm(); // tidak perlu tampilkan ulang modal update
-  });
-};
-
+        resetForm();
+      });
+    };
 
     const handleImageChange = (e) => {
       const file = e.target.files[0];

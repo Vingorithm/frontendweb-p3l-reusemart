@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-// Simpan resolve handler untuk global call
 let resolver;
 
 export function ConfirmModal() {
@@ -15,7 +14,6 @@ export function ConfirmModal() {
       keyboard: false,
     });
 
-    // Cleanup backdrop jika ada sisa
     modalRef.current.addEventListener("hidden.bs.modal", () => {
       const backdrops = document.querySelectorAll(".modal-backdrop");
       if (backdrops.length > 1) {
@@ -28,10 +26,9 @@ export function ConfirmModal() {
 
   const handleResult = (answer) => {
     bsModalRef.current.hide();
-    resolver(answer); // resolve Promise
+    resolver(answer);
   };
 
-  // Fungsi global: panggil untuk menampilkan modal
   ConfirmModal.show = (msg) => {
     setMessage(msg);
     return new Promise((resolve) => {
@@ -51,7 +48,7 @@ export function ConfirmModal() {
           <div className="modal-body">{message}</div>
           <div className="modal-footer">
             <button className="btn btn-secondary" onClick={() => handleResult(false)}>Batal</button>
-            <button className="btn btn-primary" onClick={() => handleResult(true)}>Ok</button>
+            <button className="btn btn-success" onClick={() => handleResult(true)}>Ok</button>
           </div>
         </div>
       </div>

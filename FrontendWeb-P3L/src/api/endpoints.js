@@ -61,6 +61,7 @@ export const ENDPOINTS = {
     GET_PENITIPAN_BY_BARANG: (id) => `/penitipan/byIdBarang/${id}`,
     UPDATE_PENITIPAN: (id) => `/penitipan/${id}`,
     DELETE_PENITIPAN: (id) => `/penitipan/${id}`,
+    GET_ALL_PENITIPAN_BY_ID_PENITIP: (id) => `/penitipan/byIdPenitip/${id}`,
 
     // Barang
     GET_ALL_BARANG: "/barang",

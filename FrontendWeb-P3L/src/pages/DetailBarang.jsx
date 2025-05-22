@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { decodeToken } from '../utils/jwtUtils';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GetBarangById } from "../clients/BarangService";
 import { GetPenitipById } from "../clients/PenitipService";
 import { GetReviewProdukByIdBarang } from "../clients/ReviewService";
-import { CreateDiskusiProduk, GetDiskusiProdukById, GetDiskusiProdukByIdBarang, UpdateDiskusiProduk } from "../clients/DiskusiProdukService";
-import { FaStar, FaShoppingCart, FaPlus, FaMinus, FaArrowRight, FaComment } from 'react-icons/fa';
+import { CreateDiskusiProduk, GetDiskusiProdukByIdBarang, UpdateDiskusiProduk } from "../clients/DiskusiProdukService";
+import { FaStar, FaShoppingCart } from 'react-icons/fa';
 import "bootstrap/dist/css/bootstrap.min.css";
 import AddDiskusiModal from "../components/modal/AddDiskusiModal";
 import AnswerDiskusiModal from '../components/modal/AnswerDiskusiModal';
 import { apiPembeli } from "../clients/PembeliService";
-import { GetAllPegawai, GetPegawaiByAkunId, GetPegawaiById } from "../clients/PegawaiService";
+import { GetAllPegawai, GetPegawaiByAkunId } from "../clients/PegawaiService";
 import { toast } from 'sonner';
 
 const DetailBarang = () => {

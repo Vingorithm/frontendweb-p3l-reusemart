@@ -113,6 +113,7 @@ export const ENDPOINTS = {
     GET_ALL_KERANJANG: "/keranjang",
     CREATE_KERANJANG: "/keranjang",
     SHOW_KERANJANG: (id) => `/keranjang/${id}`,
+    SHOW_KERANJANG_BY_ID_PEMBELI: (id) => `/keranjang/byIdPembeli/${id}`,
     UPDATE_KERANJANG: (id) => `/keranjang/${id}`,
     DELETE_KERANJANG: (id) => `/keranjang/${id}`,
 

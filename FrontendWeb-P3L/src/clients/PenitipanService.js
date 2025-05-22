@@ -22,3 +22,6 @@ export const CreatePenitipan = (data) =>
 
 export const GetPenitipanByIdBarang = (id) =>
     apiClient.get(ENDPOINTS.GET_PENITIPAN_BY_BARANG(id));
+
+export const GetAllPenitipanByIdPenitip = (id) =>
+    apiClient.get(ENDPOINTS.GET_ALL_PENITIPAN_BY_ID_PENITIP(id));

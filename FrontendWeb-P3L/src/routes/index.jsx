@@ -6,6 +6,7 @@ import ProtectedRoute from "../routes/ProtectedRoute";
 
 import HomePage from "../pages/HomePage";
 import ListProdukPage from "../pages/ListProdukPage";
+
 import BarangGaransiPage from "../pages/BarangGaransiPage";
 import DetailGaransiPage from "../pages/DetailGaransiBarang";
 import LoginPage from "../pages/LoginPage";
@@ -20,6 +21,7 @@ import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
 import ManageOrganisasiPage from "../pages/admin/ManageOrganisasiPage";
 import ManageMerchandisePage from "../pages/admin/ManageMerchandisePage";
 import PenitipProfile from "../pages/penitip/PenitipProfile";
+import LaporanPenitip from "../pages/penitip/LaporanPenitip";
 import PembeliProfile from "../pages/pembeli/PembeliProfile";
 import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
@@ -158,6 +160,8 @@ const mainRoutes = [
   },
   { path: "/penitip/profile", element: <PenitipProfile /> },
   { path: "/penitip/history", element: <PenitipHistory /> },
+  { path: "/penitip/barang", element: <ListProdukPage /> },
+  { path: "/penitip/laporan", element: <LaporanPenitip /> },
 
   // Protected Route for Customer Service
   {

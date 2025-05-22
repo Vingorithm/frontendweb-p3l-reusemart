@@ -14,7 +14,7 @@ import OwnerPage from "../pages/owner/OwnerPage";
 import AdminPage from "../pages/admin/AdminPage";
 import PegawaiGudangPage from "../pages/pegawai-gudang/PegawaiGudangPage";
 import PembeliPage from "../pages/pembeli/PembeliPage";
-import PenitipPage from "../pages/penitip/PenitipPage";
+import DaftarBarang from "../pages/penitip/DaftarBarang";
 import CsPage from "../pages/cs/CsPage";
 import OrganisasiPage from "../pages/organisasi/OrganisasiPage";
 import ManagePegawaiPage from "../pages/admin/ManagePegawaiPage";
@@ -154,13 +154,14 @@ const mainRoutes = [
     path: "/penitip",
     element: (
       <ProtectedRoute allowedRoles={["Penitip"]}>
-        <PenitipPage />
+        <DaftarBarang />
       </ProtectedRoute>
     ),
   },
   { path: "/penitip/profile", element: <PenitipProfile /> },
+  { path: "/penitip/barang", element: <DaftarBarang /> },
   { path: "/penitip/history", element: <PenitipHistory /> },
-  { path: "/penitip/barang", element: <ListProdukPage /> },
+
   { path: "/penitip/laporan", element: <LaporanPenitip /> },
 
   // Protected Route for Customer Service

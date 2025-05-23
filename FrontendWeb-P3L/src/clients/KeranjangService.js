@@ -7,7 +7,7 @@ export const apiKeranjang = {
         return response.data;
     },
     createKeranjang: async (data) => {
-        const response = await apiClient.post(ENDPOINTS.CREATE_KERANJANG);
+        const response = await apiClient.post(ENDPOINTS.CREATE_KERANJANG, data);
         return response.data;
     },
     deleteKeranjang: async (id) => {

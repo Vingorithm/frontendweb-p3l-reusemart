@@ -12,6 +12,8 @@ import AnswerDiskusiModal from '../components/modal/AnswerDiskusiModal';
 import { apiPembeli } from "../clients/PembeliService";
 import { GetAllPegawai, GetPegawaiByAkunId } from "../clients/PegawaiService";
 import { toast } from 'sonner';
+import { apiKeranjang } from '../clients/KeranjangService';
+import AddKeranjangModal from '../components/modal/AddKeranjangModal';
 
 const DetailBarang = () => {
   const { id } = useParams();
@@ -133,10 +135,6 @@ const DetailBarang = () => {
 
   const handleGoToDiskusi = () => {
     navigate(`/diskusi-produk/${id}`);
-  };
-
-  const handleAddToCart = () => {
-    console.log(`Added ${quantity} of ${barang.nama} to cart`);
   };
 
   const handleBuyNow = () => {
@@ -306,6 +304,32 @@ const DetailBarang = () => {
         </div>
       </div>
     );
+  }
+
+  const handleAddtoCart = async (id) => {
+    try {
+      if(pembeli && barang) {
+        const responseGet = await apiKeranjang.getKeranjangByIdPembeli(pembeli.id_pembeli);
+        if(responseGet) {
+          const duplicateData = responseGet.find((cart) => {
+            return cart.id_barang == id
+          });
+
+          if(duplicateData) {
+            toast.warning("Barang ini sudah ada di keranjang anda!");
+          } else {
+            console.log({id_barang: id, id_pembeli: pembeli.id_pembeli});
+            const responseAdd = await apiKeranjang.createKeranjang({id_barang: id, id_pembeli: pembeli.id_pembeli});
+            if(responseAdd) {
+              toast.success("Berhasil menambahkan produk ke keranjang!");
+            }
+          }
+        }
+      }
+    } catch (error) {
+      toast.error("Gagal menambahkan produk ke keranjang!");
+      console.error("Gagal menambahkan produk ke keranjang: ", error);
+    }
   }
 
   return (
@@ -756,7 +780,9 @@ const DetailBarang = () => {
                       e.target.style.backgroundColor = '#FFFFFF';
                       e.target.style.color = '#028643';
                     }}
-                    onClick={handleAddToCart}
+                    type="button"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#add-keranjang-modal"
                   >
                     Keranjang
                   </button>
@@ -785,6 +811,7 @@ const DetailBarang = () => {
       </div>
       <AddDiskusiModal onSubmit={onSubmitPertanyaan} />
       <AnswerDiskusiModal onSubmit={onSubmitjawaban} />
+      <AddKeranjangModal barang={barang} onAdd={handleAddtoCart} />
     </div>
   );
 };

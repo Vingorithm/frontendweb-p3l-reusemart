@@ -3,7 +3,7 @@ import { Card, Badge, Button } from 'react-bootstrap';
 import { BsPrinter, BsBoxSeam } from 'react-icons/bs';
 import AturPengirimanModal from '../../components/modal/AturPengirimanModal'; // Import the modal
 
-const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
+const CardListPengambilan = ({ penitipan, handleCetakNota, pegawai }) => {
   const [notaPrinted, setNotaPrinted] = useState(penitipan.cetakNotaDone || false);
   const [showPengirimanModal, setShowPengirimanModal] = useState(false);
 
@@ -67,8 +67,8 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
               <div className="status-badge mt-1">{getStatusBadge(penitipan.status_penitipan)}</div>
             </div>
             <div className="col-6 text-end date-info">
-              <div className="text-muted small">Tanggal Penitipan</div>
-              <div className="fw-medium" style={{ fontSize: '0.75rem' }}>{formatDate(penitipan.tanggal_awal_penitipan)}</div>
+              <div className="text-muted small">Terakhir Ambil</div>
+              <div className="fw-medium" style={{ fontSize: '0.75rem' }}>{formatDate(penitipan.tanggal_batas_pengambilan)}</div>
             </div>
           </div>
 
@@ -124,7 +124,7 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
               variant="outline-success"
               className="atur-pengiriman-btn"
               onClick={handleOpenPengirimanModal}
-              
+              disabled={!(notaPrinted || penitipan.cetakNotaDone)}
             >
               <BsBoxSeam className="me-1" /> Atur Pengiriman
             </Button>
@@ -251,4 +251,4 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
   );
 };
 
-export default CardTransaksiPenitipan;
+export default CardListPengambilan;

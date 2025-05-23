@@ -1,11 +1,12 @@
 import React from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsPencil, BsTrash, BsBox, BsPrinter, BsClock, BsCalendarCheck } from 'react-icons/bs';
+import { BsClock, BsEye, BsCalendarCheck, BsBoxArrowRight } from 'react-icons/bs';
 
 const CardListPenitipan = ({ 
   penitipan, 
   onModal, 
   onPerpanjang,
+  onAmbil,
   getStatusBadge,
   remainingDays
 }) => {
@@ -99,7 +100,7 @@ const CardListPenitipan = ({
           </div>
 
           <div className="info-row">
-            <span className="info-label">Tanggal Awal Penitipan</span>
+            <span className="info-label">Tanggal Akhir Penitipan</span>
             <span className="info-value fw-bold text-success">
               {formatDate(penitipan.tanggal_akhir_penitipan)}
             </span>
@@ -154,26 +155,40 @@ const CardListPenitipan = ({
           </div>
         </div>
         
-        {/* Action Buttons */}
-        <div className="action-buttons d-flex gap-2 mt-auto">
-          <Button 
-            variant="outline-success" 
-            size="sm"
-            className="action-btn flex-fill"
-            onClick={() => onModal(penitipan.id_penitipan)}
-          >
-            <BsPencil className="me-1" size={14} />
-            Detail Barang
-          </Button>
-          <Button 
-            variant="outline-danger" 
-            size="sm"
-            className="action-btn flex-fill"
-            onClick={() => onPerpanjang(penitipan.id_penitipan, penitipan.Barang.nama)}
-          >
-            <BsTrash className="me-1" size={14} />
-            Perpanjang
-          </Button>
+       <div className="action-buttons mt-auto">
+          <div className="button-row d-flex gap-2 mb-2">
+            <Button 
+              variant="outline-success" 
+              size="sm"
+              className="action-btn flex-fill"
+              onClick={() => onModal(penitipan.id_penitipan)}
+            >
+              <BsEye className="me-1" size={14} />
+              Detail Barang
+            </Button>
+            <Button 
+              variant="outline-danger" 
+              size="sm"
+              className="action-btn flex-fill"
+              onClick={() => onPerpanjang(penitipan.id_penitipan, penitipan.Barang.nama)}
+              disabled={penitipan.status_penitipan === 'Menunggu diambil' || penitipan.status_penitipan === "Menunggu didonasikan"}
+            >
+              <BsClock className="me-1" size={14} />
+              Perpanjang
+            </Button>
+          </div>
+          <div className="button-row d-flex gap-2">
+            <Button 
+              variant="outline-primary" 
+              size="sm"
+              className="action-btn flex-fill"
+              onClick={() => onAmbil(penitipan.id_penitipan, penitipan.Barang.nama)}
+              disabled={penitipan.status_penitipan === 'Menunggu diambil' || penitipan.status_penitipan === "Menunggu didonasikan"}
+            >
+              <BsBoxArrowRight className="me-1" size={14} />
+              Ambil Penitipan
+            </Button>
+          </div>
         </div>
       </Card.Body>
 

@@ -90,7 +90,7 @@ const DaftarBarang = () => {
         if (decoded.role === "Penitip") {
           const response = await GetPenitipByIdAkun(decoded.id);
           console.log('GetPenitipByIdAkun response:', response);
-          // Langsung pakai response sebagai dataPenitip karena sudah response.data.penitip
+          
           const dataPenitip = response;
           console.log('Data penitip response:', dataPenitip);
           if (!dataPenitip || !dataPenitip.id_penitip) {
@@ -131,10 +131,25 @@ const DaftarBarang = () => {
       ]);
       console.log('GetAllPenitipanByIdPenitip response:', response);
       if (!response.data || !Array.isArray(response.data)) {
-        throw new Error("Data penitipan invalid atau kosong");
+        throw new Error("Data penitipan invalid atau kosong: " + JSON.stringify(response.data));
       }
-      setPenitipanList(response.data);
-      setFilteredPenitipan(response.data);
+
+      const today = new Date(); // Tanggal sekarang: 23 Mei 2025
+      const updatedPenitipanList = await Promise.all(
+        response.data.map(async (penitipan) => {
+          const batasPengambilan = new Date(penitipan.tanggal_batas_pengambilan);
+            if (batasPengambilan < today && penitipan.status_penitipan !== 'Menunggu didonasikan') {
+              await UpdatePenitipan(penitipan.id_penitipan, {
+                status_penitipan: 'Menunggu didonasikan'
+              });
+              return { ...penitipan, status_penitipan: 'Menunggu didonasikan' };
+            }
+          return penitipan;
+        })
+      );
+
+      setPenitipanList(updatedPenitipanList);
+      setFilteredPenitipan(updatedPenitipanList);
     } catch (error) {
       console.error('Error fetching penitipan data:', error);
       setError('Gagal memuat data penitipan: ' + error.message);
@@ -225,6 +240,30 @@ const DaftarBarang = () => {
     setShowConfirmModal(true);
   };
 
+  const handlePengambilan = (id, nama) => {
+    setConfirmAction(() => async () => {
+      try {
+        const today = new Date(); 
+        const tanggalBaru = new Date(today);
+        tanggalBaru.setDate(tanggalBaru.getDate() + 7); 
+
+        await UpdatePenitipan(id, {
+          tanggal_akhir_penitipan: tanggalBaru.toISOString(),
+          tanggal_batas_pengambilan: tanggalBaru.toISOString(),
+          status_penitipan: 'Menunggu diambil'
+        });
+        showNotification('Penitipan berhasil diatur untuk diambil', 'success');
+        fetchData();
+      } catch (error) {
+        console.error('Error mengatur pengambilan penitipan:', error);
+        showNotification('Gagal mengatur pengambilan penitipan.', 'danger');
+      }
+    });
+    setConfirmType('warning');
+    setConfirmMessage(`Apakah Anda yakin ingin mengambil penitipan barang "${nama}"?`);
+    setShowConfirmModal(true);
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Terjual':
@@ -249,6 +288,7 @@ const DaftarBarang = () => {
           penitipan={penitipan}
           onModal={openModal}
           onPerpanjang={handlePerpanjangan}
+          onAmbil={handlePengambilan}
           getStatusBadge={getStatusBadge}
           remainingDays={calculateRemainingDays(penitipan)}
         />

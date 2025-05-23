@@ -114,8 +114,16 @@ const CardListPenitipan = ({
 
           <div className="info-row">
             <span className="info-label">Perpanjangan</span>
-            <span className="info-value fw-bold text-success">
-              {(penitipan.perpanjangan)}
+            <span className="info-value">
+              {penitipan?.perpanjangan !== undefined ? (
+                penitipan.perpanjangan ? (
+                  <Badge bg="success" className="ms-2">Ya</Badge>
+                ) : (
+                  <Badge bg="light" text="dark" className="ms-2">Tidak</Badge>
+                )
+              ) : (
+                <Badge bg="light" text="dark" className="ms-2">Data tidak tersedia</Badge>
+              )}
             </span>
           </div>
           

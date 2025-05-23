@@ -175,15 +175,18 @@ const DaftarBarang = () => {
   const totalPages = Math.ceil(filteredPenitipan.length / itemsPerPage);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const openModal = async (penitipan) => {
-    if (penitipan) {
+  const openModal = async (id_penitipan) => {
+    if (id_penitipan) {
       try {
-        const response = await GetPenitipanById(penitipan.id_penitipan);
+        const response = await GetPenitipanById(id_penitipan);
         const data = response.data;
         setSelectedPenitipan(data);
+        const baseUrl = 'http://localhost:3000/uploads/barang/'; 
         if (data.Barang.gambar) {
-          const imageUrls = data.Barang.gambar.split(',').map(img => img.trim());
-          setImagePreview(imageUrls.slice(0, 2)); // Limit to 2 images
+          const imageUrls = data.Barang.gambar
+            .split(',')
+            .map(img => `${baseUrl}${img.trim()}`); 
+          setImagePreview(imageUrls.slice(0, 2)); 
         } else {
           setImagePreview([]);
         }

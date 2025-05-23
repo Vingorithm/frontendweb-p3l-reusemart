@@ -40,7 +40,7 @@ const DaftarTransaksi = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(8);
+  const [itemsPerPage] = useState(9);
   const [selectedView, setSelectedView] = useState('all');
   const [akun, setAkun] = useState(null);
   const [pegawai, setPegawai] = useState(null);
@@ -57,6 +57,7 @@ const DaftarTransaksi = () => {
     { id: 'Terjual', name: 'Terjual' },
     { id: 'Didonasikan', name: 'Didonasikan' },
     { id: 'Menunggu didonasikan', name: 'Menunggu Didonasikan' },
+    { id: 'Menunggu diambil', name: 'Menunggu Diambil' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -210,6 +211,8 @@ const DaftarTransaksi = () => {
         return <Badge bg="success">Didonasikan</Badge>;
       case 'Menunggu didonasikan':
         return <Badge bg="warning">Menunggu Didonasikan</Badge>;
+       case 'Menunggu diambil':
+        return <Badge bg="warning">Menunggu Diambil</Badge>;  
       default:
         return <Badge bg="secondary">{status}</Badge>;
     }

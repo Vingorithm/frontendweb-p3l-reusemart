@@ -185,6 +185,14 @@ const Keranjang = () => {
     }
   }, [poinUsed, totalHargaBarang, ongkosKirim]);
 
+  const pembelian = {
+    id_pembeli: pembeli?.id_pembeli,
+    id_alamat: selectedAlamat?.id_alamat,
+    tanggal_pembelian: new Date().now,
+    total_harga: totalHarga,
+
+  }
+
   return (
   <div className="container-fluid mt-4 px-5" style={{ fontFamily: 'Inter, sans-serif', backgroundColor: '#f9f9f9' }}>
     <style>

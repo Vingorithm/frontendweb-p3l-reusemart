@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
   Container,
   Row,
@@ -19,7 +20,7 @@ import {
   BsGrid,
   BsListUl,
 } from 'react-icons/bs';
-import { GetAllPenitipan } from '../../clients/PenitipanService';
+
 import { GetAllPenitip } from '../../clients/PenitipService';
 import { GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
@@ -27,9 +28,10 @@ import RoleSidebar from '../../components/navigation/Sidebar';
 import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaModal from '../../components/pdf/NotaPenitipanPdf';
+import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import TransaksiCard from '../../components/card/CardListPengambilan';
 import ConfirmationModal from '../../components/modal/ConfirmationModal';
-import { UpdatePenitipan } from '../../clients/PenitipanService';
+import { GetAllPenitipan, GetItemForScheduling, UpdatePenitipan } from '../../clients/PenitipanService';
 
 const Pengambilan = () => {
   const [penitipanList, setPenitipanList] = useState([]);
@@ -119,18 +121,31 @@ const Pengambilan = () => {
       const today = new Date();
       const updatedPenitipan = await Promise.all(
         penitipanResponse.data.map(async (item) => {
-          //kalo penitipan diambil > 2 hari lgsg update jadi menunggu didonasikan
-          if (item.status_penitipan === 'Menunggu diambil') {
-            const batasPengambilan = new Date(item.tanggal_batas_pengambilan);
-            const diffTime = today - batasPengambilan;
-            const diffDays = diffTime / (1000 * 60 * 60 * 24);
-            
-            if (diffDays > 2) {
-              await UpdatePenitipan(item.id_penitipan, {
-                ...item,
-                status_penitipan: 'Menunggu didonasikan',
-              });
-              return { ...item, status_penitipan: 'Menunggu didonasikan' };
+          if (item.status_penitipan === 'Terjual') {
+            const schedulingData = await axios.get(`http://localhost:3000/api/penitipan/item-for-scheduling/${item.id_penitipan}`);
+            const scheduling = schedulingData.data;
+
+            if (scheduling.pembelian && scheduling.pembelian.pengiriman && scheduling.pembelian.pengiriman.jenis_pengiriman === 'Ambil di gudang') {
+              const batasPengambilan = new Date(item.tanggal_batas_pengambilan);
+              const diffTime = today - batasPengambilan;
+              const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+              if (diffDays > 2) {
+                await UpdatePenitipan(item.id_penitipan, {
+                  ...item,
+                  status_penitipan: 'Menunggu didonasikan',
+                });
+
+                await UpdatePengirimanStatus(
+                  scheduling.pembelian.pengiriman.id_pengiriman,
+                  'Hangus',
+                  scheduling.pembelian.pengiriman.tanggal_mulai,
+                  scheduling.pembelian.pengiriman.tanggal_berakhir
+                );
+
+                return { ...item, status_penitipan: 'Menunggu didonasikan' };
+              }
+              return { ...item, pengiriman: scheduling.pembelian.pengiriman };
             }
           }
           return item;
@@ -138,7 +153,7 @@ const Pengambilan = () => {
       );
 
       const filteredPenitipan = updatedPenitipan.filter(
-        (item) => item.Barang && item.Barang.status_qc === 'Lulus'
+        (item) => item.Barang && item.Barang.status_qc === 'Lulus' && item.status_penitipan === 'Terjual' && item.pengiriman && item.pengiriman.jenis_pengiriman === 'Ambil di gudang'
       );
 
       setPenitipanList(filteredPenitipan);
@@ -208,17 +223,28 @@ const Pengambilan = () => {
     setCurrentPage(1);
   };
 
-  const handleCetakNota = (penitipan) => {
-    setSelectedPenitipan(penitipan);
-    setShowModal(true);
-    // Update penitipan to mark nota as printed
-    setPenitipanList((prev) =>
-      prev.map((item) =>
-        item.id_penitipan === penitipan.id_penitipan
-          ? { ...item, cetakNotaDone: true }
-          : item
-      )
-    );
+  const handleCetakNota = async (penitipan) => {
+    try {
+      const schedulingData = await axios.get(`http://localhost:3000/api/penitipan/item-for-scheduling/${penitipan.id_penitipan}`);
+      const scheduling = schedulingData.data;
+
+      setSelectedPenitipan({
+        ...penitipan,
+        pembelian: scheduling.pembelian,
+      });
+      setShowModal(true);
+
+      setPenitipanList((prev) =>
+        prev.map((item) =>
+          item.id_penitipan === penitipan.id_penitipan
+            ? { ...item, cetakNotaDone: true }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error fetching scheduling data:', error);
+      showNotification('Gagal memuat data untuk cetak nota!', 'danger');
+    }
   };
 
   const handleConfirmDiambil = async (penitipan) => {
@@ -240,6 +266,22 @@ const Pengambilan = () => {
       showNotification(`Penitipan ${updatedStatus} berhasil dikonfirmasi!`, 'success');
     } catch (error) {
       showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
+    }
+  };
+
+  const handleConfirmReceipt = async (id_pengiriman) => {
+    try {
+      await axios.patch(`http://localhost:3000/api/penitipan/confirm-receipt/${id_pengiriman}`);
+      setPenitipanList((prev) =>
+        prev.map((item) =>
+          item.pengiriman.id_pengiriman === id_pengiriman
+            ? { ...item, pengiriman: { ...item.pengiriman, status_pengiriman: 'transaksi selesai' } }
+            : item
+        )
+      );
+      showNotification('Barang telah dikonfirmasi diterima!', 'success');
+    } catch (error) {
+      showNotification('Gagal mengkonfirmasi penerimaan barang!', 'danger');
     }
   };
 
@@ -286,6 +328,7 @@ const Pengambilan = () => {
           penitipan={penitipan}
           handleCetakNota={handleCetakNota}
           handleConfirmDiambil={handleConfirmDiambil}
+          handleConfirmReceipt={handleConfirmReceipt}
           pegawai={pegawai}
         />
       </Col>
@@ -511,7 +554,7 @@ const Pengambilan = () => {
       </div>
 
       {selectedPenitipan && (
-        <CetakNotaModal
+        <CetakNotaPengambilan
           show={showModal}
           handleClose={() => setShowModal(false)}
           penitipan={selectedPenitipan}

@@ -25,3 +25,6 @@ export const GetPenitipanByIdBarang = (id) =>
 
 export const GetAllPenitipanByIdPenitip = (id) =>
     apiClient.get(ENDPOINTS.GET_ALL_PENITIPAN_BY_ID_PENITIP(id));
+
+export const GetItemForScheduling = (id) =>
+  apiClient.get(ENDPOINTS.GET_ITEM_FOR_SCHEDULING(id));

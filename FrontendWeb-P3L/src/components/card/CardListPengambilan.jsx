@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsBoxSeam } from 'react-icons/bs';
+import { BsBoxSeam, BsPrinter } from 'react-icons/bs';
 import ConfirmationModal from '../../components/modal/ConfirmationModal';
 
-const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil, pegawai }) => {
+const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil, handleConfirmReceipt, pegawai }) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [notaPrinted, setNotaPrinted] = useState(penitipan.cetakNotaDone || false);
 
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: 'long', year: 'numeric' };
@@ -36,12 +37,21 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
     }
   };
 
+  const onClickCetakNota = () => {
+    handleCetakNota(penitipan);
+    setNotaPrinted(true);
+  };
+
   const handleOpenConfirmationModal = () => {
     setShowConfirmationModal(true);
   };
 
   const handleCloseConfirmationModal = () => {
     setShowConfirmationModal(false);
+  };
+
+  const handleConfirmReceiptClick = () => {
+    handleConfirmReceipt(penitipan.pengiriman.id_pengiriman);
   };
 
   return (
@@ -99,12 +109,30 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
 
           <div className="d-flex flex-column gap-2 mt-3">
             <Button
+              variant="outline-primary"
+              className="cetak-nota-btn"
+              onClick={onClickCetakNota}
+              disabled={notaPrinted || penitipan.cetakNotaDone}
+            >
+              <BsPrinter className="me-1" /> Cetak Nota
+            </Button>
+
+            <Button
               variant="outline-success"
               className="atur-pengiriman-btn"
               onClick={handleOpenConfirmationModal}
-              disabled = {penitipan.status_penitipan === "Diambil kembali"}
+              disabled={!(notaPrinted || penitipan.cetakNotaDone)}
             >
               <BsBoxSeam className="me-1" /> Konfirmasi Diambil
+            </Button>
+
+            <Button
+              variant="outline-primary"
+              className="confirm-receipt-btn"
+              onClick={handleConfirmReceiptClick}
+              disabled={!(notaPrinted || penitipan.cetakNotaDone) || penitipan.pengiriman.status_pengiriman === 'transaksi selesai'}
+            >
+              Konfirmasi Diterima
             </Button>
           </div>
         </Card.Body>

@@ -25,7 +25,7 @@ const ConfirmationModal = ({ show, handleClose, penitipan, handleConfirm, handle
           <Modal.Title>Konfirmasi Pengambilan</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Apakah Anda yakin barang akan diambil?</p>
+          <p>Apakah Anda yakin barang akan telah diambil?</p>
           {penitipan.status_penitipan === 'Terjual' && (
             <Button
               variant="outline-primary"

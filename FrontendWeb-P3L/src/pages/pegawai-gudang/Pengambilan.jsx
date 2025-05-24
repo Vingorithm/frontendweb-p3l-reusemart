@@ -28,6 +28,8 @@ import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaModal from '../../components/pdf/NotaPenitipanPdf';
 import TransaksiCard from '../../components/card/CardListPengambilan';
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
+import { UpdatePenitipan } from '../../clients/PenitipanService';
 
 const Pengambilan = () => {
   const [penitipanList, setPenitipanList] = useState([]);
@@ -50,10 +52,13 @@ const Pengambilan = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [notaPrintedForConfirmation, setNotaPrintedForConfirmation] = useState(false);
 
   const statusViews = [
     { id: 'Terjual', name: 'Terjual' },
     { id: 'Menunggu diambil', name: 'Menunggu Diambil Kembali' },
+    { id: 'Diambil kembali', name: 'Diambil Kembali' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -111,7 +116,28 @@ const Pengambilan = () => {
         GetAllPenitip(),
       ]);
 
-      const filteredPenitipan = penitipanResponse.data.filter(
+      const today = new Date();
+      const updatedPenitipan = await Promise.all(
+        penitipanResponse.data.map(async (item) => {
+          //kalo penitipan diambil > 2 hari lgsg update jadi menunggu didonasikan
+          if (item.status_penitipan === 'Menunggu diambil') {
+            const batasPengambilan = new Date(item.tanggal_batas_pengambilan);
+            const diffTime = today - batasPengambilan;
+            const diffDays = diffTime / (1000 * 60 * 60 * 24);
+            
+            if (diffDays > 2) {
+              await UpdatePenitipan(item.id_penitipan, {
+                ...item,
+                status_penitipan: 'Menunggu didonasikan',
+              });
+              return { ...item, status_penitipan: 'Menunggu didonasikan' };
+            }
+          }
+          return item;
+        })
+      );
+
+      const filteredPenitipan = updatedPenitipan.filter(
         (item) => item.Barang && item.Barang.status_qc === 'Lulus'
       );
 
@@ -195,6 +221,28 @@ const Pengambilan = () => {
     );
   };
 
+  const handleConfirmDiambil = async (penitipan) => {
+    try {
+      const today = new Date().toISOString();
+      const updatedStatus = penitipan.status_penitipan === 'Terjual' ? 'Diambil pembeli' : 'Diambil kembali';
+      await UpdatePenitipan(penitipan.id_penitipan, {
+        ...penitipan,
+        status_penitipan: updatedStatus,
+        tanggal_batas_pengambilan: today,
+      });
+      setPenitipanList((prev) =>
+        prev.map((item) =>
+          item.id_penitipan === penitipan.id_penitipan
+            ? { ...item, status_penitipan: updatedStatus, tanggal_batas_pengambilan: today }
+            : item
+        )
+      );
+      showNotification(`Penitipan ${updatedStatus} berhasil dikonfirmasi!`, 'success');
+    } catch (error) {
+      showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Dalam masa penitipan':
@@ -237,6 +285,7 @@ const Pengambilan = () => {
         <TransaksiCard
           penitipan={penitipan}
           handleCetakNota={handleCetakNota}
+          handleConfirmDiambil={handleConfirmDiambil}
           pegawai={pegawai}
         />
       </Col>

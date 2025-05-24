@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsPrinter, BsBoxSeam } from 'react-icons/bs';
-import AturPengirimanModal from '../../components/modal/AturPengirimanModal'; // Import the modal
+import { BsBoxSeam } from 'react-icons/bs';
+import ConfirmationModal from '../../components/modal/ConfirmationModal';
 
-const CardListPengambilan = ({ penitipan, handleCetakNota, pegawai }) => {
-  const [notaPrinted, setNotaPrinted] = useState(penitipan.cetakNotaDone || false);
-  const [showPengirimanModal, setShowPengirimanModal] = useState(false);
+const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil, pegawai }) => {
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: 'long', year: 'numeric' };
@@ -37,24 +36,12 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, pegawai }) => {
     }
   };
 
-  const onClickCetakNota = () => {
-    handleCetakNota(penitipan);
-    setNotaPrinted(true);
+  const handleOpenConfirmationModal = () => {
+    setShowConfirmationModal(true);
   };
 
-  const handleOpenPengirimanModal = () => {
-    if (notaPrinted || penitipan.cetakNotaDone) {
-      setShowPengirimanModal(true);
-    }
-  };
-
-  const handleClosePengirimanModal = () => {
-    setShowPengirimanModal(false);
-  };
-
-  const handlePengirimanSuccess = (data) => {
-    // Handle successful shipping creation (e.g., show toast or update state)
-    setShowPengirimanModal(false);
+  const handleCloseConfirmationModal = () => {
+    setShowConfirmationModal(false);
   };
 
   return (
@@ -112,33 +99,24 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, pegawai }) => {
 
           <div className="d-flex flex-column gap-2 mt-3">
             <Button
-              variant="outline-primary"
-              className="cetak-nota-btn"
-              onClick={onClickCetakNota}
-              disabled={notaPrinted || penitipan.cetakNotaDone}
-            >
-              <BsPrinter className="me-1" /> Cetak Nota
-            </Button>
-
-            <Button
               variant="outline-success"
               className="atur-pengiriman-btn"
-              onClick={handleOpenPengirimanModal}
-              disabled={!(notaPrinted || penitipan.cetakNotaDone)}
+              onClick={handleOpenConfirmationModal}
+              disabled = {penitipan.status_penitipan === "Diambil kembali"}
             >
-              <BsBoxSeam className="me-1" /> Atur Pengiriman
+              <BsBoxSeam className="me-1" /> Konfirmasi Diambil
             </Button>
           </div>
         </Card.Body>
       </Card>
 
-      {showPengirimanModal && (
-        <AturPengirimanModal
-          show={showPengirimanModal}
-          handleClose={handleClosePengirimanModal}
+      {showConfirmationModal && (
+        <ConfirmationModal
+          show={showConfirmationModal}
+          handleClose={handleCloseConfirmationModal}
           penitipan={penitipan}
-          pegawai={pegawai}
-          onSuccess={handlePengirimanSuccess}
+          handleConfirm={handleConfirmDiambil}
+          handleCetakNota={handleCetakNota}
         />
       )}
 

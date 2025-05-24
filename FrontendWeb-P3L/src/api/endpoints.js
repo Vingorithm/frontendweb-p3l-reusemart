@@ -62,6 +62,10 @@ export const ENDPOINTS = {
     UPDATE_PENITIPAN: (id) => `/penitipan/${id}`,
     DELETE_PENITIPAN: (id) => `/penitipan/${id}`,
     GET_ALL_PENITIPAN_BY_ID_PENITIP: (id) => `/penitipan/byIdPenitip/${id}`,
+    GET_ITEM_FOR_SCHEDULING: (id) => `/penitipan/item-for-scheduling/${id}`,
+    ITEM_FOR_SCHEDULING: (id) => `/penitipan/item-for-scheduling/${id}`,
+    CONFIRM_RECEIPT: (id) => `/penitipan/confirm-receipt/${id}`,
+    SCHEDULE_PICKUP: `/penitipan/schedule-pickup`,
 
     // Barang
     GET_ALL_BARANG: "/barang",
@@ -85,6 +89,7 @@ export const ENDPOINTS = {
     SHOW_PENGIRIMAN: (id) => `/pengiriman/${id}`,
     UPDATE_PENGIRIMAN: (id) => `/pengiriman/${id}`,
     DELETE_PENGIRIMAN: (id) => `/pengiriman/${id}`,
+    UPDATE_PENGIRIMAN_STATUS: (id) => `/pengiriman/update-status/${id}`,
 
     // Transaksi
     GET_ALL_TRANSAKSI: "/transaksi",

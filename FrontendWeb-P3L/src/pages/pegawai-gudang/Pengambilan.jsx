@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import {
   Container,
   Row,
@@ -20,18 +19,16 @@ import {
   BsGrid,
   BsListUl,
 } from 'react-icons/bs';
-
 import { GetAllPenitip } from '../../clients/PenitipService';
 import { GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
 import RoleSidebar from '../../components/navigation/Sidebar';
 import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
-import CetakNotaModal from '../../components/pdf/NotaPenitipanPdf';
 import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import TransaksiCard from '../../components/card/CardListPengambilan';
-import ConfirmationModal from '../../components/modal/ConfirmationModal';
-import { GetAllPenitipan, GetItemForScheduling, UpdatePenitipan } from '../../clients/PenitipanService';
+import { GetAllPenitipan, UpdatePenitipan, GetItemForScheduling, ConfirmReceipt, SchedulePickup } from '../../clients/PenitipanService';
+import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 
 const Pengambilan = () => {
   const [penitipanList, setPenitipanList] = useState([]);
@@ -54,13 +51,10 @@ const Pengambilan = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
-  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
-  const [notaPrintedForConfirmation, setNotaPrintedForConfirmation] = useState(false);
 
   const statusViews = [
     { id: 'Terjual', name: 'Terjual' },
     { id: 'Menunggu diambil', name: 'Menunggu Diambil Kembali' },
-    { id: 'Diambil kembali', name: 'Diambil Kembali' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -122,8 +116,8 @@ const Pengambilan = () => {
       const updatedPenitipan = await Promise.all(
         penitipanResponse.data.map(async (item) => {
           if (item.status_penitipan === 'Terjual') {
-            const schedulingData = await axios.get(`http://localhost:3000/api/penitipan/item-for-scheduling/${item.id_penitipan}`);
-            const scheduling = schedulingData.data;
+            const schedulingResponse = await GetItemForScheduling(item.id_penitipan);
+            const scheduling = schedulingResponse.data;
 
             if (scheduling.pembelian && scheduling.pembelian.pengiriman && scheduling.pembelian.pengiriman.jenis_pengiriman === 'Ambil di gudang') {
               const batasPengambilan = new Date(item.tanggal_batas_pengambilan);
@@ -145,16 +139,18 @@ const Pengambilan = () => {
 
                 return { ...item, status_penitipan: 'Menunggu didonasikan' };
               }
-              return { ...item, pengiriman: scheduling.pembelian.pengiriman };
+              return { ...item, pembelian: scheduling.pembelian, pengiriman: scheduling.pembelian.pengiriman };
             }
           }
           return item;
         })
       );
 
-      const filteredPenitipan = updatedPenitipan.filter(
-        (item) => item.Barang && item.Barang.status_qc === 'Lulus' && item.status_penitipan === 'Terjual' && item.pengiriman && item.pengiriman.jenis_pengiriman === 'Ambil di gudang'
-      );
+      const filteredPenitipan = updatedPenitipan
+        .filter(
+          (item) => item.Barang && item.Barang.status_qc === 'Lulus' && item.status_penitipan === 'Terjual' && item.pengiriman && item.pengiriman.jenis_pengiriman === 'Ambil di gudang'
+        )
+        .sort((a, b) => new Date(a.pembelian.tanggal_pembelian) - new Date(b.pembelian.tanggal_pembelian));
 
       setPenitipanList(filteredPenitipan);
       setPenitipList(penitipResponse.data);
@@ -189,11 +185,7 @@ const Pengambilan = () => {
             item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (item.Barang &&
             item.Barang.id_barang &&
-            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.Barang &&
-            item.Barang.Penitip &&
-            item.Barang.Penitip.nama_penitip &&
-            item.Barang.Penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase()))
+            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -225,8 +217,8 @@ const Pengambilan = () => {
 
   const handleCetakNota = async (penitipan) => {
     try {
-      const schedulingData = await axios.get(`http://localhost:3000/api/penitipan/item-for-scheduling/${penitipan.id_penitipan}`);
-      const scheduling = schedulingData.data;
+      const schedulingResponse = await GetItemForScheduling(penitipan.id_penitipan);
+      const scheduling = schedulingResponse.data;
 
       setSelectedPenitipan({
         ...penitipan,
@@ -271,7 +263,7 @@ const Pengambilan = () => {
 
   const handleConfirmReceipt = async (id_pengiriman) => {
     try {
-      await axios.patch(`http://localhost:3000/api/penitipan/confirm-receipt/${id_pengiriman}`);
+      await ConfirmReceipt(id_pengiriman);
       setPenitipanList((prev) =>
         prev.map((item) =>
           item.pengiriman.id_pengiriman === id_pengiriman
@@ -328,8 +320,7 @@ const Pengambilan = () => {
           penitipan={penitipan}
           handleCetakNota={handleCetakNota}
           handleConfirmDiambil={handleConfirmDiambil}
-          handleConfirmReceipt={handleConfirmReceipt}
-          pegawai={pegawai}
+          setPenitipanList={setPenitipanList}
         />
       </Col>
     );

@@ -32,5 +32,5 @@ export const GetItemForScheduling = (id) =>
 export const ConfirmReceipt = (id) =>
   apiClient.patch(ENDPOINTS.CONFIRM_RECEIPT(id));
 
-export const SchedulePickup = (data) =>
-  apiClient.put(ENDPOINTS.SCHEDULE_PICKUP, data);
+export const SchedulePickup = (id, data) =>
+  apiClient.put(ENDPOINTS.SCHEDULE_PICKUP(id), data);

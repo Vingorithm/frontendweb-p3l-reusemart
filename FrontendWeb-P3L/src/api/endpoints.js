@@ -65,8 +65,8 @@ export const ENDPOINTS = {
     GET_ITEM_FOR_SCHEDULING: (id) => `/penitipan/item-for-scheduling/${id}`,
     ITEM_FOR_SCHEDULING: (id) => `/penitipan/item-for-scheduling/${id}`,
     CONFIRM_RECEIPT: (id) => `/penitipan/confirm-receipt/${id}`,
-    SCHEDULE_PICKUP: `/penitipan/schedule-pickup`,
-
+    SCHEDULE_PICKUP: (id) => `/penitipan/schedule-pickup/${id}`,
+    
     // Barang
     GET_ALL_BARANG: "/barang",
     GET_ALL_BARANG_GARANSI: "/barang/garansi/",

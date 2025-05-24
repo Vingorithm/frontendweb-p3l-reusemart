@@ -65,6 +65,7 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
     try {
       const startDate = new Date(selectedDate);
       startDate.setHours(8, 0, 0, 0);
+      const startDateWIB = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000));
 
       let endDate = new Date(startDate);
       let daysAdded = 0;
@@ -76,18 +77,18 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
         }
       }
       endDate.setHours(20, 0, 0, 0);
+      const endDateWIB = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
 
-      const scheduleResponse = await SchedulePickup({
-        id_pengiriman: penitipan.pengiriman.id_pengiriman,
-        tanggal_mulai: startDate.toISOString(),
-        tanggal_berakhir: endDate.toISOString(),
+      const scheduleResponse = await SchedulePickup(penitipan.pengiriman.id_pengiriman, {
+        tanggal_mulai: startDateWIB.toISOString(),
+        tanggal_berakhir: endDateWIB.toISOString(),
       });
 
       const updateResponse = await UpdatePengirimanStatus(
         penitipan.pengiriman.id_pengiriman,
         'Menunggu diambil pembeli',
-        startDate.toISOString(),
-        endDate.toISOString()
+        startDateWIB.toISOString(),
+        endDateWIB.toISOString()
       );
 
       console.log('Schedule Response:', scheduleResponse.data);
@@ -102,8 +103,8 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
             pengiriman: {
               ...newList[index].pengiriman,
               status_pengiriman: 'Menunggu diambil pembeli',
-              tanggal_mulai: startDate.toISOString(),
-              tanggal_berakhir: endDate.toISOString(),
+              tanggal_mulai: startDateWIB.toISOString(),
+              tanggal_berakhir: endDateWIB.toISOString(),
             },
           };
         }

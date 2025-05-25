@@ -6,6 +6,8 @@ import { decodeToken } from '../../utils/jwtUtils';
 import { FaEdit, FaSearch, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { apiAlamatPembeli } from "../../clients/AlamatPembeliServices";
 import { GetPenitipById } from "../../clients/PenitipService";
+import dayjs from "dayjs";
+import KirimBuktiBayarModal from "../../components/modal/KirimBuktiBayarModal";
 
 // Shared color palette
 export const colors = {
@@ -174,6 +176,55 @@ const HistoryTransaksi = ({ pembeliId }) => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [countdowns, setCountdowns] = useState({});
+
+  const extractIdNumber = (id) => {
+      const match = id.match(/\d+/);
+      return match ? parseInt(match[0]) : 0;
+  };
+
+  const generateNotaNumber = (transaction) => {
+    const date = new Date(transaction.pembelian?.tanggal_pembelian);
+    const year = String(date.getFullYear()).slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const idPembelian = extractIdNumber(transaction.pembelian?.id_pembelian);
+
+    return `${year}.${month}.${idPembelian}`;
+  };
+
+  const calculateRemainingTime = (deadline) => {
+    const now = new Date();
+    const end = new Date(deadline);
+    const diff = end - now;
+
+    if (diff <= 0) return "00:00:00";
+
+    const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+    const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+    const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCountdowns((prevCountdowns) => {
+        const updatedCountdowns = {};
+        transactions.forEach((transaction) => {
+          const pembelianDate = new Date(transaction.pembelian?.tanggal_pembelian);
+          const deadline = isNaN(pembelianDate)
+            ? null
+            : new Date(pembelianDate.getTime() + 15 * 60 * 1000);
+          if (deadline && deadline > new Date()) {
+            updatedCountdowns[transaction.pembelian.id_pembelian] = calculateRemainingTime(deadline);
+          }
+        });
+        return updatedCountdowns;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [transactions]);
 
   // Fetch pembeli name
   const getPembeliName = async (idPembeli) => {
@@ -368,9 +419,8 @@ const HistoryTransaksi = ({ pembeliId }) => {
                       <h5 style={{ fontWeight: 'bold', marginBottom: '5px' }}>
                         {transaction.pembelian.id_pembelian || 'N/A'}
                       </h5>
-                      <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>
-                        {transaction.pembelian.tanggal_pembelian ? formatDate(transaction.pembelian.tanggal_pembelian) : 'N/A'}
-                      </p>
+                      <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>No Nota: {generateNotaNumber(transaction)}</p>
+                      <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>Tanggal: {transaction.pembelian.tanggal_pembelian ? formatDate(transaction.pembelian.tanggal_pembelian) : 'N/A'}</p>
                     </div>
                     <p
                       style={{
@@ -454,6 +504,20 @@ const HistoryTransaksi = ({ pembeliId }) => {
                           Ulas
                         </button>
                       )}
+                      {
+                        countdowns[transaction.pembelian.id_pembelian] != null ? 
+                        <button
+                          style={{ ...historyStyles.buttonPrimary, marginLeft: '10px' }}
+                          type="button"
+                          data-bs-toggle="modal" data-bs-target="#kirim-bukti-bayar-modal"
+                        >
+                          Bayar (
+                          {transaction.pembelian.status_pembelian === 'Menunggu verifikasi pembayaran' && (countdowns[transaction.pembelian.id_pembelian] || 'Memuat...')}
+                          )
+                        </button>
+                        :
+                        <></>
+                      }
                       <button
                         style={{ ...historyStyles.buttonPrimary, marginLeft: '10px' }}
                         onClick={() => {
@@ -589,6 +653,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
           )}
         </>
       )}
+      <KirimBuktiBayarModal />
     </div>
   );
 };

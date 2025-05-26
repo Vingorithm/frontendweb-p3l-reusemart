@@ -59,13 +59,12 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
   return (
     <div className="login-register-component">
-      
       <div className="container py-5">
         <div className={`auth-container ${isRightPanelActive ? "right-panel-active" : ""}`}>
           {/* Sign Up Form */}
           <div className="auth-form sign-up">
             <form onSubmit={handleSignUp}>
-              <h1 className="mb-4">Daftar</h1>
+              <h1 className="mb-4">Register</h1>
               <div className="mb-3">
                 <input
                   type="text"
@@ -153,7 +152,7 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
           {/* Log In Form */}
           <div className="auth-form log-in">
             <form onSubmit={handleLogin}>
-              <h1 className="mb-4">Log In</h1>
+              <h1 className="mb-4">Login</h1>
               <div className="mb-3">
                 <input
                   type="email"
@@ -203,12 +202,11 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
       <style jsx>{`
         .login-register-component {
-          background-color: #FCFBF0;
+          background-color: #FFFFFF;
           min-height: 100vh;
           width: 100%;
           display: flex;
           align-items: center;
-          background-image: linear-gradient(135deg, rgba(147, 165, 136, 0.2) 0%, rgba(252, 251, 240, 0.8) 100%);
         }
 
         .auth-container {
@@ -216,11 +214,10 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
           width: 100%;
           max-width: 850px;
           min-height: 550px;
-          background: #FCFBF0;
-          border-radius: 16px;
+          background: #FFFFFF;
+          border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 14px 28px rgba(57, 117, 75, 0.18),
-                      0 10px 10px rgba(57, 117, 75, 0.12);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
           margin: 0 auto;
         }
 
@@ -262,48 +259,38 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
         }
 
         h1 {
-          color: #39754B;
-          font-weight: 700;
-          font-size: 32px;
-          letter-spacing: 1px;
-          position: relative;
-        }
-
-        h1:after {
-          content: '';
-          position: absolute;
-          left: 50%;
-          bottom: -10px;
-          transform: translateX(-50%);
-          height: 3px;
-          width: 50px;
-          background: #39754B;
-          border-radius: 2px;
+          color: #03081F;
+          font-weight: bold;
+          font-size: 24px;
+          letter-spacing: 0.5px;
+          margin-bottom: 25px;
         }
 
         .form-control {
-          width: 250px;
-          background: #FCFBF0;
-          padding: 15px;
+          width: 100%;
+          max-width: 300px;
+          background: #FFFFFF;
+          padding: 12px;
           border-radius: 8px;
-          border: 1px solid #93A588;
-          color: #1A1816;
+          border: 1px solid #D3D3D3;
+          color: #03081F;
           font-size: 14px;
-          transition: border-color 0.3s ease;
+          transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
         .form-control:focus {
-          border-color: #39754B;
-          box-shadow: 0 0 0 2px rgba(57, 117, 75, 0.2);
+          border-color: #028643;
+          box-shadow: 0 0 0 2px rgba(2, 134, 67, 0.2);
+          outline: none;
         }
 
         .form-control::placeholder {
-          color: #93A588;
+          color: #6C757D;
           opacity: 0.7;
         }
 
         .forgot-password {
-          color: #39754B;
+          color: #FC8A06;
           font-size: 14px;
           text-decoration: none;
           align-self: flex-start;
@@ -311,32 +298,32 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
         }
 
         .forgot-password:hover {
-          color: #1A1816;
+          color: #03081F;
           text-decoration: underline;
         }
 
         .custom-btn {
-          color: #FCFBF0;
-          background: #39754B;
+          color: #FFFFFF;
+          background: #028643;
           font-size: 14px;
-          font-weight: 600;
-          padding: 14px 60px;
-          border-radius: 30px;
-          letter-spacing: 1px;
+          font-weight: bold;
+          padding: 12px 50px;
+          border-radius: 20px;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
           transition: all 0.3s ease;
-          box-shadow: 0 4px 6px rgba(57, 117, 75, 0.2);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .custom-btn:hover {
-          background: #2a5437;
+          background: #016d38;
           transform: translateY(-2px);
-          box-shadow: 0 6px 10px rgba(57, 117, 75, 0.3);
+          box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
         }
 
         .custom-btn:active {
-          transform: translateY(0) scale(0.98);
-          box-shadow: 0 2px 5px rgba(57, 117, 75, 0.2);
+          transform: translateY(0);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .overlay-container {
@@ -356,7 +343,7 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
         .overlay {
           position: relative;
-          background: linear-gradient(135deg, #39754B 0%, #93A588 100%);
+          background: linear-gradient(135deg, #028643 0%, #39754B 100%);
           left: -100%;
           height: 100%;
           width: 200%;
@@ -384,38 +371,26 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
         .maskot {
           width: 100%;
-          max-width: 300px;
+          max-width: 250px;
           height: auto;
           object-fit: contain;
-        }
-
-        .overlay-panel h1, h4, .overlay-panel p {
-          color: #FCFBF0;
-        }
-
-        .overlay-panel p {
-          font-size: 16px;
-          font-weight: 400;
-          line-height: 1.5;
-          letter-spacing: 0.5px;
           margin: 20px 0;
-          max-width: 80%;
-          text-align: center;
+        }
+
+        .overlay-panel h4 {
+          color: #FFFFFF;
+          font-weight: bold;
+          font-size: 18px;
+          letter-spacing: 0.5px;
         }
 
         .overlay-left {
           transform: translateX(0);
-          background: linear-gradient(rgba(57, 117, 75, 0.8), rgba(26, 24, 22, 0.7)), url('https://via.placeholder.com/800x600');
-          background-size: cover;
-          background-position: center;
         }
 
         .overlay-right {
           right: 0;
           transform: translateX(0);
-          background: linear-gradient(rgba(57, 117, 75, 0.8), rgba(26, 24, 22, 0.7)), url('https://via.placeholder.com/800x600');
-          background-size: cover;
-          background-position: center;
         }
 
         .right-panel-active .overlay-left {
@@ -428,19 +403,19 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
 
         .ghost {
           background: transparent;
-          border: 2px solid #FCFBF0;
-          color: #FCFBF0;
-          padding: 14px 45px;
-          border-radius: 30px;
-          font-weight: 600;
-          letter-spacing: 1px;
+          border: 2px solid #FFFFFF;
+          color: #FFFFFF;
+          padding: 12px 40px;
+          border-radius: 20px;
+          font-weight: bold;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
           transition: all 0.3s ease;
         }
 
         .ghost:hover {
-          background: rgba(252, 251, 240, 0.2);
-          color: #FCFBF0;
+          background: rgba(255, 255, 255, 0.2);
+          color: #FFFFFF;
         }
 
         .role-selection {
@@ -453,16 +428,17 @@ const LoginRegister = ({ onLoginSuccess, onRegisterSuccess }) => {
           display: flex;
           align-items: center;
           font-size: 14px;
-          color: #1A1816;
+          color: #03081F;
           cursor: pointer;
         }
 
         .role-selection input[type="radio"] {
           margin-right: 5px;
+          accent-color: #028643;
         }
 
         .error-message {
-          color: red;
+          color: #DC3545;
           font-size: 14px;
           text-align: center;
           margin-bottom: 10px;

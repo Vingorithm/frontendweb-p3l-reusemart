@@ -9,6 +9,8 @@ import { GetPenitipById } from "../../clients/PenitipService";
 import dayjs from "dayjs";
 import KirimBuktiBayarModal from "../../components/modal/KirimBuktiBayarModal";
 import { generateNotaPenjualan } from "../../components/pdf/CetakNotaPenjualan";
+import { apiPembelian } from "../../clients/PembelianService";
+import { toast } from "sonner";
 
 // Shared color palette
 export const colors = {
@@ -177,6 +179,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [selectedPembelian, setSelectedPembelian] = useState(null);
   const [countdowns, setCountdowns] = useState({});
 
   const extractIdNumber = (id) => {
@@ -373,6 +376,18 @@ const HistoryTransaksi = ({ pembeliId }) => {
     );
   });
 
+  const handlePayment = async (id, data) => {
+    try {
+      const response = await apiPembelian.updatePembelian(id, data); 
+      if(response) {
+        toast.success("Berhasil mengirim bukti bayar!");
+      }
+    } catch (error) {
+      toast.error("Gagal mengirim bukti bayar!");
+      console.error("Gagal mengirim bukti bayar: ", error);
+    }
+  }
+
   return (
     <div>
       <h2 style={historyStyles.headingStyle}>Riwayat Transaksi</h2>
@@ -511,9 +526,10 @@ const HistoryTransaksi = ({ pembeliId }) => {
                           style={{ ...historyStyles.buttonPrimary, marginLeft: '10px' }}
                           type="button"
                           data-bs-toggle="modal" data-bs-target="#kirim-bukti-bayar-modal"
+                          onClick={() => setSelectedPembelian(transaction.pembelian)}
                         >
                           Bayar (
-                          {transaction.pembelian.status_pembelian === 'Menunggu verifikasi pembayaran' && (countdowns[transaction.pembelian.id_pembelian] || 'Memuat...')}
+                          {(transaction.pembelian.status_pembelian === 'Menunggu pembayaran' || transaction.pembelian.status_pembelian === 'Menunggu verifikasi pembayaran') && (countdowns[transaction.pembelian.id_pembelian] || 'Memuat...')}
                           )
                         </button>
                         :
@@ -654,7 +670,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
           )}
         </>
       )}
-      <KirimBuktiBayarModal />
+      <KirimBuktiBayarModal pembelian={selectedPembelian} onSend={handlePayment}/>
     </div>
   );
 };

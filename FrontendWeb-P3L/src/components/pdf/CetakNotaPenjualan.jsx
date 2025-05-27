@@ -1,76 +1,163 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
+import { apiPembelian } from "../../clients/PembelianService";
 
-export const generateNotaPDF = (pembelian) => {
-  const doc = new jsPDF();
+export const generateNotaPenjualan = async (id_pembelian) => {
 
-  // Judul
-  doc.setFontSize(12);
-  doc.text("ReUse Mart", 15, 10);
-  doc.setFontSize(10);
-  doc.text("Jl. Green Eco Park No. 456 Yogyakarta", 15, 15);
+  const extractIdNumber = (id) => {
+    const match = id.match(/\d+/);
+    return match ? parseInt(match[0]) : 0;
+  };
 
-  // Info Transaksi
-  const detail = [
-    ["No Nota", ": 25.02.101"],
-    ["Tanggal pesan", ": 15/2/2025 18:50"],
-    ["Lunas pada", ": 15/2/2024 19:01"],
-    ["Tanggal kirim", ": 16/2/2024"],
-  ];
-  detail.forEach((item, index) => {
-    doc.text(`${item[0]} ${item[1]}`, 15, 25 + index * 5);
-  });
+  const generateNotaNumber = (pembelian) => {
+    const date = new Date(pembelian?.tanggal_pembelian);
+    const year = String(date.getFullYear()).slice(-2);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const idPembelian = extractIdNumber(pembelian?.id_pembelian);
 
-  // Info Pembeli
-  doc.text("Pembeli : cath123@gmail.com / Catherine", 15, 50);
-  doc.text("Perumahan Griya Persada XII/20", 15, 55);
-  doc.text("Caturtunggal, Depok, Sleman", 15, 60);
-  doc.text("Delivery: Kurir ReUseMart (Cahyono)", 15, 65);
+    return `${year}.${month}.${idPembelian}`;
+  };
 
-  // Daftar Barang
-  autoTable(doc, {
-    startY: 70,
-    theme: "plain",
-    head: [["Barang", "Harga"]],
-    body: [
-      ["Kompor tanam 3 tungku", "2.000.000"],
-      ["Hair Dryer Ion", "500.000"],
-    ],
-    styles: {
-      fontSize: 10,
-    },
-    headStyles: {
-      fontStyle: "bold",
-    },
-  });
+  const formatDateTime = (dateInput) => {
+    const date = new Date(dateInput);
+    
+    const day = date.getDate(); // tanpa leading zero
+    const month = date.getMonth() + 1; // bulan dimulai dari 0
+    const year = date.getFullYear();
+    
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
 
-  let y = doc.lastAutoTable.finalY + 5;
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  }
 
-  // Total & potongan
-  const ringkasan = [
-    ["Total", "2.500.000"],
-    ["Ongkos Kirim", "0"],
-    ["Total", "2.500.000"],
-    ["Potongan 200 poin", "-20.000"],
-    ["Total", "2.480.000"],
-  ];
-  ringkasan.forEach((item, index) => {
-    doc.text(item[0], 120, y + index * 5);
-    doc.text(item[1], 170, y + index * 5, { align: "right" });
-  });
+  const formatDate = (dateInput) => {
+    const date = new Date(dateInput);
+    
+    const day = date.getDate(); // tanpa leading zero
+    const month = date.getMonth() + 1; // bulan dimulai dari 0
+    const year = date.getFullYear();
 
-  y += ringkasan.length * 5 + 5;
+    return `${day}/${month}/${year}`;
+  }
 
-  // Poin
-  doc.text("Poin dari pesanan ini: 297", 15, y);
-  doc.text("Total poin customer: 300", 15, y + 5);
+  const formatMoney = (nominal) => {
+    const formatted = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(parseFloat(nominal));
+    return formatted;
+  }
 
-  // QC
-  doc.text("QC oleh: Farida (P18)", 15, y + 15);
-  doc.text("Diterima oleh:", 15, y + 25);
-  doc.text("(.................................)", 15, y + 35);
-  doc.text("Tanggal: ............................", 15, y + 40);
+  try {
+    const pembelian = await apiPembelian.getPembelianById(id_pembelian);
+    if(pembelian) {
+      const doc = new jsPDF();
+    
+      // Judul
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("ReUse Mart", 15, 10);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("Jl. Green Eco Park No. 456 Yogyakarta", 15, 15);
+    
+      // Info Transaksi
+      const detail = [
+        ["No Nota             : ", `${generateNotaNumber(pembelian)}`],
+        ["Tanggal pesan   : ", `${formatDateTime(pembelian?.tanggal_pembelian)}`],
+        ["Lunas pada        : ", `${formatDateTime(pembelian?.tanggal_pelunasan)}`],
+        ["Tanggal kirim     : ", `${formatDate(pembelian?.Pengiriman?.tanggal_mulai)}`],
+      ];
 
-  // Simpan PDF
-  doc.save("nota-penjualan.pdf");
+      detail.forEach((item, index) => {
+        doc.text(`${item[0]} ${item[1]}`, 15, 25 + index * 5);
+      });
+    
+      // Info Pembeli
+      doc.setFont("helvetica", "bold");
+      doc.text("Pembeli : ", 15, 50);
+      doc.setFont("helvetica", "normal");
+      doc.text(`${pembelian?.Pembeli?.Akun?.email} / ${pembelian?.Pembeli?.nama}`, 35, 50);
+      doc.text(`${pembelian?.AlamatPembeli?.alamat_lengkap}`, 15, 55);
+      doc.text(`Delivery: Kurir ReUseMart (${pembelian?.Pengiriman?.Pegawai?.nama_pegawai})`, 15, 60);
+
+      let products = [];
+
+      pembelian?.SubPembelians.forEach(data => {
+        products.push([data?.Barang?.nama, formatMoney(data?.Barang?.harga)]);
+      });
+    
+      // Daftar Barang
+      autoTable(doc, {
+        startY: 70,
+        theme: "plain",
+        head: [["Barang", "Harga"]],
+        body: products,
+        styles: {
+          fontSize: 10,
+        },
+        headStyles: {
+          fontStyle: "bold",
+        },
+      });
+    
+      let y = doc.lastAutoTable.finalY + 5;
+
+      autoTable(doc, {
+        startY: y,
+        theme: "plain",
+        head: [["", ""]],
+        body: [
+          ["Total", `${formatMoney(pembelian?.total_harga)}`],
+          ["Ongkos Kirim", `${formatMoney(pembelian?.ongkir)}`],
+          ["Total", `${formatMoney(pembelian?.total_harga + pembelian?.ongkir)}`],
+          [`Potongan ${pembelian?.potongan_poin} poin`, `-${(pembelian?.potongan_poin/100)*10000}`],
+          ["Total", `${pembelian?.total_bayar}`],
+        ],
+        styles: {
+          fontSize: 10,
+        },
+        headStyles: {
+          fontStyle: "bold",
+        },
+      });
+
+      y = doc.lastAutoTable.finalY + 15;
+    
+      // Poin
+      doc.text(`Poin dari pesanan ini: ${pembelian?.poin_diperoleh}`, 15, y);
+      y += 5;
+      doc.text(`Total poin customer: ${pembelian?.Pembeli?.total_poin}`, 15, y);
+    
+      // QC
+      y += 15;
+
+      doc.text(`QC oleh: `, 15, y);
+      const pegawaiSudahDitulis = new Set();
+
+      pembelian?.SubPembelians.forEach(data => {
+        const pegawai = data?.Barang?.PegawaiGudang;
+        if (pegawai && !pegawaiSudahDitulis.has(pegawai.id_pegawai)) {
+          pegawaiSudahDitulis.add(pegawai.id_pegawai);
+          y += 5;
+          doc.text(`${pegawai.nama_pegawai} (${pegawai.id_pegawai})`, 15, y);
+        }
+      });
+
+      y += 20;
+      doc.text("Diterima oleh:", 15, y);
+      y += 35;
+      doc.text("(.................................)", 15, y);
+      y += 10;
+      doc.text("Tanggal: ............................", 15, y);
+    
+      // Simpan PDF
+      doc.save("nota-penjualan.pdf");
+    }
+  } catch (error) {
+    toast.error("Gagal membuat pdf!");
+    console.error("Gagal membuat pdf: ", error);
+  }
 };

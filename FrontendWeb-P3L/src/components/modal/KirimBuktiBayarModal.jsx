@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import ConfirmModal from "./ConfirmModal";
 
 const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
   const [fotoPreview, setFotoPreview] = useState("");
@@ -7,9 +8,15 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
   const fileInputRef = useRef(null);
   const modalRef = useRef(null);
 
+  const isEnd = () => {
+    const now = new Date().getTime();
+    const end = new Date(pembelian?.tanggal_pembelian).getTime() + (15 * 60 * 1000);
+    return now > end;
+  };
+
   const resetForm = () => {
     if (pembelian?.bukti_bayar) {
-      setFotoPreview(`http://localhost:3000/uploads/bukti_bayar/${pembelian.bukti_bayar}`);
+      setFotoPreview(`http://localhost:3000/uploads/bukti_bayar/${pembelian?.bukti_bayar}`);
     } else {
       setFotoPreview("");
     }
@@ -19,20 +26,44 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
     }
   };
 
-  const handleSend = (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (!fotoFile && !pembelian?.bukti_bayar) {
-      toast.error("Silakan pilih bukti pembayaran terlebih dahulu.");
-      return;
-    }
 
-    if (fotoFile) {
-    //   onSend(fotoFile);
-      toast.success("Bukti pembayaran berhasil dikirim.");
-    } else {
-        
-      toast.info("Bukti pembayaran lama tetap digunakan.");
-    }
+    const currentModalEl = document.getElementById("kirim-bukti-bayar-modal");
+    const currentModal = bootstrap.Modal.getInstance(currentModalEl);
+    currentModal.hide();
+
+ 
+    if (currentModalEl._confirmHandlerAttached) return;
+    currentModalEl._confirmHandlerAttached = true;
+
+    currentModalEl.addEventListener("hidden.bs.modal", async function handler() {
+      currentModalEl.removeEventListener("hidden.bs.modal", handler);
+      currentModalEl._confirmHandlerAttached = false;
+
+      const confirmed = await ConfirmModal.show("Apakah Anda yakin ingin mengirim bukti bayar?");
+      if (!confirmed) {
+        currentModal.show();
+        return;
+      }
+
+      if (isEnd()) {
+        toast.error("Waktu pembayaran sudah habis!");
+        resetForm();
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("bukti_transfer", fotoFile);
+      formData.append("tanggal_pelunasan", new Date());
+      formData.append("status_pembelian", "Menunggu verifikasi pembayaran");
+
+      if (onSend) {
+        await onSend(pembelian?.id_pembelian, formData);
+      }
+
+      resetForm();
+    });
   };
 
   const handleFotoChange = (e) => {
@@ -50,26 +81,12 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
   };
 
   useEffect(() => {
-    const modalElement = document.getElementById("kirim-bukti-bayar-modal");
-
-    const onShow = () => resetForm();
-    const onHide = () => resetForm();
-
-    if (modalElement) {
-      modalElement.addEventListener("shown.bs.modal", onShow);
-      modalElement.addEventListener("hidden.bs.modal", onHide);
-    }
-
-    return () => {
-      if (modalElement) {
-        modalElement.removeEventListener("shown.bs.modal", onShow);
-        modalElement.removeEventListener("hidden.bs.modal", onHide);
-      }
-    };
+    resetForm();
   }, [pembelian]);
 
   return (
     <form onSubmit={handleSend}>
+      <ConfirmModal />
       <div
         className="modal fade"
         id="kirim-bukti-bayar-modal"
@@ -84,7 +101,7 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
           <div className="modal-content">
             <div className="modal-header">
               <h1 className="modal-title fs-5" id="staticBackdropLabel">Kirim Bukti Bayar</h1>
-              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <button type="button" className="btn-close" aria-label="Close" data-bs-dismiss="modal" onClick={resetForm}></button>
             </div>
             <div className="modal-body">
               <input
@@ -92,11 +109,13 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
                 className="form-control mb-3"
                 onChange={handleFotoChange}
                 accept="image/*"
+                name="bukti_transfer"
                 ref={fileInputRef}
+                required
               />
               <p>Preview:</p>
               {fotoPreview ? (
-                <img src={fotoPreview} alt="Preview" className="img-fluid border w-100" />
+                <img src={fotoPreview ? fotoPreview : `http://localhost:3000/uploads/bukti_bayar/${pembelian?.bukti_bayar}`} alt="Preview" className="img-fluid border w-100" />
               ) : (
                 <div className="border p-5 text-center text-muted">
                   Tidak ada bukti bayar
@@ -104,7 +123,7 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
               )}
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={resetForm}>Tutup</button>
               <button type="submit" className="btn btn-success">Kirim</button>
             </div>
           </div>

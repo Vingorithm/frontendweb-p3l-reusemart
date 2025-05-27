@@ -201,7 +201,7 @@ const Keranjang = () => {
     potongan_poin: potonganPoin,
     total_bayar: totalHarga,
     poin_diperoleh: bonusPoin,
-    status_pembelian: "Menunggu verifikasi pembayaran"
+    status_pembelian: "Menunggu pembayaran"
   }
 
   const pengiriman = {

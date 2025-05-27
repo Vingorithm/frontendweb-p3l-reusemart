@@ -8,6 +8,7 @@ import { apiAlamatPembeli } from "../../clients/AlamatPembeliServices";
 import { GetPenitipById } from "../../clients/PenitipService";
 import dayjs from "dayjs";
 import KirimBuktiBayarModal from "../../components/modal/KirimBuktiBayarModal";
+import { generateNotaPenjualan } from "../../components/pdf/CetakNotaPenjualan";
 
 // Shared color palette
 export const colors = {

@@ -3,7 +3,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { apiPembeli } from "../../clients/PembeliService";
 import { apiSubPembelian } from "../../clients/SubPembelianService";
 import { decodeToken } from '../../utils/jwtUtils';
-import { FaEdit, FaSearch, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaEdit, FaSearch, FaChevronDown, FaChevronUp, FaHistory, FaArrowRight } from 'react-icons/fa';
 import { apiAlamatPembeli } from "../../clients/AlamatPembeliServices";
 import { GetPenitipById } from "../../clients/PenitipService";
 import dayjs from "dayjs";
@@ -11,6 +11,7 @@ import KirimBuktiBayarModal from "../../components/modal/KirimBuktiBayarModal";
 import { generateNotaPenjualan } from "../../components/pdf/CetakNotaPenjualan";
 import { apiPembelian } from "../../clients/PembelianService";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 // Shared color palette
 export const colors = {
@@ -73,6 +74,35 @@ export const sharedStyles = {
 // Additional styles for HistoryTransaksi
 const historyStyles = {
   ...sharedStyles,
+  historyHeaderContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '25px',
+    flexWrap: 'wrap',
+    gap: '15px',
+  },
+  seeAllButton: {
+    padding: '12px 24px',
+    backgroundColor: colors.secondary,
+    color: colors.white,
+    border: 'none',
+    borderRadius: '50px',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '10px',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 8px rgba(252, 138, 6, 0.3)',
+    textDecoration: 'none',
+    '&:hover': {
+      backgroundColor: '#e67a05',
+      transform: 'translateY(-2px)',
+      boxShadow: '0 4px 12px rgba(252, 138, 6, 0.4)',
+    }
+  },
   cardImage: {
     width: '100px',
     height: '100px',
@@ -172,6 +202,7 @@ const historyStyles = {
 };
 
 const HistoryTransaksi = ({ pembeliId }) => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [transactions, setTransactions] = useState([]);
   const [expanded, setExpanded] = useState({});
@@ -265,6 +296,10 @@ const HistoryTransaksi = ({ pembeliId }) => {
       console.error(`Error fetching penitip name for ${idPenitip}:`, error);
       return 'Unknown Penitip';
     }
+  };
+
+  const handleNavigateToFullHistory = () => {
+    navigate('/pembeli/history');
   };
 
   useEffect(() => {
@@ -390,7 +425,27 @@ const HistoryTransaksi = ({ pembeliId }) => {
 
   return (
     <div>
-      <h2 style={historyStyles.headingStyle}>Riwayat Transaksi</h2>
+      <div style={historyStyles.historyHeaderContainer}>
+        <h2 style={historyStyles.headingStyle}>Riwayat Transaksi</h2>
+        <button
+          style={historyStyles.seeAllButton}
+          onClick={handleNavigateToFullHistory}
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = '#e67a05';
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0 4px 12px rgba(252, 138, 6, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = colors.secondary;
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = '0 2px 8px rgba(252, 138, 6, 0.3)';
+          }}
+        >
+          <FaHistory />
+          Lihat Semua Riwayat
+          <FaArrowRight />
+        </button>
+      </div>
       
       {loading && (
         <div className="d-flex justify-content-center">

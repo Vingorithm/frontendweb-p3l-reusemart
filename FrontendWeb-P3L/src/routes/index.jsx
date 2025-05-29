@@ -27,6 +27,7 @@ import PenitipHistory from "../pages/penitip/PenitipHistory";
 import ManageAlamat from "../pages/pembeli/ManageAlamat";
 import DetailBarangPage from "../pages/DetailBarang";
 import DiskusiProdukPage from "../pages/DiskusiProduk";
+import HistoryTransaksiPage from "../pages/pembeli/HistoryTransaksi";
 
 import OProduk from "../pages/organisasi/OProduk";
 import ODonasi from "../pages/organisasi/ODonasi";
@@ -148,6 +149,7 @@ const mainRoutes = [
   { path: "/pembeli/profile", element: <PembeliProfile /> },
   { path: "/pembeli/alamat", element: <ManageAlamat /> },
   { path: "/pembeli/keranjang", element: <Keranjang /> },
+  { path: "/pembeli/history", element: <HistoryTransaksiPage /> },
 
   // Protected Route for Penitip
   {

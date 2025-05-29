@@ -54,7 +54,7 @@ const LaporanBulananPage = () => {
       const data = response.data;
       
       const filteredData = data.filter(transaksi => {
-        const tanggalPembelian = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pembelian);
+        const tanggalPembelian = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pelunasan);
         return tanggalPembelian.getFullYear() === selectedYear && 
                tanggalPembelian.getMonth() + 1 === selectedMonth;
       });
@@ -92,7 +92,7 @@ const LaporanBulananPage = () => {
 
     const dailyMap = {};
     data.forEach(transaksi => {
-      const tanggal = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pembelian);
+      const tanggal = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pelunasan);
       const day = tanggal.getDate();
       
       if (!dailyMap[day]) {
@@ -119,7 +119,7 @@ const LaporanBulananPage = () => {
 
     const weeklyMap = {};
     data.forEach(transaksi => {
-      const tanggal = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pembelian);
+      const tanggal = new Date(transaksi.SubPembelian?.Pembelian?.tanggal_pelunasan);
       const week = Math.ceil(tanggal.getDate() / 7);
       
       if (!weeklyMap[week]) {

@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Card, Modal, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import { Link } from "react-router-dom";
 import TopNavigation from "../../components/navigation/TopNavigation";
 import ToastNotification from "../../components/toast/ToastNotification";
 import PaginationComponent from "../../components/pagination/Pagination";
+import TransactionCard from "../../components/card/CardRiwayatTransaksi";
+import DetailModal from "../../components/modal/DetailTransaksiModal";
+import RatingModal from "../../components/modal/RatingModal";
 import { decodeToken } from '../../utils/jwtUtils';
 import { apiPembeli } from "../../clients/PembeliService";
 import { apiSubPembelian } from "../../clients/SubPembelianService";
 import { apiAlamatPembeli } from "../../clients/AlamatPembeliServices";
 import { GetPenitipById } from "../../clients/PenitipService";
 import { apiPembelian } from "../../clients/PembelianService";
-import { FaStar, FaRegStar, FaShippingFast, FaCalendarAlt, FaReceipt } from 'react-icons/fa';
+import { GetAllTransaksi } from "../../clients/TransaksiService";
+import { CreateReviewProduk, GetReviewProdukByIdTransaksi, UpdateReviewProduk } from "../../clients/ReviewService";
 import { toast } from "sonner";
 
 const HistoryTransaksiPage = () => {
@@ -26,13 +30,13 @@ const HistoryTransaksiPage = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [pembeli, setPembeli] = useState(null);
-
-  // Modal states
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [currentTransaction, setCurrentTransaction] = useState(null);
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  const [isEditingReview, setIsEditingReview] = useState(false);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -72,7 +76,6 @@ const HistoryTransaksiPage = () => {
     setTimeout(() => setShowToast(false), 5000);
   };
 
-  // Fetch helper functions
   const getPembeliName = async (idPembeli) => {
     try {
       const response = await apiPembeli.getPembeliById(idPembeli);
@@ -103,6 +106,28 @@ const HistoryTransaksiPage = () => {
     }
   };
 
+  const getTransaksiId = async (idSubPembelian) => {
+    try {
+      const allTransaksi = await GetAllTransaksi();
+      const transaksi = allTransaksi.data?.find(t => t.id_sub_pembelian === idSubPembelian);
+      return transaksi?.id_transaksi || null;
+    } catch (error) {
+      console.error(`Error fetching transaksi for sub pembelian ${idSubPembelian}:`, error);
+      return null;
+    }
+  };
+
+  const checkExistingReview = async (idTransaksi) => {
+    if (!idTransaksi) return null;
+    try {
+      const reviews = await GetReviewProdukByIdTransaksi(idTransaksi);
+      return reviews.data && reviews.data.length > 0 ? reviews.data[0] : null;
+    } catch (error) {
+      console.error(`Error checking existing review for transaction ${idTransaksi}:`, error);
+      return null;
+    }
+  };
+
   const fetchTransactionData = async () => {
     try {
       setLoading(true);
@@ -119,22 +144,31 @@ const HistoryTransaksiPage = () => {
         subPembelianData.map(async (transaction) => {
           const pembeliName = await getPembeliName(transaction.pembelian.id_pembeli);
           const alamatDetails = await getAlamatDetails(transaction.pembelian.id_alamat);
+          const transaksiId = await getTransaksiId(transaction.barang?.[0]?.transaksi?.id_sub_pembelian);
+          
           const barangWithPenitip = await Promise.all(
             (transaction.barang || []).map(async (item) => ({
               ...item,
               penitipName: await getPenitipName(item.id_penitip),
             }))
           );
+
+          let existingReview = null;
+          if (transaksiId) {
+            existingReview = await checkExistingReview(transaksiId);
+          }
+
           return {
             ...transaction,
             nama_pembeli: pembeliName,
             alamat_pembeli: alamatDetails,
             barang: barangWithPenitip,
+            id_transaksi: transaksiId,
+            existing_review: existingReview,
           };
         })
       );
       
-      console.log('Transformed Data:', transformedData);
       setTransactions(transformedData);
       setLoading(false);
     } catch (error) {
@@ -184,23 +218,59 @@ const HistoryTransaksiPage = () => {
     setShowDetailModal(true);
   };
 
-  const handleRatingClick = (transaction) => {
+  const handleRatingClick = (transaction, isEdit = false) => {
     setCurrentTransaction(transaction);
-    setRating(0);
+    setIsEditingReview(isEdit);
+    if (transaction.existing_review) {
+      setRating(transaction.existing_review.rating);
+    } else {
+      setRating(0);
+    }
     setReview('');
     setShowRatingModal(true);
   };
 
   const handleSubmitRating = async () => {
+    if (!currentTransaction || !currentTransaction.id_transaksi) {
+      showNotification('Data transaksi tidak valid!', 'danger');
+      return;
+    }
+
+    if (rating === 0) {
+      showNotification('Silakan pilih rating terlebih dahulu!', 'warning');
+      return;
+    }
+
     try {
-      // Here you would call your rating API
-      // For now, just show success message
-      showNotification(`Rating ${rating} bintang berhasil diberikan!`, 'success');
+      setSubmittingRating(true);
+      
+      const reviewData = {
+        id_transaksi: currentTransaction.id_transaksi,
+        rating: rating
+      };
+
+      let response;
+      if (isEditingReview && currentTransaction.existing_review) {
+        response = await UpdateReviewProduk(currentTransaction.existing_review.id_review, { rating });
+        showNotification(`Rating berhasil diperbarui menjadi ${rating} bintang!`, 'success');
+      } else {
+        response = await CreateReviewProduk(reviewData);
+        showNotification(response.message || `Rating ${rating} bintang berhasil diberikan!`, 'success');
+      }
+      
       setShowRatingModal(false);
-      // You might want to refresh data or update the transaction status
+      await fetchTransactionData();
     } catch (error) {
       console.error('Error submitting rating:', error);
-      showNotification('Gagal memberikan rating. Silakan coba lagi.', 'danger');
+      if (error.response?.data?.message) {
+        showNotification(error.response.data.message, 'danger');
+      } else if (error.response?.status === 400) {
+        showNotification('Terjadi kesalahan saat memberikan rating', 'warning');
+      } else {
+        showNotification('Gagal memberikan rating. Silakan coba lagi.', 'danger');
+      }
+    } finally {
+      setSubmittingRating(false);
     }
   };
 
@@ -230,30 +300,26 @@ const HistoryTransaksiPage = () => {
     }).format(amount);
   };
 
-  const getStatusColor = (status) => {
-    if (!status) return '#dc3545';
-    const lowerStatus = status.toLowerCase();
-    
-    if (lowerStatus.includes('selesai') || lowerStatus.includes('valid')) {
-      return '#028643';
-    } else if (lowerStatus.includes('menunggu') || lowerStatus.includes('proses')) {
-      return '#FC8A06';
-    } else {
-      return '#dc3545';
-    }
-  };
-
   const getStatusBadgeColor = (status) => {
     if (!status) return 'danger';
     const lowerStatus = status.toLowerCase();
-    
     if (lowerStatus.includes('selesai') || lowerStatus.includes('valid')) {
       return 'success';
-    } else if (lowerStatus.includes('menunggu') || lowerStatus.includes('proses')) {
+    } else if (lowerStatus.includes('proses') || lowerStatus.includes('tidak valid')) {
       return 'warning';
+    } else if(lowerStatus.includes('menunggu verifikasi pembayaran')) {
+      return 'primary';
     } else {
       return 'danger';
     }
+  };
+
+  const canBeRated = (transaction) => {
+    const hasTransaksiId = transaction.id_transaksi;
+    const isEligibleForRating = transaction.pembelian?.status_pembelian?.toLowerCase().includes('valid') || 
+                              transaction.pembelian?.status_pembelian?.toLowerCase().includes('selesai') ||
+                              transaction.pengiriman?.status_pengiriman?.toLowerCase().includes('selesai');
+    return hasTransaksiId && isEligibleForRating;
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -268,8 +334,6 @@ const HistoryTransaksiPage = () => {
   return (
     <Container fluid className="p-0 bg-white">
       <TopNavigation />
-      
-      {/* Toast Notification */}
       <ToastNotification 
         show={showToast} 
         setShow={setShowToast} 
@@ -334,83 +398,18 @@ const HistoryTransaksiPage = () => {
             ) : (
               <>
                 {currentItems.map((transaction) => (
-                  <Card key={transaction.pembelian.id_pembelian} className="mb-3 border transaction-card">
-                    <Card.Body className="p-3">
-                      <Row className="align-items-center">
-                        <Col xs={12} md={8}>
-                          <div className="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                              <div className="mb-1">
-                                <span className="transaction-id">#{transaction.pembelian.id_pembelian}</span>
-                                <Badge 
-                                  bg={getStatusBadgeColor(transaction.pembelian.status_pembelian)}
-                                  className="ms-2"
-                                >
-                                  {transaction.pembelian.status_pembelian || 'Unknown'}
-                                </Badge>
-                              </div>
-                              
-                              <div className="mb-1">
-                                <span className="text-muted">No. Nota: </span>
-                                <span>{generateNotaNumber(transaction)}</span>
-                              </div>
-                              
-                              <div className="mb-1">
-                                <span className="text-muted">
-                                  <FaCalendarAlt className="me-1" />
-                                  Tanggal: 
-                                </span>
-                                <span className="ms-1">{formatDate(transaction.pembelian.tanggal_pembelian)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-2">
-                            <span className="text-muted">Produk ({transaction.barang?.length || 0}): </span>
-                            <span className="fw-bold">
-                              {transaction.barang?.slice(0, 2).map(item => item.nama).join(', ')}
-                              {transaction.barang?.length > 2 && ` +${transaction.barang.length - 2} lainnya`}
-                            </span>
-                          </div>
-                          
-                          <div className="transaction-total">
-                            <span className="text-muted">Total: </span>
-                            <span className="fw-bold text-primary">
-                              {formatCurrency(transaction.pembelian?.total_bayar || 0)}
-                            </span>
-                          </div>
-                        </Col>
-                        
-                        <Col xs={12} md={4} className="text-md-end mt-3 mt-md-0">
-                          <div className="d-flex flex-column gap-2">
-                            <Button 
-                              variant="primary"
-                              className="action-btn"
-                              onClick={() => handleViewDetails(transaction)}
-                            >
-                              <FaReceipt className="me-1" />
-                              Lihat Detail
-                            </Button>
-                            
-                            {(transaction.pembelian?.status_pembelian?.toLowerCase().includes('selesai') || 
-                              transaction.pengiriman?.status_pengiriman?.toLowerCase().includes('selesai')) && (
-                              <Button 
-                                variant="warning"
-                                className="action-btn"
-                                onClick={() => handleRatingClick(transaction)}
-                              >
-                                <FaStar className="me-1" />
-                                Beri Rating
-                              </Button>
-                            )}
-                          </div>
-                        </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
+                  <TransactionCard 
+                    key={transaction.pembelian.id_pembelian}
+                    transaction={transaction}
+                    handleViewDetails={handleViewDetails}
+                    handleRatingClick={handleRatingClick}
+                    generateNotaNumber={generateNotaNumber}
+                    formatDate={formatDate}
+                    formatCurrency={formatCurrency}
+                    getStatusBadgeColor={getStatusBadgeColor}
+                    canBeRated={canBeRated}
+                  />
                 ))}
-
-                {/* Pagination */}
                 {totalPages > 1 && (
                   <PaginationComponent 
                     currentPage={currentPage}
@@ -424,180 +423,57 @@ const HistoryTransaksiPage = () => {
         </Row>
       </div>
 
-      {/* Detail Transaction Modal */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Detail Transaksi</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {currentTransaction && (
-            <div>
-              <h5 className="mb-3">Informasi Pemesanan</h5>
-              <Row className="mb-3">
-                <Col md={6}>
-                  <p><strong>ID Pembelian:</strong> {currentTransaction.pembelian.id_pembelian}</p>
-                  <p><strong>No. Nota:</strong> {generateNotaNumber(currentTransaction)}</p>
-                  <p><strong>Tanggal:</strong> {formatDate(currentTransaction.pembelian.tanggal_pembelian)}</p>
-                  <p><strong>Status:</strong> 
-                    <Badge 
-                      bg={getStatusBadgeColor(currentTransaction.pembelian.status_pembelian)}
-                      className="ms-2"
-                    >
-                      {currentTransaction.pembelian.status_pembelian}
-                    </Badge>
-                  </p>
-                </Col>
-                <Col md={6}>
-                  <p><strong>Pembeli:</strong> {currentTransaction.nama_pembeli}</p>
-                  <p><strong>Alamat:</strong> {currentTransaction.alamat_pembeli}</p>
-                  <p><strong>Total:</strong> {formatCurrency(currentTransaction.pembelian.total_bayar)}</p>
-                  <p><strong>Poin Diperoleh:</strong> {currentTransaction.pembelian.poin_diperoleh || 0} poin</p>
-                </Col>
-              </Row>
+      <DetailModal 
+        show={showDetailModal}
+        onHide={() => setShowDetailModal(false)}
+        currentTransaction={currentTransaction}
+        generateNotaNumber={generateNotaNumber}
+        formatDate={formatDate}
+        formatCurrency={formatCurrency}
+        getStatusBadgeColor={getStatusBadgeColor}
+      />
 
-              {currentTransaction.pengiriman && (
-                <div className="mb-3">
-                  <h5>Informasi Pengiriman</h5>
-                  <p><strong>Jenis Pengiriman:</strong> {currentTransaction.pengiriman.jenis_pengiriman}</p>
-                  <p><strong>Status Pengiriman:</strong> 
-                    <Badge 
-                      bg={getStatusBadgeColor(currentTransaction.pengiriman.status_pengiriman)}
-                      className="ms-2"
-                    >
-                      {currentTransaction.pengiriman.status_pengiriman}
-                    </Badge>
-                  </p>
-                  <p><strong>Tanggal Mulai:</strong> {formatDate(currentTransaction.pengiriman.tanggal_mulai)}</p>
-                  <p><strong>Tanggal Berakhir:</strong> {formatDate(currentTransaction.pengiriman.tanggal_berakhir)}</p>
-                </div>
-              )}
-
-              <h5 className="mb-3">Detail Produk</h5>
-              {currentTransaction.barang?.map((item, index) => (
-                <Card key={index} className="mb-2">
-                  <Card.Body className="p-3">
-                    <Row className="align-items-center">
-                      <Col xs={3} md={2}>
-                        <img
-                          src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
-                          alt={item.nama}
-                          className="img-fluid rounded"
-                          style={{ maxHeight: '80px', objectFit: 'cover' }}
-                          onError={(e) => { e.target.src = 'default.jpg'; }}
-                        />
-                      </Col>
-                      <Col xs={9} md={10}>
-                        <h6 className="mb-1">{item.nama}</h6>
-                        <p className="mb-1 text-muted small">{item.deskripsi}</p>
-                        <p className="mb-1"><strong>Penjual:</strong> {item.penitipName}</p>
-                        <p className="mb-0 text-primary fw-bold">{formatCurrency(item.harga)}</p>
-                      </Col>
-                    </Row>
-                  </Card.Body>
-                </Card>
-              ))}
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-            Tutup
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Rating Modal */}
-      <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Berikan Rating</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {currentTransaction && (
-            <div>
-              <h6 className="mb-3">Transaksi: {currentTransaction.pembelian.id_pembelian}</h6>
-              
-              <div className="mb-3">
-                <label className="form-label">Rating (1-5 bintang):</label>
-                <div className="d-flex gap-1 mb-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      className="btn btn-link p-0"
-                      onClick={() => setRating(star)}
-                      style={{ fontSize: '1.5rem', color: star <= rating ? '#FFD700' : '#D9D9D9' }}
-                    >
-                      {star <= rating ? <FaStar /> : <FaRegStar />}
-                    </button>
-                  ))}
-                </div>
-                <small className="text-muted">Rating yang dipilih: {rating} bintang</small>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Review (opsional):</label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={review}
-                  onChange={(e) => setReview(e.target.value)}
-                  placeholder="Tulis review Anda tentang produk dan layanan..."
-                />
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowRatingModal(false)}>
-            Batal
-          </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleSubmitRating}
-            disabled={rating === 0}
-          >
-            Kirim Rating
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <RatingModal 
+        show={showRatingModal}
+        onHide={() => setShowRatingModal(false)}
+        currentTransaction={currentTransaction}
+        rating={rating}
+        setRating={setRating}
+        submittingRating={submittingRating}
+        handleSubmitRating={handleSubmitRating}
+        formatCurrency={formatCurrency}
+      />
 
       <style jsx>{`
         .max-width-container {
           max-width: 1200px;
         }
-        
         .transaction-card {
           border-radius: 8px;
           border-color: #E7E7E7;
           box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           transition: all 0.2s ease;
         }
-        
         .transaction-card:hover {
           box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         }
-        
         .transaction-id {
           color: #686868;
           font-size: 0.9rem;
           font-weight: 600;
         }
-        
         .transaction-total {
           color: #4A4A4A;
           font-size: 1.1rem;
         }
-        
         .action-btn {
           border-radius: 4px;
           font-weight: 500;
         }
-        
         .search-container {
           position: relative;
           min-width: 300px;
         }
-        
         .search-icon {
           position: absolute;
           left: 15px;
@@ -606,36 +482,30 @@ const HistoryTransaksiPage = () => {
           color: #686868;
           z-index: 10;
         }
-        
         .search-input {
           height: 45px;
           padding-left: 45px;
           border-radius: 25px;
           border: 1px solid #E7E7E7;
         }
-        
         .search-input:focus {
           box-shadow: none;
           border-color: #028643;
         }
-        
         .status-filter {
           width: 200px;
           height: 45px;
           border-radius: 25px;
           border: 1px solid #E7E7E7;
         }
-        
         .status-filter:focus {
           box-shadow: none;
           border-color: #028643;
         }
-        
         @media (max-width: 768px) {
           .search-container {
             width: 100%;
           }
-          
           .status-filter {
             width: 100%;
           }

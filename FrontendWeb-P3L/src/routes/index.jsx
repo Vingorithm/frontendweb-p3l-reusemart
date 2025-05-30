@@ -187,7 +187,7 @@ const mainRoutes = [
     path: "/organisasi",
     element: (
       <ProtectedRoute allowedRoles={["Organisasi Amal"]}>
-        <OProduk />
+        <OrganisasiPage />
       </ProtectedRoute>
     ),
   },

@@ -33,7 +33,6 @@ const TopNavigation = ({ userRole }) => {
         ];
       case 'Customer Service':
         return [
-          { name: 'Dashboard', path: '/cs', exact: true },
           { name: 'Data Penitip', path: '/cs/penitip' },
           { name: 'Bukti Transfer', path: '/cs/bukti' },
           { name: 'Diskusi Produk', path: '/cs/diskusi' },
@@ -59,13 +58,13 @@ const TopNavigation = ({ userRole }) => {
 
   const roleMenu = getRoleBasedMenu(userRole);
 
-  // Custom function to check if link is active
   const isActiveLink = (item) => {
     if (item.exact) {
       return location.pathname === item.path;
     }
-    // Ensure exact match for non-exact paths by checking if the path is followed by a slash or is the full path
-    return location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+    return location.pathname.startsWith(item.path) &&
+          location.pathname !== item.path &&
+          !item.exact;
   };
 
   return (
@@ -73,17 +72,17 @@ const TopNavigation = ({ userRole }) => {
       <div className="max-width-container mx-auto">
         <Nav className="nav-tabs-custom border-0">
           {roleMenu.map((item) => (
-            <Nav.Item key={item.name}>
-              <NavLink
-                to={item.path}
-                className="nav-link"
-                activeClassName="active"
-                isActive={() => isActiveLink(item)}
-                style={{ textDecoration: 'none' }}
-              >
-                {item.name}
-              </NavLink>
-            </Nav.Item>
+          <Nav.Item key={item.name}>
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                `${isActiveLink(item) || isActive ? 'active' : ''} nav-link`
+              }
+              style={{ textDecoration: 'none' }}
+            >
+              {item.name}
+            </NavLink>
+          </Nav.Item>
           ))}
         </Nav>
       </div>

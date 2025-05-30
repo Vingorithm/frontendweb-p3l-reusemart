@@ -299,7 +299,7 @@ const DetailBarang = () => {
   if (error || !barang) {
     return (
       <div className="container mt-5">
-        <div className="alert mt-4" role="alert" style={{ backgroundColor: '#FC8A06', color: '#FFFFFF' }}>
+        <div className="alert mt-4" role="alert" style={{ backgroundColor: '#FFFFFF', color: '#FFFFFF' }}>
           {error || "Produk tidak ditemukan"}
         </div>
       </div>
@@ -333,7 +333,7 @@ const DetailBarang = () => {
   }
 
   return (
-    <div className="py-5" style={{ backgroundColor: '#F8F9FA' }}>
+    <div className="py-5" style={{ backgroundColor: '#FFFFFF' }}>
       <div className="container">
         <div className="row">
           {/* Left Column - Product Images & Details */}

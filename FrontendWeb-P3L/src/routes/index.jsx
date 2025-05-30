@@ -57,6 +57,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import { Navigate } from "react-router-dom"; 
 import { decodeToken } from "../utils/jwtUtils";
 import Keranjang from "../pages/pembeli/Keranjang";
+import PenitipPage from "../pages/penitip/PenitipPage";
 
 const ProfileRedirect = () => {
   const token = localStorage.getItem("authToken");
@@ -97,7 +98,7 @@ const mainRoutes = [
     path: "/owner",
     element: (
       <ProtectedRoute allowedRoles={["Owner"]}>
-        <ProdukDisumbang />
+        <OwnerPage />
       </ProtectedRoute>
     ),
   },
@@ -115,7 +116,7 @@ const mainRoutes = [
     path: "/admin",
     element: (
       <ProtectedRoute allowedRoles={["Admin"]}>
-        <ManagePegawaiPage /> 
+        <AdminPage /> 
       </ProtectedRoute>
     ),
   },
@@ -128,7 +129,7 @@ const mainRoutes = [
     path: "/pegawai-gudang",
     element: (
       <ProtectedRoute allowedRoles={["Pegawai Gudang"]}>
-        <ManageBarang />
+        <PegawaiGudangPage />
       </ProtectedRoute>
     ),
   },
@@ -142,7 +143,7 @@ const mainRoutes = [
     path: "/pembeli",
     element: (
       <ProtectedRoute allowedRoles={["Pembeli"]}>
-        <PembeliPage />
+        <HomePage />
       </ProtectedRoute>
     ),
   },
@@ -156,7 +157,7 @@ const mainRoutes = [
     path: "/penitip",
     element: (
       <ProtectedRoute allowedRoles={["Penitip"]}>
-        <DaftarBarang />
+        <PenitipPage />
       </ProtectedRoute>
     ),
   },
@@ -171,7 +172,7 @@ const mainRoutes = [
     path: "/cs",
     element: (
       <ProtectedRoute allowedRoles={["Customer Service"]}>
-        <DataPenitip />
+        <CsPage />
       </ProtectedRoute>
     ),
   },

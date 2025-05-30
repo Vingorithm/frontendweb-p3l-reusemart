@@ -228,9 +228,9 @@ const Keranjang = () => {
             for (const produk of selectedProduct) {
               await UpdateStatusPenitipan(produk?.Barang?.Penitipan?.id_penitipan, "Dibeli");
             }
-            // for (const produk of selectedProduct) {
-            //   await apiKeranjang.deleteKeranjang(produk.id_keranjang);
-            // }
+            for (const produk of selectedProduct) {
+              await apiKeranjang.deleteKeranjang(produk.id_keranjang);
+            }
             toast.success("Pembelian berhasil!");
           }
         }

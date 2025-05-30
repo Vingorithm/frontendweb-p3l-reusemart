@@ -213,6 +213,15 @@ const HistoryTransaksi = ({ pembeliId }) => {
   const [selectedPembelian, setSelectedPembelian] = useState(null);
   const [countdowns, setCountdowns] = useState({});
 
+  const formatTime = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleTimeString('id-ID', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+  };
+
   const extractIdNumber = (id) => {
       const match = id.match(/\d+/);
       return match ? parseInt(match[0]) : 0;
@@ -302,52 +311,52 @@ const HistoryTransaksi = ({ pembeliId }) => {
     navigate('/pembeli/history');
   };
 
-  useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        
-        if (!pembeliId) {
-          throw new Error('Pembeli ID not found');
-        }
-
-        const subPembelianData = await apiSubPembelian.getSubPembelianByPembeliId(pembeliId);
-        console.log('SubPembelian Data for user:', subPembelianData);
-
-        if (!Array.isArray(subPembelianData)) {
-          throw new Error('Invalid response data');
-        }
-
-        const transformedData = await Promise.all(
-          subPembelianData.map(async (transaction) => {
-            console.log('transaction ini', transaction);
-            const pembeliName = await getPembeliName(transaction.pembelian.id_pembeli);
-            const alamatDetails = await getAlamatDetails(transaction.pembelian.id_alamat);
-            const barangWithPenitip = await Promise.all(
-              (transaction.barang || []).map(async (item) => ({
-                ...item,
-                penitipName: await getPenitipName(item.id_penitip),
-              }))
-            );
-            return {
-              ...transaction,
-              nama_pembeli: pembeliName,
-              alamat_pembeli: alamatDetails,
-              barang: barangWithPenitip,
-            };
-          })
-        );
-        
-        console.log('Transformed Data:', transformedData);
-        setTransactions(transformedData);
-      } catch (error) {
-        console.error('Error fetching transaction data:', error);
-        setError('Failed to load your transactions');
-      } finally {
-        setLoading(false);
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      
+      if (!pembeliId) {
+        throw new Error('Pembeli ID not found');
       }
-    };
 
+      const subPembelianData = await apiSubPembelian.getSubPembelianByPembeliId(pembeliId);
+      console.log('SubPembelian Data for user:', subPembelianData);
+
+      if (!Array.isArray(subPembelianData)) {
+        throw new Error('Invalid response data');
+      }
+
+      const transformedData = await Promise.all(
+        subPembelianData.map(async (transaction) => {
+          console.log('transaction ini', transaction);
+          const pembeliName = await getPembeliName(transaction.pembelian.id_pembeli);
+          const alamatDetails = await getAlamatDetails(transaction.pembelian.id_alamat);
+          const barangWithPenitip = await Promise.all(
+            (transaction.barang || []).map(async (item) => ({
+              ...item,
+              penitipName: await getPenitipName(item.id_penitip),
+            }))
+          );
+          return {
+            ...transaction,
+            nama_pembeli: pembeliName,
+            alamat_pembeli: alamatDetails,
+            barang: barangWithPenitip,
+          };
+        })
+      );
+      
+      console.log('Transformed Data:', transformedData);
+      setTransactions(transformedData);
+    } catch (error) {
+      console.error('Error fetching transaction data:', error);
+      setError('Failed to load your transactions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (pembeliId) {
       fetchTransactions();
     }
@@ -416,6 +425,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
       const response = await apiPembelian.updatePembelian(id, data); 
       if(response) {
         toast.success("Berhasil mengirim bukti bayar!");
+        await fetchTransactions();
       }
     } catch (error) {
       toast.error("Gagal mengirim bukti bayar!");
@@ -491,7 +501,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
                         {transaction.pembelian.id_pembelian || 'N/A'}
                       </h5>
                       <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>No Nota: {generateNotaNumber(transaction)}</p>
-                      <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>Tanggal: {transaction.pembelian.tanggal_pembelian ? formatDate(transaction.pembelian.tanggal_pembelian) : 'N/A'}</p>
+                      <p style={{ fontSize: '0.85rem', color: colors.dark, margin: 0 }}>Waktu & Tanggal: {transaction.pembelian.tanggal_pembelian ? `${formatDate(transaction.pembelian.tanggal_pembelian)} ${formatTime(transaction.pembelian.tanggal_pembelian)}` : 'N/A'}</p>
                     </div>
                     <p
                       style={{
@@ -512,17 +522,21 @@ const HistoryTransaksi = ({ pembeliId }) => {
                       {transaction.barang.map((item, index) => (
                         <div key={index} style={historyStyles.productItem}>
                           <div className="d-flex flex-row align-items-center mt-2">
-                            <img
-                              src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
-                              alt={item.nama || 'No Name'}
-                              style={historyStyles.cardImage}
-                              onError={(e) => { e.target.src = 'default.jpg'; }}
-                            />
+                            <a href={`http://localhost:5173/barang/${item.id_barang}`} className="me-2">
+                              <img
+                                src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
+                                alt={item.nama || 'No Name'}
+                                style={historyStyles.cardImage}
+                                onError={(e) => { e.target.src = 'default.jpg'; }}
+                              />
+                            </a>
                             <div className="d-flex justify-content-between align-items-start w-100">
                               <div>
-                                <h6 style={{ fontWeight: 'bold', marginBottom: '5px' }}>
-                                  {item.nama || 'No Name'}
-                                </h6>
+                                <a href={`http://localhost:5173/barang/${item.id_barang}`} style={{ textDecoration: "none", color: 'black'}}>
+                                  <h6 style={{ fontWeight: 'bold', marginBottom: '5px' }}>
+                                    {item.nama || 'No Name'}
+                                  </h6>
+                                </a>
                                 <p style={{ margin: 0, fontSize: '0.9rem', color: colors.dark }}>{item.deskripsi || 'No Description'}</p>
                                 <p style={{ margin: '5px 0 0 0', fontSize: '0.85rem', color: colors.dark }}>
                                   <span style={{ fontWeight: '500' }}>Penjual:</span> {item.penitipName || 'N/A'}

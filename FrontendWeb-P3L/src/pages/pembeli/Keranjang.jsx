@@ -223,14 +223,14 @@ const Keranjang = () => {
         pengiriman.id_pembelian = responsePembelian?.id_pembelian;
         const responsePengiriman = await CreatePengiriman(pengiriman);
         if(responsePengiriman) {
-          const responseUpdatePoin = await apiPembeli.updatePembeli(pembeli?.id_pembeli, {total_poin: pembeli?.total_poin + bonusPoin - poinUsed});
+          const responseUpdatePoin = await apiPembeli.updatePembeli(pembeli?.id_pembeli, {total_poin: pembeli?.total_poin - poinUsed});
           if(responseUpdatePoin) {
             for (const produk of selectedProduct) {
               await UpdateStatusPenitipan(produk?.Barang?.Penitipan?.id_penitipan, "Dibeli");
             }
-            for (const produk of selectedProduct) {
-              await apiKeranjang.deleteKeranjang(produk.id_keranjang);
-            }
+            // for (const produk of selectedProduct) {
+            //   await apiKeranjang.deleteKeranjang(produk.id_keranjang);
+            // }
             toast.success("Pembelian berhasil!");
           }
         }

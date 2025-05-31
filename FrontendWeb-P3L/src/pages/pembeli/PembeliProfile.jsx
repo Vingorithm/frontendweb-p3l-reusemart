@@ -212,6 +212,8 @@ const HistoryTransaksi = ({ pembeliId }) => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [selectedPembelian, setSelectedPembelian] = useState(null);
   const [countdowns, setCountdowns] = useState({});
+  const [expiredIds, setExpiredIds] = useState(new Set());
+  const [anyExpired, setAnyExpired] = useState(false);
 
   const formatTime = (dateString) => {
       const date = new Date(dateString);
@@ -253,22 +255,40 @@ const HistoryTransaksi = ({ pembeliId }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCountdowns((prevCountdowns) => {
+        if (anyExpired) {
+          fetchTransactions();
+        }
+
         const updatedCountdowns = {};
+        setAnyExpired(false);
+
         transactions.forEach((transaction) => {
+          const id = transaction.pembelian?.id_pembelian;
           const pembelianDate = new Date(transaction.pembelian?.tanggal_pembelian);
           const deadline = isNaN(pembelianDate)
             ? null
             : new Date(pembelianDate.getTime() + 15 * 60 * 1000);
-          if (deadline && deadline > new Date()) {
-            updatedCountdowns[transaction.pembelian.id_pembelian] = calculateRemainingTime(deadline);
+          
+          if (deadline) {
+            const now = new Date();
+
+            if (deadline > now) {
+              updatedCountdowns[id] = calculateRemainingTime(deadline);
+            } else {
+              if (!expiredIds.has(id)) {
+                setExpiredIds((prev) => new Set(prev).add(id));
+                setAnyExpired(true);
+              }
+            }
           }
         });
+
         return updatedCountdowns;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [transactions]);
+  }, [transactions, expiredIds]);
 
   // Fetch pembeli name
   const getPembeliName = async (idPembeli) => {

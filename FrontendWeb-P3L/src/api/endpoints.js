@@ -161,5 +161,8 @@ export const ENDPOINTS = {
     DELETE_SUB_PEMBELIAN: (id) => `/sub-pembelian/${id}`,
     GET_SUB_PEMBELIAN_BY_PEMBELIAN: (id_pembelian) => `/sub-pembelian/by-pembelian/${id_pembelian}`,
     GET_SUB_PEMBELIAN_BY_PEMBELI: (id_pembeli) => `/sub-pembelian/byIdPembeli/${id_pembeli}`, 
-    GET_SUB_PEMBELIAN_BY_PENITIP: (id_penitip) => `/sub-pembelian/byIdPenitip/${id_penitip}`
+    GET_SUB_PEMBELIAN_BY_PENITIP: (id_penitip) => `/sub-pembelian/byIdPenitip/${id_penitip}`,
+
+    SEND_NOTIFICATION: "/notification/sendPushNotification",
+    SEND_BULK_NOTIFICATION: "/notification/sendBulkNotifications",
 };

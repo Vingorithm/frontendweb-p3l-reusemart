@@ -10,6 +10,7 @@ import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 import { UpdatePenitipan } from '../../clients/PenitipanService';
 import { generateNotaPenjualan } from "../../components/pdf/CetakNotaPenjualan";
 import { apiPembeli } from '../../clients/PembeliService';
+import { SendNotification } from '../../clients/NotificationServices';
 
 const CekBuktiTf = () => {
   
@@ -128,7 +129,13 @@ const CekBuktiTf = () => {
           const responsePengiriman = await UpdatePengirimanStatus(selectedPembelian?.Pengiriman?.id_pengiriman, "Diproses");
           if(responsePengiriman) {
             selectedPembelian?.SubPembelians.forEach(async (sb) => {
-              await UpdatePenitipan(sb?.Barang?.Penitipan?.id_penitipan, { status_penitipan: "Terjual"});           
+              await UpdatePenitipan(sb?.Barang?.Penitipan?.id_penitipan, { status_penitipan: "Terjual"});
+              const notification = { 
+                fcmToken: sb?.Barang?.Penitip?.Akun?.fcm_token, 
+                title: "Barang terjual", 
+                body: `Barang ${sb?.Barang?.nama} dengan id ${sb?.Barang?.id_barang} telah terjual!`
+              }
+              await SendNotification(notification);           
             });
           }
         }

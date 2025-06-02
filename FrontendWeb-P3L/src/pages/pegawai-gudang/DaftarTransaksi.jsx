@@ -9,6 +9,7 @@ import {
   Spinner,
   Table,
   Nav,
+  Modal,
 } from 'react-bootstrap';
 import {
   BsSearch,
@@ -28,6 +29,7 @@ import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaModal from '../../components/pdf/NotaPenitipanPdf';
 import TransaksiCard from '../../components/card/CardTransaksiPenitipan';
+import { GetPenitipanById } from '../../clients/PenitipanService';
 
 const DaftarTransaksi = () => {
   const [penitipanList, setPenitipanList] = useState([]);
@@ -50,6 +52,8 @@ const DaftarTransaksi = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [detailPenitipan, setDetailPenitipan] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   const statusViews = [
     { id: 'all', name: 'Semua Penitipan' },
@@ -186,17 +190,15 @@ const DaftarTransaksi = () => {
     setCurrentPage(1);
   };
 
-  const handleCetakNota = (penitipan) => {
-    setSelectedPenitipan(penitipan);
-    setShowModal(true);
-    // Update penitipan to mark nota as printed
-    setPenitipanList((prev) =>
-      prev.map((item) =>
-        item.id_penitipan === penitipan.id_penitipan
-          ? { ...item, cetakNotaDone: true }
-          : item
-      )
-    );
+  const handleLihatDetail = async (penitipan) => {
+    try {
+      const response = await GetPenitipanById(penitipan.id_penitipan);
+      setDetailPenitipan(response.data);
+      setShowDetailModal(true);
+    } catch (error) {
+      console.error('Error fetching penitipan detail:', error);
+      showNotification('Gagal memuat detail penitipan!', 'danger');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -211,8 +213,8 @@ const DaftarTransaksi = () => {
         return <Badge bg="success">Didonasikan</Badge>;
       case 'Menunggu didonasikan':
         return <Badge bg="warning">Menunggu Didonasikan</Badge>;
-       case 'Menunggu diambil':
-        return <Badge bg="warning">Menunggu Diambil</Badge>;  
+      case 'Menunggu diambil':
+        return <Badge bg="warning">Menunggu Diambil</Badge>;
       default:
         return <Badge bg="secondary">{status}</Badge>;
     }
@@ -235,12 +237,14 @@ const DaftarTransaksi = () => {
     }).format(angka);
   };
 
+  const baseUrl = 'http://localhost:3000/uploads/barang/';
+
   const renderTransaksiCard = (penitipan) => {
     return (
       <Col xs={12} md={6} lg={4} key={penitipan.id_penitipan} className="mb-4">
         <TransaksiCard
           penitipan={penitipan}
-          handleCetakNota={handleCetakNota}
+          handleLihatDetail={handleLihatDetail}
           pegawai={pegawai}
         />
       </Col>
@@ -320,11 +324,9 @@ const DaftarTransaksi = () => {
                     <Button
                       variant="outline-primary"
                       size="sm"
-                      className="cetak-nota-btn"
-                      onClick={() => handleCetakNota(penitipan)}
-                      disabled={penitipan.cetakNotaDone}
+                      onClick={() => handleLihatDetail(penitipan)}
                     >
-                      <BsPrinter className="me-1" /> Cetak Nota
+                      Lihat Detail
                     </Button>
                   </td>
                 </tr>
@@ -472,6 +474,111 @@ const DaftarTransaksi = () => {
           penitipan={selectedPenitipan}
         />
       )}
+
+      {detailPenitipan && (
+        <Modal
+          show={showDetailModal}
+          onHide={() => setShowDetailModal(false)}
+          centered
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Detail Penitipan</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row>
+              <Col md={6}>
+                <h6>ID Penitipan</h6>
+                <p>{detailPenitipan.id_penitipan}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Status</h6>
+                {getStatusBadge(detailPenitipan.status_penitipan)}
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Nama Barang</h6>
+                <p>{detailPenitipan.Barang?.nama || '-'}</p>
+              </Col>
+              <Col md={6}>
+                <h6>ID Barang</h6>
+                <p>{detailPenitipan.id_barang}</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Harga</h6>
+                <p className="fw-bold" style={{ color: '#028643' }}>
+                  {formatRupiah(detailPenitipan.Barang?.harga || 0)}
+                </p>
+              </Col>
+              <Col md={6}>
+                <h6>Kategori</h6>
+                <p>{detailPenitipan.Barang?.kategori_barang || '-'}</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Penitip</h6>
+                <p>{detailPenitipan.Barang?.Penitip?.nama_penitip || '-'}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Email Penitip</h6>
+                <p>{detailPenitipan.Barang?.Penitip?.Akun?.email || '-'}</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Tanggal Awal Penitipan</h6>
+                <p>{formatDate(detailPenitipan.tanggal_awal_penitipan)}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Tanggal Akhir Penitipan</h6>
+                <p>{formatDate(detailPenitipan.tanggal_akhir_penitipan)}</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Batas Pengambilan</h6>
+                <p>{formatDate(detailPenitipan.tanggal_batas_pengambilan)}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Berat</h6>
+                <p>{detailPenitipan.Barang?.berat || 0} kg</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col>
+                <h6>Gambar Barang</h6>
+                {detailPenitipan.Barang?.gambar ? (
+                  <div className="d-flex gap-3">
+                    {detailPenitipan.Barang.gambar.split(',').map((img, index) => (
+                      <img
+                        key={index}
+                        src={`${baseUrl}/${img.trim()}`}
+                        alt={`${detailPenitipan.Barang.nama}-${index + 1}`}
+                        style={{ maxWidth: '200px', borderRadius: '8px' }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p>Tidak ada gambar</p>
+                )}
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDetailModal(false)}
+            >
+              Tutup
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
 
       <style jsx>{`
         .max-width-container {

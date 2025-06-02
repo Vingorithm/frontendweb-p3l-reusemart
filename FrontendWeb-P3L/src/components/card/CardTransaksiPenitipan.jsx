@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsPrinter, BsBoxSeam } from 'react-icons/bs';
-import AturPengirimanModal from '../../components/modal/AturPengirimanModal'; // Import the modal
 
-const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
-  const [notaPrinted, setNotaPrinted] = useState(penitipan.cetakNotaDone || false);
-  const [showPengirimanModal, setShowPengirimanModal] = useState(false);
-
+const CardTransaksiPenitipan = ({ penitipan, handleLihatDetail, pegawai }) => {
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: 'long', year: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
@@ -37,25 +32,7 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
     }
   };
 
-  const onClickCetakNota = () => {
-    handleCetakNota(penitipan);
-    setNotaPrinted(true);
-  };
-
-  const handleOpenPengirimanModal = () => {
-    if (notaPrinted || penitipan.cetakNotaDone) {
-      setShowPengirimanModal(true);
-    }
-  };
-
-  const handleClosePengirimanModal = () => {
-    setShowPengirimanModal(false);
-  };
-
-  const handlePengirimanSuccess = (data) => {
-    // Handle successful shipping creation (e.g., show toast or update state)
-    setShowPengirimanModal(false);
-  };
+  const baseUrl = 'http://localhost:3000/uploads/barang';
 
   return (
     <>
@@ -113,34 +90,15 @@ const CardTransaksiPenitipan = ({ penitipan, handleCetakNota, pegawai }) => {
           <div className="d-flex flex-column gap-2 mt-3">
             <Button
               variant="outline-primary"
-              className="cetak-nota-btn"
-              onClick={onClickCetakNota}
-              disabled={notaPrinted || penitipan.cetakNotaDone}
+              className="lihat-detail-btn"
+              onClick={() => handleLihatDetail(penitipan)}
             >
-              <BsPrinter className="me-1" /> Cetak Nota
-            </Button>
-
-            <Button
-              variant="outline-success"
-              className="atur-pengiriman-btn"
-              onClick={handleOpenPengirimanModal}
-              
-            >
-              <BsBoxSeam className="me-1" /> Atur Pengiriman
+              Lihat Detail
             </Button>
           </div>
         </Card.Body>
       </Card>
 
-      {showPengirimanModal && (
-        <AturPengirimanModal
-          show={showPengirimanModal}
-          handleClose={handleClosePengirimanModal}
-          penitipan={penitipan}
-          pegawai={pegawai}
-          onSuccess={handlePengirimanSuccess}
-        />
-      )}
 
       <style jsx>{`
         .transaksi-info {

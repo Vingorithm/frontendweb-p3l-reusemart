@@ -15,8 +15,17 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
   const [selectedDate, setSelectedDate] = useState(null);
 
   const formatDate = (dateString) => {
-    const options = { day: '2-digit', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
+    const date = new Date(dateString);
+    const options = { 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: false,
+      timeZone: 'Asia/Jakarta'
+    };
+    return date.toLocaleString('id-ID', options);
   };
 
   const formatRupiah = (angka) => {
@@ -64,35 +73,30 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
   const handleScheduleSubmit = async () => {
     try {
       const startDate = new Date(selectedDate);
-      startDate.setHours(8, 0, 0, 0);
-      const startDateWIB = new Date(startDate.getTime() - (startDate.getTimezoneOffset() * 60000));
-
-      let endDate = new Date(startDate);
-      let daysAdded = 0;
-      while (daysAdded < 2) {
+      const endDate = new Date(startDate);
+      
+      let workDaysAdded = 0;
+      while (workDaysAdded < 2) {
         endDate.setDate(endDate.getDate() + 1);
-        const endDayOfWeek = endDate.getDay();
-        if (endDayOfWeek !== 0 && endDayOfWeek !== 6) {
-          daysAdded++;
+        const dayOfWeek = endDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Senin-Jumat
+          workDaysAdded++;
         }
       }
       endDate.setHours(20, 0, 0, 0);
-      const endDateWIB = new Date(endDate.getTime() - (endDate.getTimezoneOffset() * 60000));
+      startDate.setHours(8, 0, 0, 0);
 
       const scheduleResponse = await SchedulePickup(penitipan.pengiriman.id_pengiriman, {
-        tanggal_mulai: startDateWIB.toISOString(),
-        tanggal_berakhir: endDateWIB.toISOString(),
+        tanggal_mulai: startDate.toISOString(),
+        tanggal_berakhir: endDate.toISOString(),
       });
 
       const updateResponse = await UpdatePengirimanStatus(
         penitipan.pengiriman.id_pengiriman,
         'Menunggu diambil pembeli',
-        startDateWIB.toISOString(),
-        endDateWIB.toISOString()
+        startDate.toISOString(),
+        endDate.toISOString()
       );
-
-      console.log('Schedule Response:', scheduleResponse.data);
-      console.log('Update Response:', updateResponse.data);
 
       setPenitipanList((prev) => {
         const newList = [...prev];
@@ -103,8 +107,8 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
             pengiriman: {
               ...newList[index].pengiriman,
               status_pengiriman: 'Menunggu diambil pembeli',
-              tanggal_mulai: startDateWIB.toISOString(),
-              tanggal_berakhir: endDateWIB.toISOString(),
+              tanggal_mulai: startDate.toISOString(),
+              tanggal_berakhir: endDate.toISOString(),
             },
           };
         }
@@ -150,8 +154,14 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
 
           <div className="d-flex justify-content-between mb-3">
             <div>
-              <div className="text-muted small">Pembeli</div>
-              <div className="fw-medium">{penitipan.pembelian?.pembeli?.nama || '-'}</div>
+              <div className="text-muted small">
+                {penitipan.status_penitipan === 'Menunggu diambil' ? 'Penitip' : 'Pembeli'}
+              </div>
+              <div className="fw-medium">
+                {penitipan.status_penitipan === 'Menunggu diambil'
+                  ? penitipan.Barang.Penitip.nama_penitip || '-'
+                  : penitipan.pembelian?.pembeli?.nama || '-'}
+              </div>
             </div>
             <div className="text-end">
               <div className="text-muted small">Harga</div>
@@ -163,8 +173,14 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
 
           <div className="barang-details mb-3 flex-grow-1">
             <div className="info-row">
-              <span className="info-label">Pembeli</span>
-              <span className="info-value">{penitipan.pembelian?.pembeli?.nama || '-'}</span>
+              <span className="info-label">
+                {penitipan.status_penitipan === 'Menunggu diambil' ? 'ID Penitipan' : 'ID Pembelian'}
+              </span>
+              <span className="info-value">
+                {penitipan.status_penitipan === 'Menunggu diambil'
+                  ? penitipan.id_penitipan || '-'
+                  : penitipan.pembelian?.id_pembelian || '-'}
+              </span>
             </div>
 
             <div className="info-row">
@@ -174,30 +190,36 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
               </span>
             </div>
 
-            <div className="info-row">
-              <span className="info-label">Tanggal Pembelian</span>
-              <span className="info-value">{formatDate(penitipan.pembelian.tanggal_pembelian)}</span>
-            </div>
+            {penitipan.pembelian && (
+              <div className="info-row">
+                <span className="info-label">Tanggal Pembelian</span>
+                <span className="info-value">{formatDate(penitipan.pembelian.tanggal_pembelian)}</span>
+              </div>
+            )}
 
             <div className="info-row">
               <span className="info-label">Status Penitipan</span>
               <span className="info-value">{getStatusBadge(penitipan.status_penitipan)}</span>
             </div>
 
-            <div className="info-row">
-              <span className="info-label">Status Pengiriman</span>
-              <span className="info-value">{getStatusBadge(penitipan.pengiriman.status_pengiriman)}</span>
-            </div>
+            {penitipan.pengiriman && (
+              <>
+                <div className="info-row">
+                  <span className="info-label">Status Pengiriman</span>
+                  <span className="info-value">{getStatusBadge(penitipan.pengiriman.status_pengiriman)}</span>
+                </div>
 
-            <div className="info-row">
-              <span className="info-label">Tanggal Mulai</span>
-              <span className="info-value">{penitipan.pengiriman.tanggal_mulai ? formatDate(penitipan.pengiriman.tanggal_mulai) : '-'}</span>
-            </div>
+                <div className="info-row">
+                  <span className="info-label">Tanggal Mulai</span>
+                  <span className="info-value">{penitipan.pengiriman.tanggal_mulai ? formatDate(penitipan.pengiriman.tanggal_mulai) : '-'}</span>
+                </div>
 
-            <div className="info-row">
-              <span className="info-label">Tanggal Berakhir</span>
-              <span className="info-value">{penitipan.pengiriman.tanggal_berakhir ? formatDate(penitipan.pengiriman.tanggal_berakhir) : '-'}</span>
-            </div>
+                <div className="info-row">
+                  <span className="info-label">Tanggal Berakhir</span>
+                  <span className="info-value">{penitipan.pengiriman.tanggal_berakhir ? formatDate(penitipan.pengiriman.tanggal_berakhir) : '-'}</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="d-flex flex-column gap-2 mt-3">
@@ -205,7 +227,7 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
               variant="outline-success"
               className="atur-pengiriman-btn"
               onClick={handleOpenConfirmationModal}
-              disabled={penitipan.pengiriman.status_pengiriman !== 'Menunggu diambil pembeli'}
+              disabled={penitipan.status_penitipan !== 'Terjual' || !penitipan.pengiriman || penitipan.pengiriman.status_pengiriman !== 'Menunggu diambil pembeli'}
             >
               <BsBoxSeam className="me-1" /> Konfirmasi Diambil
             </Button>
@@ -214,6 +236,7 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
               variant="outline-primary"
               className="schedule-btn"
               onClick={handleOpenScheduleModal}
+              disabled={penitipan.status_penitipan !== 'Terjual' || !penitipan.pengiriman}
             >
               <BsCalendar className="me-1" /> Atur Jadwal Pengambilan
             </Button>

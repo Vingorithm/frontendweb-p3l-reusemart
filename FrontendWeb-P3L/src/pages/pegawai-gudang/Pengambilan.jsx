@@ -105,17 +105,18 @@ const Pengambilan = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [penitipanResponse, penitipResponse] = await Promise.all([
-        GetAllPenitipan(),
-        GetAllPenitip(),
-      ]);
+  setLoading(true);
+  try {
+    const [penitipanResponse, penitipResponse] = await Promise.all([
+      GetAllPenitipan(),
+      GetAllPenitip(),
+    ]);
 
-      const today = new Date();
-      const updatedPenitipan = await Promise.all(
-        penitipanResponse.data.map(async (item) => {
-          if (item.status_penitipan === 'Terjual') {
+    const today = new Date();
+    const updatedPenitipan = await Promise.all(
+      penitipanResponse.data.map(async (item) => {
+        if (item.status_penitipan === 'Terjual') {
+          try {
             const schedulingResponse = await GetItemForScheduling(item.id_penitipan);
             const scheduling = schedulingResponse.data;
 
@@ -141,27 +142,37 @@ const Pengambilan = () => {
               }
               return { ...item, pembelian: scheduling.pembelian, pengiriman: scheduling.pembelian.pengiriman };
             }
+          } catch (error) {
+            console.error(`Error fetching scheduling for ${item.id_penitipan}:`, error);
           }
-          return item;
-        })
-      );
+        }
+        return item; // Kembalikan item apa adanya untuk "Menunggu diambil"
+      })
+    );
 
-      const filteredPenitipan = updatedPenitipan
-        .filter(
-          (item) => item.Barang && item.Barang.status_qc === 'Lulus' && item.status_penitipan === 'Terjual' && item.pengiriman && item.pengiriman.jenis_pengiriman === 'Ambil di gudang'
-        )
-        .sort((a, b) => new Date(a.pembelian.tanggal_pembelian) - new Date(b.pembelian.tanggal_pembelian));
+    const filteredPenitipan = updatedPenitipan
+      .filter(
+        (item) =>
+          item.Barang &&
+          item.Barang.status_qc === 'Lulus' &&
+          (item.status_penitipan === 'Terjual' || item.status_penitipan === 'Menunggu diambil') &&
+          (item.status_penitipan === 'Menunggu diambil' || // Izinkan tanpa pengiriman
+            (item.pengiriman &&
+              item.pengiriman.jenis_pengiriman === 'Ambil di gudang' &&
+              item.pengiriman.status_pengiriman !== 'Hangus'))
+      )
+      .sort((a, b) => new Date(a.tanggal_awal_penitipan) - new Date(b.tanggal_awal_penitipan));
 
-      setPenitipanList(filteredPenitipan);
-      setPenitipList(penitipResponse.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      setError('Gagal memuat data. Silakan coba lagi nanti.');
-      showNotification('Gagal memuat data. Silakan coba lagi nanti.', 'danger');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setPenitipanList(filteredPenitipan);
+    setPenitipList(penitipResponse.data);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    setError('Gagal memuat data. Silakan coba lagi nanti.');
+    showNotification('Gagal memuat data. Silakan coba lagi nanti.', 'danger');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: 'long', year: 'numeric' };

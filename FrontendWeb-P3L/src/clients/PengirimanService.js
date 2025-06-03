@@ -10,5 +10,5 @@ export const GetPengirimanById = (id) =>
 export const CreatePengiriman = (data) => 
   apiClient.post(ENDPOINTS.CREATE_PENGIRIMAN, data);
 
-export const UpdatePengirimanStatus = (id, status_pengiriman, tanggal_mulai, tanggal_berakhir) =>
-  apiClient.put(ENDPOINTS.UPDATE_PENGIRIMAN(id), { status_pengiriman, tanggal_mulai, tanggal_berakhir });
+export const UpdatePengirimanStatus = (id, status_pengiriman, tanggal_mulai, tanggal_berakhir, id_pengkonfirmasi) =>
+  apiClient.put(ENDPOINTS.UPDATE_PENGIRIMAN(id), { status_pengiriman, tanggal_mulai, tanggal_berakhir, id_pengkonfirmasi});

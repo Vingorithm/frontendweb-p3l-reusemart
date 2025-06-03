@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Badge, Button, Modal, Form } from 'react-bootstrap';
 import { BsBoxSeam, BsCalendar, BsEye } from 'react-icons/bs';
 import ConfirmationModal from '../../components/modal/ConfirmationModal2';
@@ -99,8 +99,10 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
         'Menunggu diambil pembeli',
         startDate.toISOString(),
         endDate.toISOString(),
-        { id_pengkonfirmasi: pegawai.id_pegawai }
+        pegawai.id_pegawai
       );
+
+      console.log('data submit', pegawai.id_pegawai);
 
       setTransaksiList((prev) => {
         const newList = [...prev];
@@ -128,9 +130,13 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
     }
   };
 
-  const isConfirmDisabled = !transaksi.pengiriman?.id_pengkonfirmasi ||
+  const isConfirmDisabled = 
                             !transaksi.pengiriman?.tanggal_mulai ||
                             !transaksi.pengiriman?.tanggal_berakhir;
+
+  useEffect(() => {
+    console.log('data card pegawai', pegawai);
+  }, []);
 
   return (
     <>

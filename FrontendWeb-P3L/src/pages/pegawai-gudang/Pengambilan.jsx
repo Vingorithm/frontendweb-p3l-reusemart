@@ -25,7 +25,7 @@ const Pengambilan = () => {
   const [itemsPerPage] = useState(9);
   const [selectedView, setSelectedView] = useState('Menunggu diambil pembeli');
   const [akun, setAkun] = useState(null);
-  const [pegawai, setPegawai] = useState(null);
+  const [pegawai, setPegawai] = useState('');
   const [showNotaModal, setShowNotaModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaksi, setSelectedTransaksi] = useState(null);
@@ -59,6 +59,7 @@ const Pengambilan = () => {
           console.log('Decode ID:', decoded.id);
           console.log('Pegawai data:', response.data);
           setPegawai(response.data);
+          console.log('Pegawai id:', pegawai);
         }
       } catch (err) {
         setError('Gagal memuat data user!');
@@ -151,7 +152,11 @@ const Pengambilan = () => {
   };
 
   const handleCetakNota = async (transaksi) => {
+    console.log('transaksi in handleCetakNota:', transaksi);
     try {
+      if (!transaksi || !transaksi.id_pembelian) {
+        throw new Error('Transaksi tidak valid');
+      }
       setSelectedTransaksi(transaksi);
       setShowNotaModal(true);
       setTransaksiList((prev) =>
@@ -166,30 +171,31 @@ const Pengambilan = () => {
   };
 
   const handleConfirmDiambil = async (transaksi) => {
-      try {
-        const today = new Date().toISOString();
-        const updatedStatus = transaksi.pengiriman?.status_pengiriman === 'Menunggu diambil pembeli'
-          ? 'Sudah diambil pembeli'
-          : 'Diambil kembali';
-        await UpdatePengirimanStatus(
-          transaksi.pengiriman.id_pengiriman,
-          updatedStatus,
-          transaksi.pengiriman.tanggal_mulai,
-          today,
-          { id_pengkonfirmasi: pegawai.id_pegawai }
-        );
-        setTransaksiList((prev) =>
-          prev.map((item) =>
-            item.id_pembelian === transaksi.id_pembelian
-              ? { ...item, pengiriman: { ...item.pengiriman, status_pengiriman: updatedStatus, tanggal_berakhir: today, id_pengkonfirmasi: pegawai.id_pegawai } }
-              : item
-          )
-        );
-        handleCetakNota(transaksi); // Cetak nota otomatis
-        showNotification(`Pengambilan ${updatedStatus} berhasil disimpan!`, 'success');
-      } catch (error) {
-        showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
-      }
+    try {
+      const today = new Date().toISOString();
+      const updatedStatus = transaksi.pengiriman?.status_pengiriman === 'Menunggu diambil pembeli'
+        ? 'Sudah diambil pembeli'
+        : 'Diambil kembali';
+      await UpdatePengirimanStatus(
+        transaksi.pengiriman.id_pengiriman,
+        updatedStatus,
+        transaksi.pengiriman.tanggal_mulai,
+        today,
+        { id_pengkonfirmasi: pegawai.id_pegawai }
+      );
+      setTransaksiList((prev) =>
+        prev.map((item) =>
+          item.id_pembelian === transaksi.id_pembelian
+            ? { ...item, pengiriman: { ...item.pengiriman, status_pengiriman: updatedStatus, tanggal_berakhir: today, id_pengkonfirmasi: pegawai.id_pegawai } }
+            : item
+        )
+      );
+      await handleCetakNota(transaksi); // Pastikan transaksi diteruskan
+      showNotification(`Pengambilan ${updatedStatus} berhasil disimpan!`, 'success');
+    } catch (error) {
+      console.error('Error in handleConfirmDiambil:', error);
+      showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
+    }
   };
 
   const getStatusBadge = (status) => {

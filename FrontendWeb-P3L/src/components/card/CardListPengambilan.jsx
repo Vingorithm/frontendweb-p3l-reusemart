@@ -174,12 +174,10 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
           <div className="barang-details mb-3 flex-grow-1">
             <div className="info-row">
               <span className="info-label">
-                {penitipan.status_penitipan === 'Menunggu diambil' ? 'ID Penitipan' : 'ID Pembelian'}
+                {'ID Penitipan'}
               </span>
               <span className="info-value">
-                {penitipan.status_penitipan === 'Menunggu diambil'
-                  ? penitipan.id_penitipan || '-'
-                  : penitipan.pembelian?.id_pembelian || '-'}
+                {penitipan.id_penitipan || '-'}
               </span>
             </div>
 

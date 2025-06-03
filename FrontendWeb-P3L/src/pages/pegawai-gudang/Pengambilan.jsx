@@ -194,9 +194,15 @@ const Pengambilan = () => {
           (item.Barang &&
             item.Barang.nama &&
             item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.barang?.penitip?.nama_penitip &&
+            item.barang.penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.pembelian?.pembeli?.nama &&
+            item.pembelian.pembeli?.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (item.Barang &&
             item.Barang.id_barang &&
-            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase()))
+            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.status_penitipan &&
+            item.status_penitipan.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -469,7 +475,7 @@ const Pengambilan = () => {
                     <BsSearch className="search-icon" />
                     <Form.Control
                       type="search"
-                      placeholder="Cari id penitipan, nama barang..."
+                      placeholder="Cari id penitipan, nama barang, nama pembeli..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="search-input"

@@ -68,20 +68,22 @@ const TopNavigation = ({ userRole }) => {
   };
 
   return (
-    <div className="bg-white pt-4 px-3 navigation-container">
+    <div className="bg-white pt-4 px-3">
       <div className="max-width-container mx-auto">
         <Nav className="nav-tabs-custom border-0">
           {roleMenu.map((item, index) => (
-          <Nav.Item key={item.name} className="nav-item-animated" style={{ animationDelay: `${index * 0.1}s` }}>
+          <Nav.Item key={item.name}>
             <NavLink
               to={item.path}
               className={({ isActive }) =>
-                `${isActiveLink(item) || isActive ? 'active' : ''} nav-link nav-link-enhanced`
+                `${isActiveLink(item) || isActive ? 'active' : ''} nav-link`
               }
-              style={{ textDecoration: 'none' }}
+              style={{ 
+                textDecoration: 'none',
+                animationDelay: `${index * 0.1}s`
+              }}
             >
-              <span className="nav-text">{item.name}</span>
-              <div className="nav-indicator"></div>
+              {item.name}
             </NavLink>
           </Nav.Item>
           ))}
@@ -89,46 +91,23 @@ const TopNavigation = ({ userRole }) => {
       </div>
 
       <style jsx>{`
-        .navigation-container {
-          background: #FFFFF;
-          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-          border-bottom: 1px solid rgba(231, 231, 231, 0.5);
-        }
-        
         .max-width-container {
           max-width: 1200px;
         }
-        
         .nav-tabs-custom {
           display: flex;
           justify-content: center;
           align-items: center;
-          border-bottom: none;
+          border-bottom: 1px solid #E7E7E7;
           overflow-x: auto;
           scrollbar-width: none;
           -ms-overflow-style: none;
-          padding: 0 20px;
           position: relative;
         }
-        
         .nav-tabs-custom::-webkit-scrollbar {
           display: none;
         }
-        
-        .nav-item-animated {
-          opacity: 0;
-          transform: translateY(-10px);
-          animation: slideInDown 0.6s ease-out forwards;
-        }
-        
-        @keyframes slideInDown {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .nav-link-enhanced {
+        .nav-tabs-custom .nav-link {
           color: #686868 !important;
           border: none;
           margin: 0 15px;
@@ -137,130 +116,99 @@ const TopNavigation = ({ userRole }) => {
           white-space: nowrap;
           position: relative;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          border-radius: 25px;
-          overflow: hidden;
+          border-radius: 8px;
           background: transparent;
+          transform: translateY(0);
+          opacity: 0;
+          animation: slideInUp 0.6s ease-out forwards;
         }
         
-        .nav-text {
-          position: relative;
-          z-index: 2;
-          transition: color 0.3s ease;
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
-        .nav-indicator {
-          position: absolute;
-          bottom: 0;
-          left: 50%;
-          width: 0;
-          height: 3px;
-          background: linear-gradient(90deg, #028643 0%, #34d399 100%);
-          border-radius: 2px;
-          transform: translateX(-50%);
-          transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .nav-link-enhanced:hover {
+        .nav-tabs-custom .nav-link:hover {
           color: #03081F !important;
+          background: rgba(2, 134, 67, 0.08);
           transform: translateY(-2px);
-          background: rgba(2, 134, 67, 0.05);
-          box-shadow: 0 4px 15px rgba(2, 134, 67, 0.1);
+          box-shadow: 0 4px 12px rgba(2, 134, 67, 0.15);
         }
         
-        .nav-link-enhanced:hover .nav-indicator {
-          width: 60%;
-        }
-        
-        .nav-link-enhanced.active {
+        .nav-tabs-custom .nav-link.active {
           color: #03081F !important;
           font-weight: 600;
-          background: linear-gradient(135deg, rgba(2, 134, 67, 0.1) 0%, rgba(52, 211, 153, 0.05) 100%);
+          background: linear-gradient(135deg, rgba(2, 134, 67, 0.1), rgba(2, 134, 67, 0.05));
           transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(2, 134, 67, 0.15);
+          box-shadow: 0 2px 8px rgba(2, 134, 67, 0.1);
         }
         
-        .nav-link-enhanced.active .nav-indicator {
-          width: 80%;
-          height: 3px;
-          background: linear-gradient(90deg, #028643 0%, #34d399 100%);
-          box-shadow: 0 2px 8px rgba(2, 134, 67, 0.3);
-        }
-        
-        .nav-link-enhanced.active .nav-text {
-          color: #028643;
-        }
-        
-        /* Pulse animation for active link */
-        .nav-link-enhanced.active::before {
+        .nav-tabs-custom .nav-link.active::after {
           content: '';
           position: absolute;
-          top: 50%;
+          bottom: -1px;
           left: 50%;
-          width: 100%;
-          height: 100%;
-          background: radial-gradient(circle, rgba(2, 134, 67, 0.1) 0%, transparent 70%);
-          border-radius: 25px;
-          transform: translate(-50%, -50%) scale(0);
-          animation: pulse 2s infinite;
-          z-index: 1;
+          transform: translateX(-50%);
+          width: 80%;
+          height: 3px;
+          background: linear-gradient(90deg, #028643, #02a651);
+          border-radius: 2px;
+          animation: expandWidth 0.4s ease-out;
         }
         
-        @keyframes pulse {
-          0% {
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 1;
+        @keyframes expandWidth {
+          from {
+            width: 0%;
           }
-          100% {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 0;
+          to {
+            width: 80%;
           }
         }
         
-        /* Mobile Responsive */
+        .nav-tabs-custom .nav-link::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(2, 134, 67, 0.1);
+          border-radius: 8px;
+          opacity: 0;
+          transform: scale(0.8);
+          transition: all 0.3s ease;
+          z-index: -1;
+        }
+        
+        .nav-tabs-custom .nav-link:hover::before {
+          opacity: 1;
+          transform: scale(1);
+        }
+        
         @media (max-width: 768px) {
           .nav-tabs-custom {
             justify-content: flex-start;
             padding: 0 10px;
           }
-          
-          .nav-link-enhanced {
-            padding: 10px 16px;
-            margin: 0 8px;
+          .nav-tabs-custom .nav-link {
+            padding: 10px 12px;
+            margin: 0 5px;
             font-size: 14px;
-          }
-          
-          .nav-indicator {
-            height: 2px;
-          }
-          
-          .nav-link-enhanced.active .nav-indicator {
-            height: 2px;
           }
         }
         
         @media (max-width: 480px) {
-          .nav-link-enhanced {
-            padding: 8px 12px;
-            margin: 0 4px;
+          .nav-tabs-custom .nav-link {
+            padding: 8px 10px;
+            margin: 0 3px;
             font-size: 13px;
           }
-        }
-        
-        /* Smooth scrolling for overflow */
-        .nav-tabs-custom {
-          scroll-behavior: smooth;
-        }
-        
-        /* Add a subtle gradient overlay for the container */
-        .navigation-container::after {
-          content: '';
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: linear-gradient(90deg, transparent 0%, #028643 50%, transparent 100%);
-          opacity: 0.3;
         }
       `}</style>
     </div>

@@ -41,7 +41,7 @@ const TopNavigation = ({ userRole }) => {
         ];
       case 'Penitip':
         return [
-          { name: 'Daftar Barang Titipan', path: '/penitip/barang' },
+          { name: 'Daftar Barang', path: '/penitip/barang' },
           { name: 'History Penjualan', path: '/penitip/history' },
           { name: 'Laporan Transaksi', path: '/penitip/laporan' },
         ];

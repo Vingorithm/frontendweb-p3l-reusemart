@@ -1,25 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Container,
-  Row,
-  Col,
-  Button,
-  Form,
-  Badge,
-  Spinner,
-  Table,
-  Nav,
-} from 'react-bootstrap';
-import {
-  BsSearch,
-  BsExclamationTriangle,
-  BsPrinter,
-  BsFilter,
-  BsCalendar,
-  BsGrid,
-  BsListUl,
-} from 'react-icons/bs';
-import { GetAllPenitip } from '../../clients/PenitipService';
+import { Container, Row, Col, Button, Form, Spinner, Table, Nav, Modal, Badge } from 'react-bootstrap';
+import { BsSearch, BsExclamationTriangle, BsFilter, BsCalendar, BsGrid, BsListUl } from 'react-icons/bs';
+import { apiSubPembelian } from '../../clients/SubPembelianService';
+import { apiPembeli } from '../../clients/PembeliService';
 import { GetPegawaiByAkunId } from '../../clients/PegawaiService';
 import { decodeToken } from '../../utils/jwtUtils';
 import RoleSidebar from '../../components/navigation/Sidebar';
@@ -27,13 +10,11 @@ import ToastNotification from '../../components/toast/ToastNotification';
 import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import TransaksiCard from '../../components/card/CardListPengambilan';
-import { GetAllPenitipan, UpdatePenitipan, GetItemForScheduling, ConfirmReceipt, SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 
 const Pengambilan = () => {
-  const [penitipanList, setPenitipanList] = useState([]);
-  const [filteredPenitipan, setFilteredPenitipan] = useState([]);
-  const [penitipList, setPenitipList] = useState([]);
+  const [transaksiList, setTransaksiList] = useState([]);
+  const [filteredTransaksi, setFilteredTransaksi] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,19 +23,20 @@ const Pengambilan = () => {
   const [toastType, setToastType] = useState('success');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
-  const [selectedView, setSelectedView] = useState('Terjual');
+  const [selectedView, setSelectedView] = useState('Menunggu diambil pembeli');
   const [akun, setAkun] = useState(null);
   const [pegawai, setPegawai] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedPenitipan, setSelectedPenitipan] = useState(null);
+  const [showNotaModal, setShowNotaModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedTransaksi, setSelectedTransaksi] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
 
   const statusViews = [
-    { id: 'Terjual', name: 'Terjual' },
-    { id: 'Menunggu diambil', name: 'Menunggu Diambil Kembali' },
+    { id: 'Menunggu diambil pembeli', name: 'Menunggu Diambil Pembeli' },
+    { id: 'Hangus', name: 'Menunggu Diambil Kembali' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -68,19 +50,14 @@ const Pengambilan = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        if (!token) {
-          throw new Error('Token tidak ditemukan');
-        }
-
+        if (!token) throw new Error('Token tidak ditemukan');
         const decoded = decodeToken(token);
         setAkun(decoded);
-
-        if (!decoded?.id) {
-          throw new Error('Invalid token structure');
-        }
-
+        if (!decoded?.id) throw new Error('Invalid token structure');
         if (decoded.role === 'Pegawai Gudang') {
           const response = await GetPegawaiByAkunId(decoded.id);
+          console.log('Decode ID:', decoded.id);
+          console.log('Pegawai data:', response.data);
           setPegawai(response.data);
         }
       } catch (err) {
@@ -95,221 +72,38 @@ const Pengambilan = () => {
   }, []);
 
   useEffect(() => {
-    filterPenitipanData();
-  }, [selectedView, penitipanList, searchTerm, startDate, endDate]);
+    filterTransaksiData();
+  }, [selectedView, transaksiList, searchTerm, startDate, endDate]);
 
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredPenitipan.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredPenitipan.length / itemsPerPage);
+  const currentItems = filteredTransaksi.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredTransaksi.length / itemsPerPage);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const fetchData = async () => {
-  setLoading(true);
-  try {
-    const [penitipanResponse, penitipResponse] = await Promise.all([
-      GetAllPenitipan(),
-      GetAllPenitip(),
-    ]);
-
-    const today = new Date();
-    const updatedPenitipan = await Promise.all(
-      penitipanResponse.data.map(async (item) => {
-        if (item.status_penitipan === 'Terjual') {
-          try {
-            const schedulingResponse = await GetItemForScheduling(item.id_penitipan);
-            const scheduling = schedulingResponse.data;
-
-            if (scheduling.pembelian && scheduling.pembelian.pengiriman && scheduling.pembelian.pengiriman.jenis_pengiriman === 'Ambil di gudang') {
-              const batasPengambilan = new Date(item.tanggal_batas_pengambilan);
-              const diffTime = today - batasPengambilan;
-              const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
-              if (diffDays > 2) {
-                await UpdatePenitipan(item.id_penitipan, {
-                  ...item,
-                  status_penitipan: 'Menunggu didonasikan',
-                });
-
-                await UpdatePengirimanStatus(
-                  scheduling.pembelian.pengiriman.id_pengiriman,
-                  'Hangus',
-                  scheduling.pembelian.pengiriman.tanggal_mulai,
-                  scheduling.pembelian.pengiriman.tanggal_berakhir
-                );
-
-                return { ...item, status_penitipan: 'Menunggu didonasikan' };
-              }
-              return { ...item, pembelian: scheduling.pembelian, pengiriman: scheduling.pembelian.pengiriman };
-            }
-          } catch (error) {
-            console.error(`Error fetching scheduling for ${item.id_penitipan}:`, error);
+    setLoading(true);
+    try {
+      const transaksiResponse = await apiSubPembelian.getAllSubPembelian();
+      const updatedTransaksi = await Promise.all(
+        transaksiResponse.map(async (transaksi) => {
+          if (transaksi.pengiriman?.jenis_pengiriman === 'Ambil di gudang') {
+            const pembeliResponse = await apiPembeli.getPembeliById(transaksi.id_pembeli);
+            return { ...transaksi, Pembeli: pembeliResponse.pembeli };
           }
-        }
-        return item; // Kembalikan item apa adanya untuk "Menunggu diambil"
-      })
-    );
-
-    const filteredPenitipan = updatedPenitipan
-      .filter(
-        (item) =>
-          item.Barang &&
-          item.Barang.status_qc === 'Lulus' &&
-          (item.status_penitipan === 'Terjual' || item.status_penitipan === 'Menunggu diambil') &&
-          (item.status_penitipan === 'Menunggu diambil' || // Izinkan tanpa pengiriman
-            (item.pengiriman &&
-              item.pengiriman.jenis_pengiriman === 'Ambil di gudang' &&
-              item.pengiriman.status_pengiriman !== 'Hangus'))
-      )
-      .sort((a, b) => new Date(a.tanggal_awal_penitipan) - new Date(b.tanggal_awal_penitipan));
-
-    setPenitipanList(filteredPenitipan);
-    setPenitipList(penitipResponse.data);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    setError('Gagal memuat data. Silakan coba lagi nanti.');
-    showNotification('Gagal memuat data. Silakan coba lagi nanti.', 'danger');
-  } finally {
-    setLoading(false);
-  }
-};
-
-  const formatDate = (dateString) => {
-    const options = { day: '2-digit', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
-  };
-
-  const filterPenitipanData = () => {
-    let filtered = [...penitipanList];
-
-    if (selectedView !== 'all') {
-      filtered = filtered.filter((item) => item.status_penitipan === selectedView);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          (item.id_penitipan &&
-            item.id_penitipan.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.Barang &&
-            item.Barang.nama &&
-            item.Barang.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.barang?.penitip?.nama_penitip &&
-            item.barang.penitip.nama_penitip.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.pembelian?.pembeli?.nama &&
-            item.pembelian.pembeli?.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.Barang &&
-            item.Barang.id_barang &&
-            item.Barang.id_barang.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.status_penitipan &&
-            item.status_penitipan.toLowerCase().includes(searchTerm.toLowerCase()))
+          return null;
+        })
       );
-    }
 
-    if (startDate && endDate) {
-      const startDateTime = new Date(startDate).setHours(0, 0, 0, 0);
-      const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
+      const filteredTransaksi = updatedTransaksi.filter((item) => item);
 
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
-        return itemDate >= startDateTime && itemDate <= endDateTime;
-      });
-    } else if (startDate) {
-      const startDateTime = new Date(startDate).setHours(0, 0, 0, 0);
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
-        return itemDate >= startDateTime;
-      });
-    } else if (endDate) {
-      const endDateTime = new Date(endDate).setHours(23, 59, 59, 999);
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tanggal_awal_penitipan).getTime();
-        return itemDate <= endDateTime;
-      });
-    }
-
-    setFilteredPenitipan(filtered);
-    setCurrentPage(1);
-  };
-
-  const handleCetakNota = async (penitipan) => {
-    try {
-      const schedulingResponse = await GetItemForScheduling(penitipan.id_penitipan);
-      const scheduling = schedulingResponse.data;
-
-      setSelectedPenitipan({
-        ...penitipan,
-        pembelian: scheduling.pembelian,
-      });
-      setShowModal(true);
-
-      setPenitipanList((prev) =>
-        prev.map((item) =>
-          item.id_penitipan === penitipan.id_penitipan
-            ? { ...item, cetakNotaDone: true }
-            : item
-        )
-      );
+      setTransaksiList(filteredTransaksi);
     } catch (error) {
-      console.error('Error fetching scheduling data:', error);
-      showNotification('Gagal memuat data untuk cetak nota!', 'danger');
-    }
-  };
-
-  const handleConfirmDiambil = async (penitipan) => {
-    try {
-      const today = new Date().toISOString();
-      const updatedStatus = penitipan.status_penitipan === 'Terjual' ? 'Diambil pembeli' : 'Diambil kembali';
-      await UpdatePenitipan(penitipan.id_penitipan, {
-        ...penitipan,
-        status_penitipan: updatedStatus,
-        tanggal_batas_pengambilan: today,
-      });
-      setPenitipanList((prev) =>
-        prev.map((item) =>
-          item.id_penitipan === penitipan.id_penitipan
-            ? { ...item, status_penitipan: updatedStatus, tanggal_batas_pengambilan: today }
-            : item
-        )
-      );
-      showNotification(`Penitipan ${updatedStatus} berhasil dikonfirmasi!`, 'success');
-    } catch (error) {
-      showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
-    }
-  };
-
-  const handleConfirmReceipt = async (id_pengiriman) => {
-    try {
-      await ConfirmReceipt(id_pengiriman);
-      setPenitipanList((prev) =>
-        prev.map((item) =>
-          item.pengiriman.id_pengiriman === id_pengiriman
-            ? { ...item, pengiriman: { ...item.pengiriman, status_pengiriman: 'transaksi selesai' } }
-            : item
-        )
-      );
-      showNotification('Barang telah dikonfirmasi diterima!', 'success');
-    } catch (error) {
-      showNotification('Gagal mengkonfirmasi penerimaan barang!', 'danger');
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'Dalam masa penitipan':
-        return <Badge bg="info">Dalam Penitipan</Badge>;
-      case 'Terjual':
-        return <Badge bg="primary">Terjual</Badge>;
-      case 'Dibeli':
-        return <Badge bg="primary">Dibeli</Badge>;
-      case 'Didonasikan':
-        return <Badge bg="success">Didonasikan</Badge>;
-      case 'Menunggu didonasikan':
-        return <Badge bg="warning">Menunggu Didonasikan</Badge>;
-       case 'Menunggu diambil':
-        return <Badge bg="warning">Menunggu Diambil</Badge>;  
-      default:
-        return <Badge bg="secondary">{status}</Badge>;
+      console.error('Error fetching data:', error);
+      setError('Gagal memuat data. Silakan coba lagi nanti.');
+      showNotification('Gagal memuat data. Silakan coba lagi nanti.', 'danger');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -317,9 +111,105 @@ const Pengambilan = () => {
     setShowDateFilter(!showDateFilter);
   };
 
-  const clearDateFilter = () => {
-    setStartDate('');
-    setEndDate('');
+  const filterTransaksiData = () => {
+    let filtered = [...transaksiList];
+
+    if (selectedView !== 'all') {
+      filtered = filtered.filter((item) =>
+        item.pengiriman?.status_pengiriman === selectedView ||
+        (selectedView === 'Menunggu diambil pembeli' && item.pengiriman?.status_pengiriman === 'Diproses')
+      );
+    }
+
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (item) =>
+          (item.id_pembelian &&
+            item.id_pembelian.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.Pembeli?.nama &&
+            item.Pembeli.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (item.barang?.some((b) =>
+            b.nama.toLowerCase().includes(searchTerm.toLowerCase())
+          )) ||
+          (item.barang?.some((b) =>
+            b.id_barang.toLowerCase().includes(searchTerm.toLowerCase())
+          ))
+      );
+    }
+
+    if (startDate || endDate) {
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.tanggal_pembelian).setHours(0, 0, 0, 0);
+        const startDateTime = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : -Infinity;
+        const endDateTime = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Infinity;
+        return itemDate >= startDateTime && itemDate <= endDateTime;
+      });
+    }
+
+    setFilteredTransaksi(filtered);
+    setCurrentPage(1);
+  };
+
+  const handleCetakNota = async (transaksi) => {
+    try {
+      setSelectedTransaksi(transaksi);
+      setShowNotaModal(true);
+      setTransaksiList((prev) =>
+        prev.map((item) =>
+          item.id_pembelian === transaksi.id_pembelian ? { ...item, cetakNotaDone: true } : item
+        )
+      );
+    } catch (error) {
+      console.error('Error preparing nota:', error);
+      showNotification('Gagal memuat data untuk cetak nota!', 'danger');
+    }
+  };
+
+  const handleConfirmDiambil = async (transaksi) => {
+      try {
+        const today = new Date().toISOString();
+        const updatedStatus = transaksi.pengiriman?.status_pengiriman === 'Menunggu diambil pembeli'
+          ? 'Sudah diambil pembeli'
+          : 'Diambil kembali';
+        await UpdatePengirimanStatus(
+          transaksi.pengiriman.id_pengiriman,
+          updatedStatus,
+          transaksi.pengiriman.tanggal_mulai,
+          today,
+          { id_pengkonfirmasi: pegawai.id_pegawai }
+        );
+        setTransaksiList((prev) =>
+          prev.map((item) =>
+            item.id_pembelian === transaksi.id_pembelian
+              ? { ...item, pengiriman: { ...item.pengiriman, status_pengiriman: updatedStatus, tanggal_berakhir: today, id_pengkonfirmasi: pegawai.id_pegawai } }
+              : item
+          )
+        );
+        handleCetakNota(transaksi); // Cetak nota otomatis
+        showNotification(`Pengambilan ${updatedStatus} berhasil disimpan!`, 'success');
+      } catch (error) {
+        showNotification('Gagal mengkonfirmasi pengambilan!', 'danger');
+      }
+  };
+
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case 'Menunggu diambil pembeli':
+        return <Badge bg="warning">Menunggu Diambil</Badge>;
+      case 'Diproses':
+        return <Badge bg="info">Diproses</Badge>;
+      case 'Sudah diambil pembeli':
+        return <Badge bg="success">Diambil</Badge>;
+      case 'Hangus':
+        return <Badge bg="danger">Hangus</Badge>;
+      default:
+        return <Badge bg="secondary">{status}</Badge>;
+    }
+  };
+
+  const handleLihatDetail = (transaksi) => {
+    setSelectedTransaksi(transaksi);
+    setShowDetailModal(true);
   };
 
   const formatRupiah = (angka) => {
@@ -330,14 +220,16 @@ const Pengambilan = () => {
     }).format(angka);
   };
 
-  const renderTransaksiCard = (penitipan) => {
+  const renderTransaksiCard = (transaksi) => {
     return (
-      <Col xs={12} md={6} lg={4} key={penitipan.id_penitipan} className="mb-4">
+      <Col xs={12} md={6} lg={4} key={transaksi.id_pembelian} className="mb-4">
         <TransaksiCard
-          penitipan={penitipan}
+          transaksi={transaksi}
           handleCetakNota={handleCetakNota}
           handleConfirmDiambil={handleConfirmDiambil}
-          setPenitipanList={setPenitipanList}
+          handleLihatDetail={handleLihatDetail}
+          setTransaksiList={setTransaksiList}
+          pegawai={pegawai}
         />
       </Col>
     );
@@ -355,7 +247,7 @@ const Pengambilan = () => {
       );
     }
 
-    if (filteredPenitipan.length === 0) {
+    if (filteredTransaksi.length === 0) {
       return (
         <div className="text-center py-5">
           <BsExclamationTriangle style={{ fontSize: '3rem', color: '#D9D9D9' }} />
@@ -365,60 +257,59 @@ const Pengambilan = () => {
     }
 
     if (viewMode === 'grid') {
-      return <Row>{currentItems.map((penitipan) => renderTransaksiCard(penitipan))}</Row>;
+      return <Row>{currentItems.map((transaksi) => renderTransaksiCard(transaksi))}</Row>;
     } else {
       return (
         <div className="table-responsive">
           <Table hover className="align-middle">
             <thead>
               <tr>
-                <th>ID Penitipan</th>
+                <th>ID Pembelian</th>
                 <th>Barang</th>
-                <th>Penitip</th>
-                <th>Tanggal Akhir Pengambilan</th>
-                <th>Harga</th>
-                <th>Status</th>
+                <th>Pembeli</th>
+                <th>Tanggal Pembelian</th>
+                <th>Total Harga</th>
+                <th>Status Pengiriman</th>
                 <th>Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((penitipan) => (
-                <tr key={penitipan.id_penitipan}>
-                  <td>{penitipan.id_penitipan}</td>
+              {currentItems.map((transaksi) => (
+                <tr key={transaksi.id_pembelian}>
+                  <td>{transaksi.id_pembelian}</td>
                   <td>
                     <div className="d-flex align-items-center">
-                      {penitipan.Barang?.gambar ? (
-                        <div
-                          className="me-2"
-                          style={{ width: '40px', height: '40px', overflow: 'hidden' }}
-                        >
+                      {transaksi.barang?.[0]?.gambar ? (
+                        <div className="me-2" style={{ width: '40px', height: '40px', overflow: 'hidden' }}>
                           <img
-                            src={penitipan.Barang.gambar.split(',')[0]}
-                            alt={penitipan.Barang.nama}
+                            src={`http://localhost:3000/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
+                            alt={transaksi.barang[0].nama}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             className="rounded"
                           />
                         </div>
                       ) : null}
                       <div>
-                        <div className="fw-bold">{penitipan.Barang?.nama || '-'}</div>
-                        <small className="text-muted">{penitipan.Barang?.id_barang || '-'}</small>
+                        <div className="fw-bold">{transaksi.barang?.[0]?.nama || '-'}</div>
+                        <small className="text-muted">
+                          {transaksi.barang?.length > 1 ? `${transaksi.barang.length} barang` : transaksi.barang?.[0]?.id_barang || '-'}
+                        </small>
                       </div>
                     </div>
                   </td>
-                  <td>{penitipan.Barang?.Penitip?.nama_penitip || '-'}</td>
-                  <td>{formatDate(penitipan.tanggal_awal_penitipan)}</td>
+                  <td>{transaksi.Pembeli?.nama || '-'}</td>
+                  <td>{formatDate(transaksi.tanggal_pembelian)}</td>
                   <td className="fw-bold" style={{ color: '#028643' }}>
-                    {formatRupiah(penitipan.Barang?.harga || 0)}
+                    {formatRupiah(transaksi.total_harga || 0)}
                   </td>
-                  <td>{getStatusBadge(penitipan.status_penitipan)}</td>
+                  <td>{getStatusBadge(transaksi.pengiriman?.status_pengiriman)}</td>
                   <td>
                     <Button
                       variant="outline-primary"
                       size="sm"
                       className="cetak-nota-btn"
-                      onClick={() => handleCetakNota(penitipan)}
-                      disabled={penitipan.cetakNotaDone}
+                      onClick={() => handleCetakNota(transaksi)}
+                      disabled={transaksi.cetakNotaDone}
                     >
                       <BsPrinter className="me-1" /> Cetak Nota
                     </Button>
@@ -430,6 +321,11 @@ const Pengambilan = () => {
         </div>
       );
     }
+  };
+
+  const formatDate = (dateString) => {
+    const options = { day: '2-digit', month: 'long', year: 'numeric' };
+    return dateString ? new Date(dateString).toLocaleDateString('id-ID', options) : '-';
   };
 
   return (
@@ -453,14 +349,14 @@ const Pengambilan = () => {
             <h2 className="mb-0 fw-bold" style={{ color: '#03081F' }}>
               Daftar Pengambilan
             </h2>
-            <p className="text-muted mt-1">Daftar pengambilan barang oleh pembeli/penitip</p>
+            <p className="text-muted mt-1">Daftar pengambilan barang oleh pembeli atau penitip</p>
           </Col>
         </Row>
 
         <Row>
           <Col md={3}>
             <RoleSidebar
-              namaSidebar={'Status Penitipan'}
+              namaSidebar={'Status Pengiriman'}
               roles={statusViews}
               selectedRole={selectedView}
               handleRoleChange={setSelectedView}
@@ -475,7 +371,7 @@ const Pengambilan = () => {
                     <BsSearch className="search-icon" />
                     <Form.Control
                       type="search"
-                      placeholder="Cari id penitipan, nama barang, nama pembeli..."
+                      placeholder="Cari ID pembelian, nama pembeli, nama barang..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="search-input"
@@ -550,7 +446,7 @@ const Pengambilan = () => {
 
             {renderContent()}
 
-            {!loading && filteredPenitipan.length > 0 && totalPages > 1 && (
+            {!loading && filteredTransaksi.length > 0 && totalPages > 1 && (
               <PaginationComponent
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -561,13 +457,93 @@ const Pengambilan = () => {
         </Row>
       </div>
 
-      {selectedPenitipan && (
+      {selectedTransaksi && (
         <CetakNotaPengambilan
-          show={showModal}
-          handleClose={() => setShowModal(false)}
-          penitipan={selectedPenitipan}
+          show={showNotaModal}
+          handleClose={() => setShowNotaModal(false)}
+          transaksi={selectedTransaksi}
         />
       )}
+      
+      {selectedTransaksi && (
+        <Modal
+          show={showDetailModal}
+          onHide={() => setShowDetailModal(false)}
+          centered
+          size="lg"
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Detail Transaksi</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row>
+              <Col md={6}>
+                <h6>ID Pembelian</h6>
+                <p>{selectedTransaksi.id_pembelian}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Status Pengiriman</h6>
+                {getStatusBadge(selectedTransaksi.pengiriman?.status_pengiriman)}
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={6}>
+                <h6>Pembeli</h6>
+                <p>{selectedTransaksi.Pembeli?.nama || '-'}</p>
+              </Col>
+              <Col md={6}>
+                <h6>Tanggal Pembelian</h6>
+                <p>{formatDate(selectedTransaksi.tanggal_pembelian)}</p>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col>
+                <h6>Barang</h6>
+                {selectedTransaksi.barang?.map((b, index) => (
+                  <div key={index} className="d-flex align-items-center mb-2">
+                    {b.gambar ? (
+                      <img
+                        src={`http://localhost:3000/uploads/barang/${b.gambar.split(',')[0]}`}
+                        alt={b.nama}
+                        style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', marginRight: '10px' }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: '50px',
+                          height: '50px',
+                          backgroundColor: '#f8f9fa',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: '10px',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        <span className="text-muted">No Image</span>
+                      </div>
+                    )}
+                    <div>
+                      <p className="mb-0 fw-bold">{b.nama}</p>
+                      <small className="text-muted">{b.id_barang}</small>
+                      <p className="mb-0">{formatRupiah(b.harga)}</p>
+                    </div>
+                  </div>
+                ))}
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowDetailModal(false)}
+            >
+              Tutup
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
 
       <style jsx>{`
         .max-width-container {

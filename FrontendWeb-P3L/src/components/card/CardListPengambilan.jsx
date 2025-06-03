@@ -1,31 +1,29 @@
 import React, { useState } from 'react';
 import { Card, Badge, Button, Modal, Form } from 'react-bootstrap';
-import { BsBoxSeam, BsCalendar } from 'react-icons/bs';
+import { BsBoxSeam, BsCalendar, BsEye } from 'react-icons/bs';
 import ConfirmationModal from '../../components/modal/ConfirmationModal2';
-import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import { SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 
-const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil, setPenitipanList }) => {
+const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai }) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [notaPrinted, setNotaPrinted] = useState(penitipan.cetakNotaDone || false);
+  const [notaPrinted, setNotaPrinted] = useState(transaksi?.cetakNotaDone || false);
   const [selectedDate, setSelectedDate] = useState(null);
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const options = { 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit', 
+    const options = {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
       hour12: false,
-      timeZone: 'Asia/Jakarta'
+      timeZone: 'Asia/Jakarta',
     };
-    return date.toLocaleString('id-ID', options);
+    return dateString ? new Date(dateString).toLocaleString('id-ID', options) : '-';
   };
 
   const formatRupiah = (angka) => {
@@ -38,16 +36,14 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'Dalam masa penitipan':
-        return <Badge bg="info">Dalam Penitipan</Badge>;
-      case 'Terjual':
-        return <Badge bg="primary">Terjual</Badge>;
-      case 'Dibeli':
-        return <Badge bg="primary">Dibeli</Badge>;
-      case 'Didonasikan':
-        return <Badge bg="success">Didonasikan</Badge>;
-      case 'Menunggu didonasikan':
-        return <Badge bg="warning">Menunggu Didonasikan</Badge>;
+      case 'Menunggu diambil pembeli':
+        return <Badge bg="warning">Menunggu Diambil</Badge>;
+      case 'Diproses':
+        return <Badge bg="info">Diproses</Badge>;
+      case 'Sudah diambil pembeli':
+        return <Badge bg="success">Diambil</Badge>;
+      case 'Hangus':
+        return <Badge bg="danger">Hangus</Badge>;
       default:
         return <Badge bg="secondary">{status}</Badge>;
     }
@@ -72,35 +68,43 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
 
   const handleScheduleSubmit = async () => {
     try {
+      if (!transaksi.pengiriman?.id_pengiriman) {
+        throw new Error('ID pengiriman tidak ditemukan');
+      }
+      if (!pegawai?.id_pegawai) {
+        throw new Error('ID pegawai tidak ditemukan');
+      }
+
       const startDate = new Date(selectedDate);
+      if (isNaN(startDate.getTime())) {
+        throw new Error('Tanggal mulai tidak valid');
+      }
+      startDate.setHours(8, 0, 0, 0);
       const endDate = new Date(startDate);
-      
       let workDaysAdded = 0;
       while (workDaysAdded < 2) {
         endDate.setDate(endDate.getDate() + 1);
         const dayOfWeek = endDate.getDay();
-        if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Senin-Jumat
-          workDaysAdded++;
-        }
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) workDaysAdded++;
       }
       endDate.setHours(20, 0, 0, 0);
-      startDate.setHours(8, 0, 0, 0);
 
-      const scheduleResponse = await SchedulePickup(penitipan.pengiriman.id_pengiriman, {
+      const scheduleResponse = await SchedulePickup(transaksi.pengiriman.id_pengiriman, {
         tanggal_mulai: startDate.toISOString(),
         tanggal_berakhir: endDate.toISOString(),
       });
 
       const updateResponse = await UpdatePengirimanStatus(
-        penitipan.pengiriman.id_pengiriman,
+        transaksi.pengiriman.id_pengiriman,
         'Menunggu diambil pembeli',
         startDate.toISOString(),
-        endDate.toISOString()
+        endDate.toISOString(),
+        { id_pengkonfirmasi: pegawai.id_pegawai }
       );
 
-      setPenitipanList((prev) => {
+      setTransaksiList((prev) => {
         const newList = [...prev];
-        const index = newList.findIndex((item) => item.id_penitipan === penitipan.id_penitipan);
+        const index = newList.findIndex((item) => item.id_pembelian === transaksi.id_pembelian);
         if (index !== -1) {
           newList[index] = {
             ...newList[index],
@@ -109,6 +113,7 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
               status_pengiriman: 'Menunggu diambil pembeli',
               tanggal_mulai: startDate.toISOString(),
               tanggal_berakhir: endDate.toISOString(),
+              id_pengkonfirmasi: pegawai.id_pegawai,
             },
           };
         }
@@ -118,10 +123,14 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
       handleCloseScheduleModal();
       alert('Jadwal pengambilan berhasil disimpan!');
     } catch (error) {
-      console.error('Error scheduling pickup:', error.response?.data || error.message);
-      alert('Gagal menyimpan jadwal pengambilan. Silakan coba lagi.');
+      console.error('Error scheduling pickup:', error.message, error.response?.data);
+      alert(`Gagal menyimpan jadwal pengambilan: ${error.message}. Silakan coba lagi.`);
     }
   };
+
+  const isConfirmDisabled = !transaksi.pengiriman?.id_pengkonfirmasi ||
+                            !transaksi.pengiriman?.tanggal_mulai ||
+                            !transaksi.pengiriman?.tanggal_berakhir;
 
   return (
     <>
@@ -129,92 +138,61 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
         <Card.Body>
           <div className="barang-info-container mb-3">
             <div className="d-flex align-items-center">
-              {penitipan.Barang?.gambar ? (
+              {transaksi.barang?.[0]?.gambar ? (
                 <div className="me-3" style={{ width: '60px', height: '60px', overflow: 'hidden' }}>
                   <img
-                    src={penitipan.Barang.gambar.split(',')[0]}
-                    alt={penitipan.Barang.nama}
+                    src={`http://localhost:3000/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
+                    alt={transaksi.barang[0].nama}
                     className="barang-image rounded"
                   />
                 </div>
               ) : (
-                <div
-                  className="me-3 no-image-placeholder rounded"
-                  style={{ width: '60px', height: '60px' }}
-                >
+                <div className="me-3 no-image-placeholder rounded" style={{ width: '60px', height: '60px' }}>
                   <span className="text-muted">No Image</span>
                 </div>
               )}
               <div>
-                <h6 className="barang-name mb-1">{penitipan.Barang?.nama || '-'}</h6>
-                <small className="text-muted">{penitipan.Barang?.id_barang || '-'}</small>
+                <h6 className="barang-name mb-1">{transaksi.barang?.[0]?.nama || '-'}</h6>
+                <small className="text-muted">{transaksi.barang?.length > 1 ? `${transaksi.barang.length} barang` : transaksi.barang?.[0]?.id_barang || '-'}</small>
               </div>
             </div>
           </div>
 
           <div className="d-flex justify-content-between mb-3">
             <div>
-              <div className="text-muted small">
-                {penitipan.status_penitipan === 'Menunggu diambil' ? 'Penitip' : 'Pembeli'}
-              </div>
-              <div className="fw-medium">
-                {penitipan.status_penitipan === 'Menunggu diambil'
-                  ? penitipan.Barang.Penitip.nama_penitip || '-'
-                  : penitipan.pembelian?.pembeli?.nama || '-'}
-              </div>
+              <div className="text-muted small">Pembeli</div>
+              <div className="fw-medium">{transaksi.Pembeli?.nama || '-'}</div>
             </div>
             <div className="text-end">
-              <div className="text-muted small">Harga</div>
+              <div className="text-muted small">Total Harga</div>
               <div className="fw-bold" style={{ color: '#028643' }}>
-                {formatRupiah(penitipan.Barang?.harga || 0)}
+                {formatRupiah(transaksi.total_harga || 0)}
               </div>
             </div>
           </div>
 
           <div className="barang-details mb-3 flex-grow-1">
             <div className="info-row">
-              <span className="info-label">
-                {'ID Penitipan'}
-              </span>
-              <span className="info-value">
-                {penitipan.id_penitipan || '-'}
-              </span>
+              <span className="info-label">ID Pembelian</span>
+              <span className="info-value">{transaksi.id_pembelian || '-'}</span>
             </div>
-
             <div className="info-row">
-              <span className="info-label">Harga</span>
-              <span className="info-value fw-bold text-success">
-                Rp {parseFloat(penitipan.Barang.harga).toLocaleString('id-ID')}
-              </span>
+              <span className="info-label">Tanggal Pembelian</span>
+              <span className="info-value">{formatDate(transaksi.tanggal_pembelian)}</span>
             </div>
-
-            {penitipan.pembelian && (
-              <div className="info-row">
-                <span className="info-label">Tanggal Pembelian</span>
-                <span className="info-value">{formatDate(penitipan.pembelian.tanggal_pembelian)}</span>
-              </div>
-            )}
-
             <div className="info-row">
-              <span className="info-label">Status Penitipan</span>
-              <span className="info-value">{getStatusBadge(penitipan.status_penitipan)}</span>
+              <span className="info-label">Status Pengiriman</span>
+              <span className="info-value">{getStatusBadge(transaksi.pengiriman?.status_pengiriman)}</span>
             </div>
-
-            {penitipan.pengiriman && (
+            {transaksi.pengiriman && (
               <>
                 <div className="info-row">
-                  <span className="info-label">Status Pengiriman</span>
-                  <span className="info-value">{getStatusBadge(penitipan.pengiriman.status_pengiriman)}</span>
-                </div>
-
-                <div className="info-row">
                   <span className="info-label">Tanggal Mulai</span>
-                  <span className="info-value">{penitipan.pengiriman.tanggal_mulai ? formatDate(penitipan.pengiriman.tanggal_mulai) : '-'}</span>
+                  <span className="info-value">{transaksi.pengiriman.tanggal_mulai ? formatDate(transaksi.pengiriman.tanggal_mulai) : '-'}</span>
                 </div>
-
                 <div className="info-row">
                   <span className="info-label">Tanggal Berakhir</span>
-                  <span className="info-value">{penitipan.pengiriman.tanggal_berakhir ? formatDate(penitipan.pengiriman.tanggal_berakhir) : '-'}</span>
+                  <span className="info-value">{transaksi.pengiriman.tanggal_berakhir ? formatDate(transaksi.pengiriman.tanggal_berakhir) : '-'}</span>
                 </div>
               </>
             )}
@@ -225,18 +203,24 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
               variant="outline-success"
               className="atur-pengiriman-btn"
               onClick={handleOpenConfirmationModal}
-              disabled={penitipan.status_penitipan !== 'Terjual' || !penitipan.pengiriman || penitipan.pengiriman.status_pengiriman !== 'Menunggu diambil pembeli'}
+              disabled={isConfirmDisabled}
             >
               <BsBoxSeam className="me-1" /> Konfirmasi Diambil
             </Button>
-
             <Button
               variant="outline-primary"
               className="schedule-btn"
               onClick={handleOpenScheduleModal}
-              disabled={penitipan.status_penitipan !== 'Terjual' || !penitipan.pengiriman}
+              disabled={transaksi.pengiriman?.status_pengiriman !== 'Diproses'}
             >
               <BsCalendar className="me-1" /> Atur Jadwal Pengambilan
+            </Button>
+            <Button
+              variant="outline-info"
+              className="detail-btn"
+              onClick={() => handleLihatDetail(transaksi)}
+            >
+              <BsEye className="me-1" /> Lihat Detail
             </Button>
           </div>
         </Card.Body>
@@ -246,7 +230,7 @@ const CardListPengambilan = ({ penitipan, handleCetakNota, handleConfirmDiambil,
         <ConfirmationModal
           show={showConfirmationModal}
           handleClose={handleCloseConfirmationModal}
-          penitipan={penitipan}
+          transaksi={transaksi}
           handleConfirm={handleConfirmDiambil}
           handleCetakNota={handleCetakNota}
         />

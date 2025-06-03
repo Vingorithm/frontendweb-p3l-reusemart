@@ -41,8 +41,17 @@ const ManageBarang = () => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmType, setConfirmType] = useState('warning');
   const [confirmMessage, setConfirmMessage] = useState('');
-  const [selectedImages, setSelectedImages] = useState([]);
-  const [imagePreview, setImagePreview] = useState([]);
+  
+  // Improved image state management
+  const [selectedImages, setSelectedImages] = useState({
+    image1: null,
+    image2: null
+  });
+  const [imagePreview, setImagePreview] = useState({
+    image1: null,
+    image2: null
+  });
+  
   const [selectedView, setSelectedView] = useState('all');
   const [currentBarang, setCurrentBarang] = useState(null);
   const [error, setError] = useState('');
@@ -170,6 +179,32 @@ const ManageBarang = () => {
     }
   };
 
+  const handleRemoveImage = (index) => {
+    const imageKey = index === 0 ? 'image1' : 'image2';
+    
+    // Clear selected image
+    setSelectedImages(prev => ({
+      ...prev,
+      [imageKey]: null
+    }));
+    
+    // Clear preview - hanya jika ini adalah file baru (bukan URL dari server)
+    if (imagePreview[imageKey] && imagePreview[imageKey].startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview[imageKey]);
+    }
+    
+    setImagePreview(prev => ({
+      ...prev,
+      [imageKey]: null
+    }));
+    
+    // Reset file input
+    const fileInput = document.querySelector(`input[data-index="${index}"]`);
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const filterBarangData = () => {
     let filtered = [...barangList];
     
@@ -210,17 +245,45 @@ const ManageBarang = () => {
     });
   };
 
+  // Improved image handling logic
   const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
+    const { files, dataset } = e.target;
+    const index = parseInt(dataset.index);
+    const imageKey = index === 0 ? 'image1' : 'image2';
     
-    if (files.length > 2) {
-      showNotification('Maksimal 2 gambar yang dapat diunggah.', 'warning');
-      return;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showNotification('Ukuran file tidak boleh melebihi 5MB.', 'warning');
+        // Reset file input
+        e.target.value = '';
+        return;
+      }
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        showNotification('Hanya file JPEG, PNG, dan JPG yang diperbolehkan.', 'warning');
+        // Reset file input
+        e.target.value = '';
+        return;
+      }
+      
+      // Update selected images
+      setSelectedImages(prev => ({
+        ...prev,
+        [imageKey]: file
+      }));
+      
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(prev => ({
+        ...prev,
+        [imageKey]: previewUrl
+      }));
     }
-
-    setSelectedImages(files);
-    const previews = files.map(file => URL.createObjectURL(file));
-    setImagePreview(previews);
   };
 
   const resetForm = () => {
@@ -237,40 +300,69 @@ const ManageBarang = () => {
       status_qc: 'Tidak Lulus',
       kategori_barang: ''
     });
-    setSelectedImages([]);
-    setImagePreview([]);
+    
+    // Clear selected images
+    setSelectedImages({
+      image1: null,
+      image2: null
+    });
+    
+    // Clear preview URLs dan revoke blob URLs
+    if (imagePreview.image1 && imagePreview.image1.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview.image1);
+    }
+    if (imagePreview.image2 && imagePreview.image2.startsWith('blob:')) {
+      URL.revokeObjectURL(imagePreview.image2);
+    }
+    
+    setImagePreview({
+      image1: null,
+      image2: null
+    });
+    
     setCurrentBarang(null);
     setError('');
+    
+    // Reset file inputs
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      input.value = '';
+    });
   };
 
   const openModal = (barang = null) => {
     if (barang) {
-      setConfirmAction(() => () => {
-        setFormData({
-          id_penitip: barang.id_penitip,
-          id_hunter: barang.id_hunter || null,
-          id_pegawai_gudang: loggedInPegawaiId,
-          nama: barang.nama,
-          deskripsi: barang.deskripsi,
-          harga: barang.harga,
-          garansi_berlaku: barang.garansi_berlaku,
-          tanggal_garansi: barang.tanggal_garansi ? barang.tanggal_garansi.split('T')[0] : null,
-          berat: barang.berat,
-          status_qc: barang.status_qc,
-          kategori_barang: barang.kategori_barang
-        });
-        setCurrentBarang(barang);
-        if (barang.gambar) {
-          const imageUrls = barang.gambar.split(',').map(img => img.trim());
-          setImagePreview(imageUrls);
-        } else {
-          setImagePreview([]);
-        }
-        setShowModal(true);
+      setFormData({
+        id_penitip: barang.id_penitip,
+        id_hunter: barang.id_hunter || null,
+        id_pegawai_gudang: loggedInPegawaiId,
+        nama: barang.nama,
+        deskripsi: barang.deskripsi,
+        harga: barang.harga,
+        garansi_berlaku: barang.garansi_berlaku,
+        tanggal_garansi: barang.tanggal_garansi ? barang.tanggal_garansi.split('T')[0] : null,
+        berat: barang.berat,
+        status_qc: barang.status_qc,
+        kategori_barang: barang.kategori_barang,
       });
-      setConfirmType('warning');
-      setConfirmMessage(`Apakah Anda yakin ingin mengedit barang "${barang.nama}"?`);
-      setShowConfirmModal(true);
+      setCurrentBarang(barang);
+      if (barang.gambar) {
+        const imageUrls = barang.gambar.split(',').map(img => img.trim());
+        setImagePreview({
+          image1: imageUrls[0] || null,
+          image2: imageUrls[1] || null,
+        });
+      } else {
+        setImagePreview({
+          image1: null,
+          image2: null,
+        });
+      }
+      setSelectedImages({
+        image1: null,
+        image2: null,
+      });
+      setShowModal(true);
     } else {
       resetForm();
       setShowModal(true);
@@ -304,51 +396,84 @@ const ManageBarang = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, submissionData = null) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.id_penitip || !formData.nama || 
-        !formData.deskripsi || !formData.harga || !formData.berat || !formData.kategori_barang) {
+    const dataToSubmit = submissionData || formData;
+
+    // Validasi form
+    if (!dataToSubmit.id_penitip || !dataToSubmit.nama || 
+        !dataToSubmit.deskripsi || !dataToSubmit.harga || 
+        !dataToSubmit.berat || !dataToSubmit.kategori_barang) {
       setError('Harap isi semua field yang diperlukan!');
       showNotification('Harap isi semua field yang diperlukan!', 'danger');
       return;
     }
 
-    if (formData.garansi_berlaku && !formData.tanggal_garansi) {
+    if (dataToSubmit.garansi_berlaku && !dataToSubmit.tanggal_garansi) {
       setError('Tanggal garansi harus diisi jika garansi berlaku!');
       showNotification('Tanggal garansi harus diisi jika garansi berlaku!', 'danger');
       return;
     }
 
-    try {
-      const formDataObj = new FormData();
-      
-      Object.keys(formData).forEach(key => {
-        if (key === 'id_hunter') {
-          if (formData[key] !== '' && formData[key] !== 'null' && formData[key] !== null) {
-            formDataObj.append(key, formData[key]);
-          }
-        } else if (formData[key] !== null && formData[key] !== undefined) {
-          formDataObj.append(key, formData[key]);
+    if (!currentBarang && !selectedImages.image1 && !imagePreview.image1) {
+      setError('Minimal satu gambar harus diunggah!');
+      showNotification('Minimal satu gambar harus diunggah!', 'danger');
+      return;
+    }
+
+    const formDataObj = new FormData();
+    Object.keys(dataToSubmit).forEach(key => {
+      if (key === 'id_hunter') {
+        if (dataToSubmit[key] !== '' && dataToSubmit[key] !== 'null' && dataToSubmit[key] !== null) {
+          formDataObj.append(key, dataToSubmit[key]);
+        }
+      } else if (dataToSubmit[key] !== null && dataToSubmit[key] !== undefined) {
+        formDataObj.append(key, dataToSubmit[key]);
+      }
+    });
+
+    if (selectedImages.image1) {
+      formDataObj.append('gambar', selectedImages.image1);
+    }
+    if (selectedImages.image2) {
+      formDataObj.append('gambar', selectedImages.image2);
+    }
+
+    if (currentBarang) {
+      const existingImages = [];
+      if (imagePreview.image1 && !imagePreview.image1.startsWith('blob:')) {
+        existingImages.push(imagePreview.image1);
+      }
+      if (imagePreview.image2 && !imagePreview.image2.startsWith('blob:')) {
+        existingImages.push(imagePreview.image2);
+      }
+      if (existingImages.length > 0) {
+        formDataObj.append('existing_images', JSON.stringify(existingImages));
+      }
+
+      // Show confirmation modal for update
+      setConfirmAction(() => async () => {
+        try {
+          const response = await UpdateBarang(currentBarang.id_barang, formDataObj);
+          showNotification('Data barang berhasil diperbarui!', 'success');
+          setShowModal(false);
+          resetForm();
+          fetchData();
+        } catch (error) {
+          console.error('Error updating barang:', error);
+          setError('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.');
+          showNotification('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.', 'danger');
         }
       });
-      
-      if (selectedImages.length > 0) {
-        selectedImages.forEach(image => {
-          formDataObj.append('gambar', image);
-        });
-      }
-      
-      console.log('Form data keys:', [...formDataObj.keys()]);
-      console.log('Form data entries:', [...formDataObj.entries()].map(entry => `${entry[0]}: ${entry[1]}`));
-      
-      let response;
-      if (currentBarang) {
-        response = await UpdateBarang(currentBarang.id_barang, formDataObj);
-        showNotification('Data barang berhasil diperbarui!', 'success');
-      } else {
-        response = await CreateBarang(formDataObj);
+      setConfirmType('warning');
+      setConfirmMessage(`Apakah Anda yakin ingin memperbarui barang "${dataToSubmit.nama}"?`);
+      setShowConfirmModal(true);
+    } else {
+      // Handle create barang
+      try {
+        const response = await CreateBarang(formDataObj);
         try {
           const barangId = response.data.id_barang;
           await createPenitipanForBarang(barangId);
@@ -357,15 +482,14 @@ const ManageBarang = () => {
           console.error('Error creating penitipan:', penitipanError);
           showNotification('Barang berhasil ditambahkan, tetapi gagal membuat data penitipan!', 'warning');
         }
+        setShowModal(false);
+        resetForm();
+        fetchData();
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        setError('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.');
+        showNotification('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.', 'danger');
       }
-
-      setShowModal(false);
-      resetForm();
-      fetchData();
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setError('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.');
-      showNotification('Terjadi kesalahan saat menyimpan data. Silakan coba lagi nanti.', 'danger');
     }
   };
 
@@ -421,25 +545,12 @@ const ManageBarang = () => {
     return pegawai ? pegawai.nama_pegawai : '-';
   };
 
-  const renderImagePreview = () => {
-    if (imagePreview.length === 0) {
-      return <p className="text-muted">Tidak ada gambar yang dipilih</p>;
-    }
-    
-    return (
-      <div className="d-flex flex-wrap gap-2 mt-2">
-        {imagePreview.map((src, index) => (
-          <div key={index} className="position-relative" style={{ width: '150px', height: '150px' }}>
-            <img
-              src={src}
-              alt={`Preview ${index + 1}`}
-              className="img-thumbnail"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
-          </div>
-        ))}
-      </div>
-    );
+  // Convert imagePreview object to array format for modal compatibility
+  const getImagePreviewArray = () => {
+    const array = [];
+    if (imagePreview.image1) array.push(imagePreview.image1);
+    if (imagePreview.image2) array.push(imagePreview.image2);
+    return array;
   };
 
   const renderBarangCard = (barang) => {
@@ -457,6 +568,18 @@ const ManageBarang = () => {
       </Col>
     );
   };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup blob URLs
+      if (imagePreview.image1 && imagePreview.image1.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview.image1);
+      }
+      if (imagePreview.image2 && imagePreview.image2.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview.image2);
+      }
+    };
+  }, [imagePreview]);
 
   return (
     <Container fluid className="p-0 bg-white">
@@ -582,6 +705,7 @@ const ManageBarang = () => {
         handleInputChange={handleInputChange}
         handleDateChange={handleDateChange}
         handleImageChange={handleImageChange}
+        handleRemoveImage={handleRemoveImage}
         imagePreview={imagePreview}
         handleSubmit={handleSubmit}
         currentBarang={currentBarang}

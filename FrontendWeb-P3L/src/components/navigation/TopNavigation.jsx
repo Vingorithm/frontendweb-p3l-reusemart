@@ -113,6 +113,7 @@ const TopNavigation = ({ userRole }) => {
           margin: 0 15px;
           padding: 12px 20px;
           font-weight: 500;
+          font-size: 14px;
           white-space: nowrap;
           position: relative;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -199,7 +200,7 @@ const TopNavigation = ({ userRole }) => {
           .nav-tabs-custom .nav-link {
             padding: 10px 12px;
             margin: 0 5px;
-            font-size: 14px;
+            font-size: 13px;
           }
         }
         
@@ -207,7 +208,7 @@ const TopNavigation = ({ userRole }) => {
           .nav-tabs-custom .nav-link {
             padding: 8px 10px;
             margin: 0 3px;
-            font-size: 13px;
+            font-size: 12px;
           }
         }
       `}</style>

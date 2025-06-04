@@ -139,7 +139,7 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
   };
 
   const isConfirmDisabled = !transaksi.pengiriman?.tanggal_mulai || !transaksi.pengiriman?.tanggal_berakhir;
-
+  const isHangus = transaksi.pengiriman?.status_pengiriman == 'Hangus';
   return (
     <>
       <Card className="transaksi-card h-100">
@@ -211,7 +211,7 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
               variant="outline-success"
               className="atur-pengiriman-btn"
               onClick={handleOpenConfirmationModal}
-              disabled={isConfirmDisabled}
+              disabled={isConfirmDisabled || isHangus}
             >
               <BsBoxSeam className="me-1" /> Konfirmasi Diambil
             </Button>
@@ -219,7 +219,7 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
               variant="outline-primary"
               className="schedule-btn"
               onClick={handleOpenScheduleModal}
-              disabled={transaksi.pengiriman?.status_pengiriman !== 'Diproses'}
+              disabled={transaksi.pengiriman?.status_pengiriman !== 'Diproses' || isHangus}
             >
               <BsCalendar className="me-1" /> Atur Jadwal Pengambilan
             </Button>
@@ -234,6 +234,7 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
               variant="outline-primary"
               className="cetak-nota-btn"
               onClick={handleCetakNota}
+              disabled={isHangus}
             >
               <BsPrinter className="me-1" /> Cetak Nota
             </Button>

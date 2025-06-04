@@ -36,7 +36,8 @@ const Pengambilan = () => {
 
   const statusViews = [
     { id: 'Menunggu diambil pembeli', name: 'Menunggu Diambil Pembeli' },
-    { id: 'Hangus', name: 'Menunggu Diambil Kembali' },
+    { id: 'Menunggu diambil kembali', name: 'Menunggu Diambil Kembali' },
+    { id: 'Hangus', name: 'Hangus' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -172,6 +173,10 @@ const Pengambilan = () => {
 
   const handleConfirmDiambil = async (transaksi) => {
     try {
+      if (!transaksi.cetakNotaDone) {
+        showNotification('Cetak nota terlebih dahulu sebelum konfirmasi!', 'danger');
+        return;
+      }
       const today = new Date().toISOString();
       const updatedStatus = transaksi.pengiriman?.status_pengiriman === 'Menunggu diambil pembeli'
         ? 'Sudah diambil pembeli'
@@ -190,7 +195,6 @@ const Pengambilan = () => {
             : item
         )
       );
-      await handleCetakNota(transaksi); // Pastikan transaksi diteruskan
       showNotification(`Pengambilan ${updatedStatus} berhasil disimpan!`, 'success');
     } catch (error) {
       console.error('Error in handleConfirmDiambil:', error);
@@ -231,11 +235,11 @@ const Pengambilan = () => {
       <Col xs={12} md={6} lg={4} key={transaksi.id_pembelian} className="mb-4">
         <TransaksiCard
           transaksi={transaksi}
-          handleCetakNota={handleCetakNota}
           handleConfirmDiambil={handleConfirmDiambil}
           handleLihatDetail={handleLihatDetail}
           setTransaksiList={setTransaksiList}
           pegawai={pegawai}
+          notaPrinted={transaksi.cetakNotaDone || false}
         />
       </Col>
     );

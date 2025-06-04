@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Badge, Button, Modal, Form } from 'react-bootstrap';
-import { BsBoxSeam, BsCalendar, BsEye } from 'react-icons/bs';
+import { BsBoxSeam, BsCalendar, BsEye, BsPrinter } from 'react-icons/bs';
 import ConfirmationModal from '../../components/modal/ConfirmationModal2';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
+import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 
-const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai }) => {
+const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai, notaPrinted }) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [notaPrinted, setNotaPrinted] = useState(transaksi?.cetakNotaDone || false);
+  const [showNotaModal, setShowNotaModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
 
   const formatDate = (dateString) => {
@@ -66,6 +67,15 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
     setSelectedDate(null);
   };
 
+  const handleCetakNota = () => {
+    setShowNotaModal(true);
+    setTransaksiList((prev) =>
+      prev.map((item) =>
+        item.id_pembelian === transaksi.id_pembelian ? { ...item, cetakNotaDone: true } : item
+      )
+    );
+  };
+
   const handleScheduleSubmit = async () => {
     try {
       if (!transaksi.pengiriman?.id_pengiriman) {
@@ -89,20 +99,18 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
       }
       endDate.setHours(20, 0, 0, 0);
 
-      const scheduleResponse = await SchedulePickup(transaksi.pengiriman.id_pengiriman, {
+      await SchedulePickup(transaksi.pengiriman.id_pengiriman, {
         tanggal_mulai: startDate.toISOString(),
         tanggal_berakhir: endDate.toISOString(),
       });
 
-      const updateResponse = await UpdatePengirimanStatus(
+      await UpdatePengirimanStatus(
         transaksi.pengiriman.id_pengiriman,
         'Menunggu diambil pembeli',
         startDate.toISOString(),
         endDate.toISOString(),
         pegawai.id_pegawai
       );
-
-      console.log('data submit', pegawai.id_pegawai);
 
       setTransaksiList((prev) => {
         const newList = [...prev];
@@ -130,13 +138,7 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
     }
   };
 
-  const isConfirmDisabled = 
-                            !transaksi.pengiriman?.tanggal_mulai ||
-                            !transaksi.pengiriman?.tanggal_berakhir;
-
-  useEffect(() => {
-    console.log('data card pegawai', pegawai);
-  }, []);
+  const isConfirmDisabled = !transaksi.pengiriman?.tanggal_mulai || !transaksi.pengiriman?.tanggal_berakhir;
 
   return (
     <>
@@ -228,6 +230,13 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
             >
               <BsEye className="me-1" /> Lihat Detail
             </Button>
+            <Button
+              variant="outline-primary"
+              className="cetak-nota-btn"
+              onClick={handleCetakNota}
+            >
+              <BsPrinter className="me-1" /> Cetak Nota
+            </Button>
           </div>
         </Card.Body>
       </Card>
@@ -238,7 +247,14 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
           handleClose={handleCloseConfirmationModal}
           transaksi={transaksi}
           handleConfirm={handleConfirmDiambil}
-          handleCetakNota={handleCetakNota}
+        />
+      )}
+
+      {showNotaModal && (
+        <CetakNotaPengambilan
+          show={showNotaModal}
+          handleClose={() => setShowNotaModal(false)}
+          transaksi={transaksi}
         />
       )}
 
@@ -271,6 +287,7 @@ const CardListPengambilan = ({ transaksi, handleCetakNota, handleConfirmDiambil,
           </Button>
         </Modal.Footer>
       </Modal>
+
 
 
       <style jsx>{`

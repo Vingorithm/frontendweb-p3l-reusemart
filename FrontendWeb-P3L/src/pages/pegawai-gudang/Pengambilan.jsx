@@ -11,6 +11,7 @@ import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import TransaksiCard from '../../components/card/CardListPengambilan';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
+import { UpdateStatusPenitipan } from '../../clients/PenitipanService';
 
 const Pengambilan = () => {
   const [transaksiList, setTransaksiList] = useState([]);
@@ -25,7 +26,7 @@ const Pengambilan = () => {
   const [itemsPerPage] = useState(9);
   const [selectedView, setSelectedView] = useState('Menunggu diambil pembeli');
   const [akun, setAkun] = useState(null);
-  const [pegawai, setPegawai] = useState('');
+  const [pegawai, setPegawai] = useState({});
   const [showNotaModal, setShowNotaModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTransaksi, setSelectedTransaksi] = useState(null);
@@ -47,6 +48,7 @@ const Pengambilan = () => {
     setTimeout(() => setShowToast(false), 5000);
   };
 
+  // Update useEffect for fetching user data
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -57,10 +59,9 @@ const Pengambilan = () => {
         if (!decoded?.id) throw new Error('Invalid token structure');
         if (decoded.role === 'Pegawai Gudang') {
           const response = await GetPegawaiByAkunId(decoded.id);
-          console.log('Decode ID:', decoded.id);
-          console.log('Pegawai data:', response.data);
+          console.log('data pegawai sekarang:', response.data);
           setPegawai(response.data);
-          console.log('Pegawai id:', pegawai);
+          await fetchData(); // Fetch data after pegawai is set
         }
       } catch (err) {
         setError('Gagal memuat data user!');
@@ -70,8 +71,86 @@ const Pengambilan = () => {
     };
 
     fetchUserData();
-    fetchData();
   }, []);
+
+  // Update filteredTransaksi and run checkExpiredPickups
+  useEffect(() => {
+    filterTransaksiData();
+    if (filteredTransaksi.length > 0 && pegawai.id_pegawai) {
+      console.log('Running checkExpiredPickups with filteredTransaksi:', filteredTransaksi);
+      checkExpiredPickups();
+    }
+  }, [selectedView, transaksiList, searchTerm, startDate, endDate, pegawai]);
+
+  // Check and update expired pickups with status "Menunggu diambil pembeli"
+  const checkExpiredPickups = async () => {
+    try {
+      if (!pegawai.id_pegawai) {
+        console.warn('Pegawai ID not set, skipping checkExpiredPickups');
+        return;
+      }
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize to start of day
+      console.log('Today (normalized):', today.toISOString());
+      console.log('filteredTransaksi:', filteredTransaksi);
+
+      const expiredTransaksi = filteredTransaksi.filter((transaksi) => {
+        if (!transaksi.pengiriman) {
+          console.log(`No pengiriman for transaksi ${transaksi.id_pembelian}`);
+          return false;
+        }
+        const endDate = new Date(transaksi.pengiriman.tanggal_berakhir);
+        endDate.setHours(0, 0, 0, 0); // Normalize to start of day
+        console.log(`Transaksi ${transaksi.id_pembelian}: status=${transaksi.pengiriman.status_pengiriman}, endDate=${endDate.toISOString()}`);
+        return (
+          transaksi.pengiriman.status_pengiriman === 'Menunggu diambil pembeli' &&
+          endDate < today
+        );
+      });
+
+      console.log('Expired transaksi:', expiredTransaksi);
+
+      for (const transaksi of expiredTransaksi) {
+        console.log(`Processing expired transaksi: ${transaksi.id_pembelian}`);
+        // Update Pengiriman status to "Hangus"
+        await UpdatePengirimanStatus(
+          transaksi.pengiriman.id_pengiriman,
+          'Hangus',
+          transaksi.pengiriman.tanggal_mulai,
+          transaksi.pengiriman.tanggal_berakhir,
+          { id_pengkonfirmasi: pegawai.id_pegawai }
+        );
+        console.log(`Updated Pengiriman status to Hangus for ${transaksi.id_pembelian}`);
+
+        // Update Penitipan status to "Menunggu didonasikan" for each barang
+        for (const barang of transaksi.barang) {
+          if (barang.id_penitip) {
+            try {
+              const penitipanResponse = await GetPenitipanByIdBarang(barang.id_barang);
+              console.log(`Penitipan response for barang ${barang.id_barang}:`, penitipanResponse.data);
+              const id_penitipan = penitipanResponse.data.id_penitipan;
+              if (!id_penitipan) throw new Error(`Penitipan not found for barang ${barang.id_barang}`);
+              await UpdateStatusPenitipan(id_penitipan, 'Menunggu didonasikan');
+              console.log(`Updated Penitipan for barang: ${barang.id_barang}`);
+            } catch (err) {
+              console.error(`Failed to update Penitipan for barang ${barang.id_barang}:`, err.message);
+            }
+          } else {
+            console.log(`No id_penitip for barang: ${barang.id_barang}, skipping Penitipan update`);
+          }
+        }
+      }
+
+      // Refresh data after updates
+      if (expiredTransaksi.length > 0) {
+        console.log('Refreshing data after updates');
+        await fetchData();
+      }
+    } catch (error) {
+      console.error('Error checking expired pickups:', error.message);
+      showNotification('Gagal memeriksa pengambilan kadaluarsa!', 'danger');
+    }
+  };
 
   useEffect(() => {
     filterTransaksiData();
@@ -100,6 +179,7 @@ const Pengambilan = () => {
       const filteredTransaksi = updatedTransaksi.filter((item) => item);
 
       setTransaksiList(filteredTransaksi);
+      console.log('data transaksi : ', filteredTransaksi);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Gagal memuat data. Silakan coba lagi nanti.');

@@ -111,16 +111,24 @@ const Pengambilan = () => {
       console.log('Expired transaksi:', expiredTransaksi);
 
       for (const transaksi of expiredTransaksi) {
-        console.log(`Processing expired transaksi: ${transaksi.id_pembelian}`);
-        // Update Pengiriman status to "Hangus"
-        await UpdatePengirimanStatus(
-          transaksi.pengiriman.id_pengiriman,
-          'Hangus',
-          transaksi.pengiriman.tanggal_mulai,
-          transaksi.pengiriman.tanggal_berakhir,
-          { id_pengkonfirmasi: pegawai.id_pegawai }
-        );
-        console.log(`Updated Pengiriman status to Hangus for ${transaksi.id_pembelian}`);
+          console.log(`Processing expired transaksi: ${transaksi.id_pembelian}`);
+          // Update Pengiriman status to "Hangus"
+          try {
+            const payload = {
+              id_pembelian: transaksi.id_pembelian,
+              id_pengkonfirmasi: pegawai.id_pegawai,
+              tanggal_mulai: transaksi.pengiriman.tanggal_mulai,
+              tanggal_berakhir: transaksi.pengiriman.tanggal_berakhir,
+              status_pengiriman: 'Hangus',
+              jenis_pengiriman: 'Ambil di gudang',
+            };
+            console.log(`UpdatePengirimanStatus payload for ${transaksi.pengiriman.id_pengiriman}:`, payload);
+            await UpdatePengirimanStatus(transaksi.pengiriman.id_pengiriman, payload);
+            console.log(`Updated Pengiriman status to Hangus for ${transaksi.id_pembelian}`);
+          } catch (err) {
+            console.error(`Failed to update Pengiriman for ${transaksi.id_pembelian}:`, err.message, err.response?.data);
+            throw err; // Stop further processing if Pengiriman update fails
+        }
 
         // Update Penitipan status to "Menunggu didonasikan" for each barang
         for (const barang of transaksi.barang) {
@@ -261,13 +269,14 @@ const Pengambilan = () => {
       const updatedStatus = transaksi.pengiriman?.status_pengiriman === 'Menunggu diambil pembeli'
         ? 'Sudah diambil pembeli'
         : 'Diambil kembali';
-      await UpdatePengirimanStatus(
-        transaksi.pengiriman.id_pengiriman,
-        updatedStatus,
-        transaksi.pengiriman.tanggal_mulai,
-        today,
-        { id_pengkonfirmasi: pegawai.id_pegawai }
-      );
+      await UpdatePengirimanStatus(transaksi.pengiriman.id_pengiriman, {
+        id_pembelian: transaksi.id_pembelian,
+        id_pengkonfirmasi: pegawai.id_pegawai,
+        tanggal_mulai: startDate.toISOString(),
+        tanggal_berakhir: endDate.toISOString(),
+        status_pengiriman: 'Menunggu diambil pembeli',
+        jenis_pengiriman: 'Ambil di gudang',
+      });
       setTransaksiList((prev) =>
         prev.map((item) =>
           item.id_pembelian === transaksi.id_pembelian

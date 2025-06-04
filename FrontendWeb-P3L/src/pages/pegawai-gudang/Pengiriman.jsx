@@ -228,6 +228,8 @@ const Pengiriman = () => {
   };
 
   const renderTransaksiCard = (transaksi) => {
+    console.log(transaksi);
+    
     return (
       <Col xs={12} md={6} lg={4} key={transaksi.id_pembelian} className="mb-4">
         <TransaksiCard

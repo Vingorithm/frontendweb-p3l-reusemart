@@ -126,8 +126,9 @@ const CekBuktiTf = () => {
       if(val) {
         const responsePembelian = await apiPembelian.updatePembelian(selectedPembelian?.id_pembelian, { status_pembelian: "Pembayaran valid", id_customer_service: customerService?.id_pegawai });
         if(responsePembelian) {
-          const responsePengiriman = await UpdatePengirimanStatus(selectedPembelian?.Pengiriman?.id_pengiriman, "Diproses");
+          const responsePengiriman = await UpdatePengirimanStatus(selectedPembelian?.Pengiriman?.id_pengiriman, { status_pengiriman: "Diproses", jenis_pengiriman: selectedPembelian?.Pengiriman?.jenis_pengiriman });
           if(responsePengiriman) {
+            console.log(responsePengiriman);
             selectedPembelian?.SubPembelians.forEach(async (sb) => {
               await UpdatePenitipan(sb?.Barang?.Penitipan?.id_penitipan, { status_penitipan: "Terjual"});
               const notification = { 

@@ -7,6 +7,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
+import { SendNotification } from '../../clients/NotificationServices';
 
 const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai, notaPrinted }) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -129,6 +130,31 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
           };
         }
         return newList;
+      });
+      
+      
+      // kirim notif ke pembeli
+      const pembeliNotification = { 
+        fcmToken: transaksi?.Pembeli?.Akun?.fcm_token,
+        title: "Jadwal Pengambilan",
+        body: `Jadwal pengambilan untuk pembelian ${transaksi?.id_pembelian} sudah ditentukan!`
+      }
+      
+      if(pembeliNotification.fcmToken){
+        await SendNotification(pembeliNotification);
+      }
+
+      // kirim notif ke penitip
+      transaksi?.barang.forEach( async (barang) => {
+        const penitipNotification = { 
+          fcmToken: barang?.Penitip?.Akun?.fcm_token,
+          title: "Jadwal Pengambilan",
+          body: `Jadwal pengambilan untuk barang ${barang?.id_barang} sudah ditentukan!`
+        }
+        
+        if(penitipNotification.fcmToken) {
+          await SendNotification(penitipNotification);
+        }
       });
 
       handleCloseScheduleModal();

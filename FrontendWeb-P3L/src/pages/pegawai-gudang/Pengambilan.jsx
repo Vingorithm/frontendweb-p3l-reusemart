@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Table, Nav, Modal, Badge } from 'react-bootstrap';
-import { BsSearch, BsExclamationTriangle, BsFilter, BsCalendar, BsGrid, BsListUl } from 'react-icons/bs';
+import { BsSearch, BsExclamationTriangle, BsFilter, BsCalendar, BsGrid, BsListUl, BsPrinter } from 'react-icons/bs';
 import { apiSubPembelian } from '../../clients/SubPembelianService';
 import { apiPembeli } from '../../clients/PembeliService';
 import { GetPegawaiByAkunId } from '../../clients/PegawaiService';

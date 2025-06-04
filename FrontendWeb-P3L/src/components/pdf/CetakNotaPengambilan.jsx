@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Logo from '../../assets/images/logo.png';
 
-const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
+const CetakNotaPengambilan = ({ show, handleClose, transaksi }) => {
   const formatPrice = (angka) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -15,7 +15,7 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
 
   const formatDate = (dateString) => {
     const options = { day: '2-digit', month: 'long', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('id-ID', options);
+    return dateString ? new Date(dateString).toLocaleDateString('id-ID', options) : '-';
   };
 
   const generatePDF = () => {
@@ -70,16 +70,13 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
         startY: yPosition,
         head: [['Field', 'Value']],
         body: [
-          ['ID Penitipan', penitipan?.id_penitipan || '-'],
-          ['Tanggal Awal Penitipan', formatDate(penitipan?.tanggal_awal_penitipan) || '-'],
-          ['Tanggal Akhir Penitipan', formatDate(penitipan?.tanggal_akhir_penitipan) || '-'],
-          ['Batas Pengambilan', formatDate(penitipan?.tanggal_batas_pengambilan) || '-'],
-          ['Status Penitipan', penitipan?.status_penitipan || '-'],
-          ['ID Pengiriman', penitipan?.pengiriman?.id_pengiriman || '-'],
-          ['Jenis Pengiriman', penitipan?.pengiriman?.jenis_pengiriman || '-'],
-          ['Status Pengiriman', penitipan?.pengiriman?.status_pengiriman || '-'],
-          ['Tanggal Mulai Pengiriman', formatDate(penitipan?.pengiriman?.tanggal_mulai) || '-'],
-          ['Tanggal Berakhir Pengiriman', formatDate(penitipan?.pengiriman?.tanggal_berakhir) || '-'],
+          ['ID Pembelian', transaksi?.id_pembelian || '-'],
+          ['Tanggal Pembelian', formatDate(transaksi?.tanggal_pembelian) || '-'],
+          ['ID Pengiriman', transaksi?.pengiriman?.id_pengiriman || '-'],
+          ['Jenis Pengiriman', transaksi?.pengiriman?.jenis_pengiriman || '-'],
+          ['Status Pengiriman', transaksi?.pengiriman?.status_pengiriman || '-'],
+          ['Tanggal Mulai Pengiriman', formatDate(transaksi?.pengiriman?.tanggal_mulai) || '-'],
+          ['Tanggal Berakhir Pengiriman', formatDate(transaksi?.pengiriman?.tanggal_berakhir) || '-'],
         ],
         theme: 'grid',
         margin: { left: margin, right: margin },
@@ -100,45 +97,19 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
       doc.text('Detail Barang', margin, yPosition);
       yPosition += 5;
 
-      autoTable(doc, {
-        startY: yPosition,
-        head: [['Field', 'Value']],
-        body: [
-          ['ID Barang', penitipan?.Barang?.id_barang || '-'],
-          ['Nama', penitipan?.Barang?.nama || '-'],
-          ['Harga', formatPrice(penitipan?.Barang?.harga || 0)],
-          ['Berat', `${penitipan?.Barang?.berat || '-'} kg`],
-          ['Kategori', penitipan?.Barang?.kategori_barang || '-'],
-          ['Status QC', penitipan?.Barang?.status_qc || '-'],
-        ],
-        theme: 'grid',
-        margin: { left: margin, right: margin },
-        styles: { fontSize: 8, cellPadding: 3, font: 'helvetica' },
-        headStyles: {
-          fillColor: [2, 134, 67],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 9,
-        },
-        alternateRowStyles: { fillColor: [245, 252, 248] },
-      });
-      yPosition = doc.lastAutoTable.finalY + 8;
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.setTextColor(2, 134, 67);
-      doc.text('Detail Penitip', margin, yPosition);
-      yPosition += 5;
+      const barangBody = transaksi?.barang?.map(item => [
+        item.id_barang || '-',
+        item.nama || '-',
+        formatPrice(item.harga || 0),
+        `${item.berat || '-'} kg`,
+        item.kategori_barang || '-',
+        item.status_qc || '-',
+      ]) || [['-', '-', '-', '-', '-', '-']];
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Field', 'Value']],
-        body: [
-          ['Nama', penitipan?.Barang?.Penitip?.nama_penitip || '-'],
-          ['Nomor KTP', penitipan?.Barang?.Penitip?.nomor_ktp || '-'],
-          ['Email', penitipan?.Barang?.Penitip?.Akun?.email || '-'],
-          ['Tanggal Registrasi', formatDate(penitipan?.Barang?.Penitip?.tanggal_registrasi) || '-'],
-        ],
+        head: [['ID Barang', 'Nama', 'Harga', 'Berat', 'Kategori', 'Status QC']],
+        body: barangBody,
         theme: 'grid',
         margin: { left: margin, right: margin },
         styles: { fontSize: 8, cellPadding: 3, font: 'helvetica' },
@@ -162,8 +133,10 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
         startY: yPosition,
         head: [['Field', 'Value']],
         body: [
-          ['Nama Pembeli', penitipan?.pembelian?.pembeli?.nama || '-'],
-          ['Alamat Pengiriman', penitipan?.pembelian?.alamat?.alamat_lengkap || '-'],
+          ['Nama Pembeli', transaksi?.Pembeli?.nama || '-'],
+          ['Total Harga', formatPrice(transaksi?.total_harga || 0)],
+          ['Ongkir', formatPrice(transaksi?.ongkir || 0)],
+          ['Total Bayar', formatPrice(transaksi?.total_bayar || 0)],
         ],
         theme: 'grid',
         margin: { left: margin, right: margin },
@@ -187,7 +160,7 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
         pageHeight - 10
       );
 
-      doc.save(`Nota_Pengambilan_${penitipan?.id_penitipan || 'unknown'}.pdf`);
+      doc.save(`Nota_Pengambilan_${transaksi?.id_pembelian || 'unknown'}.pdf`);
     } catch (error) {
       console.error('PDF generation error:', error);
       alert('Gagal menghasilkan PDF. Silakan coba lagi.');
@@ -201,20 +174,17 @@ const CetakNotaPengambilan = ({ show, handleClose, penitipan }) => {
       </Modal.Header>
       <Modal.Body className="p-4">
         <div className="text-center mb-3">
-          <h6 className="fw-bold">ID: {penitipan?.id_penitipan || '-'}</h6>
+          <h6 className="fw-bold">ID: {transaksi?.id_pembelian || '-'}</h6>
         </div>
         <div className="card p-3 border-success shadow-sm">
           <p className="mb-2">
-            <strong>Nama Barang:</strong> {penitipan?.Barang?.nama || '-'}
+            <strong>Nama Barang:</strong> {transaksi?.barang?.[0]?.nama || '-'}
           </p>
           <p className="mb-2">
-            <strong>Penitip:</strong> {penitipan?.Barang?.Penitip?.nama_penitip || '-'}
-          </p>
-          <p className="mb-2">
-            <strong>Pembeli:</strong> {penitipan?.pembelian?.pembeli?.nama || '-'}
+            <strong>Pembeli:</strong> {transaksi?.Pembeli?.nama || '-'}
           </p>
           <p className="mb-0">
-            <strong>Status:</strong> {penitipan?.status_penitipan || '-'}
+            <strong>Status:</strong> {transaksi?.pengiriman?.status_pengiriman || '-'}
           </p>
         </div>
       </Modal.Body>

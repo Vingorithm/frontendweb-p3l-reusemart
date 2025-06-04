@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Badge, Button, Modal, Form } from 'react-bootstrap';
-import { BsBoxSeam, BsCalendar, BsEye } from 'react-icons/bs';
+import { BsBoxSeam, BsCalendar, BsEye, BsPrinter } from 'react-icons/bs';
 import ConfirmationModal from '../../components/modal/ConfirmationModal2';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -213,6 +213,17 @@ const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, 
               onClick={() => handleLihatDetail(transaksi)}
             >
               <BsEye className="me-1" /> Lihat Detail
+            </Button>
+            <Button
+                variant="outline-primary"
+                className="cetak-nota-btn"
+                onClick={() => {
+                  handleCetakNota(transaksi);
+                  setNotaPrinted(true);
+                }}
+                disabled={notaPrinted}
+              >
+                <BsPrinter className="me-1" /> Cetak Nota
             </Button>
           </div>
         </Card.Body>

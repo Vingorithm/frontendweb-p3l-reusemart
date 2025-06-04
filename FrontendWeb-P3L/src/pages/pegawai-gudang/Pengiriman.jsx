@@ -159,14 +159,7 @@ const Pengiriman = () => {
       if (!transaksi || !transaksi.id_pembelian) {
         throw new Error('Transaksi tidak valid');
       }
-      setSelectedTransaksi({
-        id_pembelian: transaksi.id_pembelian,
-        Pembeli: transaksi.Pembeli,
-        barang: transaksi.barang,
-        pengiriman: transaksi.pengiriman,
-        tanggal_pembelian: transaksi.tanggal_pembelian,
-        total_harga: transaksi.total_harga,
-      });
+      setSelectedTransaksi(transaksi);
       setShowNotaModal(true);
       setTransaksiList((prev) =>
         prev.map((item) =>

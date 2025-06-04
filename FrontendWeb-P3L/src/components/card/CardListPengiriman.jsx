@@ -6,8 +6,10 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
+import { GetPegawaiById } from '../../clients/PegawaiService';
+import { SendNotification } from '../../clients/NotificationServices';
 
-const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai }) => {
+const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai}) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [notaPrinted, setNotaPrinted] = useState(transaksi?.cetakNotaDone || false);
@@ -109,8 +111,46 @@ const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, 
             },
           };
         }
+        
         return newList;
       });
+
+      // kirim notif ke pembeli
+      const pembeliNotification = { 
+        fcmToken: transaksi?.Pembeli?.Akun?.fcm_token,
+        title: "Jadwal Pengiriman",
+        body: `Jadwal Pengiriman untuk pembelian ${transaksi?.id_pembelian} sudah ditentukan!`
+      }
+      
+      if(pembeliNotification.fcmToken) {
+        await SendNotification(pembeliNotification);
+      }
+      
+      // kirim notif ke penitip
+      transaksi?.barang.forEach( async (barang) => {
+        const penitipNotification = { 
+          fcmToken: barang?.Penitip?.Akun?.fcm_token,
+          title: "Jadwal Pengiriman",
+          body: `Jadwal Pengiriman untuk barang ${barang?.id_barang} sudah ditentukan!`
+        }
+        if(penitipNotification.fcmToken) {
+          await SendNotification(penitipNotification);
+        }
+      });
+      
+      // kirim notif ke kurir
+      const responseKurir = await GetPegawaiById(selectedKurir);
+      if(responseKurir) {
+        const data = responseKurir.data;
+        const kurirNotification = { 
+          fcmToken: data?.Akun?.fcm_token,
+          title: "Jadwal Pengiriman",
+          body: `Jadwal Pengiriman untuk pembelian ${transaksi?.id_pembelian} sudah ditentukan!`
+        }
+        if(kurirNotification.fcmToken) {
+          await SendNotification(kurirNotification);
+        }
+      }
 
       handleCloseScheduleModal();
       alert('Jadwal pengambilan berhasil disimpan!');

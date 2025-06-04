@@ -104,13 +104,14 @@ const CardListPengambilan = ({ transaksi, handleConfirmDiambil, handleLihatDetai
         tanggal_berakhir: endDate.toISOString(),
       });
 
-      await UpdatePengirimanStatus(
-        transaksi.pengiriman.id_pengiriman,
-        'Menunggu diambil pembeli',
-        startDate.toISOString(),
-        endDate.toISOString(),
-        pegawai.id_pegawai
-      );
+      await UpdatePengirimanStatus(transaksi.pengiriman.id_pengiriman, {
+        id_pembelian: transaksi.id_pembelian,
+        id_pengkonfirmasi: pegawai.id_pegawai,
+        tanggal_mulai: startDate.toISOString(),
+        tanggal_berakhir: endDate.toISOString(),
+        status_pengiriman: 'Menunggu diambil pembeli',
+        jenis_pengiriman: 'Ambil di gudang',
+      });
 
       setTransaksiList((prev) => {
         const newList = [...prev];

@@ -143,7 +143,7 @@ const CekBuktiTf = () => {
       } else {
         const responsePembelian = await apiPembelian.updatePembelian(selectedPembelian?.id_pembelian, { status_pembelian: "Pembayaran tidak valid", id_customer_service: customerService?.id_pegawai });
         if(responsePembelian) {
-          const responsePengiriman = await UpdatePengirimanStatus(selectedPembelian?.Pengiriman?.id_pengiriman, "Tidak diproses");
+          const responsePengiriman = await UpdatePengirimanStatus(selectedPembelian?.Pengiriman?.id_pengiriman, { status_pengiriman: "Tidak diproses", jenis_pengiriman: selectedPembelian?.Pengiriman?.jenis_pengiriman });
           if(responsePengiriman) {
             selectedPembelian?.SubPembelians.forEach(async (sb) => {
               await UpdatePenitipan(sb?.Barang?.Penitipan?.id_penitipan, { status_penitipan: "Dalam masa penitipan"});           
@@ -295,7 +295,7 @@ const CekBuktiTf = () => {
                 }
                 
                 {
-                  item?.status_pembelian == "Menunggu verifikasi pembayaran" && ( (new Date()) > (new Date( (new Date(item?.tanggal_pembelian).getTime() + 15 * 60 * 1000) )) ) ?
+                  item?.status_pembelian == "Menunggu verifikasi pembayaran"  ?
                   <button type="button" data-bs-toggle="modal" data-bs-target="#verifikasi-bukti-bayar-modal" className={`btn btn-success me-2`} onClick={() => setSelectedPembelian(item)}>Verifikasi Bukti Bayar</button>
                   :
                   <></>

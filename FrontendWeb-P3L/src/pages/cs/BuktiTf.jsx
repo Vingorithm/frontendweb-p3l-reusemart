@@ -295,7 +295,7 @@ const CekBuktiTf = () => {
                 }
                 
                 {
-                  item?.status_pembelian == "Menunggu verifikasi pembayaran"  ?
+                  item?.status_pembelian == "Menunggu verifikasi pembayaran" && ( (new Date()) > (new Date( (new Date(item?.tanggal_pembelian).getTime() + 15 * 60 * 1000) )) ) ?
                   <button type="button" data-bs-toggle="modal" data-bs-target="#verifikasi-bukti-bayar-modal" className={`btn btn-success me-2`} onClick={() => setSelectedPembelian(item)}>Verifikasi Bukti Bayar</button>
                   :
                   <></>

@@ -4,7 +4,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import Logo from '../../assets/images/logo.png';
 
-const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
+const CetakNotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
   const formatPrice = (angka) => {
     if (!angka || isNaN(angka)) return '0';
     return new Intl.NumberFormat('id-ID').format(parseFloat(angka));
@@ -47,13 +47,14 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
     return match ? parseInt(match[0]) : 0;
   };
 
+  // Updated nota number format: tahunpenitipan.bulanpenitipan.id_penitipan
   const generateNotaNumber = (penitipan) => {
-    if (!penitipan?.tanggal_awal_penitipan) return 'PNT-00.00.000';
+    if (!penitipan?.tanggal_awal_penitipan) return '00.00.000';
     const date = new Date(penitipan.tanggal_awal_penitipan);
-    const year = String(date.getFullYear()).slice(-2);
+    const year = String(date.getFullYear()).slice(-2); // Last 2 digits of year
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const idPenitipan = extractIdNumber(penitipan?.id_penitipan);
-    return `PNT-${year}.${month}.${String(idPenitipan).padStart(3, '0')}`;
+    return `${year}.${month}.${String(idPenitipan).padStart(3, '0')}`;
   };
 
   // Generate PDF
@@ -95,22 +96,39 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
       doc.setFont("helvetica", "normal");
       doc.text(`${penitipan?.Barang?.Penitip?.id_penitip || '-'} / ${penitipan?.Barang?.Penitip?.nama_penitip || '-'}`, 35, y);
       y += 5;
+      doc.text(`Email: ${penitipan?.Barang?.Penitip?.Akun?.email || '-'}`, 15, y);
+      y += 5;
+      doc.text(`Total Poin: ${penitipan?.Barang?.Penitip?.total_poin || '0'}`, 15, y);
+      y += 5;
       doc.text(`Terdaftar sejak: ${formatDate(penitipan?.Barang?.Penitip?.tanggal_registrasi) || '-'}`, 15, y);
       y += 10;
 
-      // Detail Barang
-      const barangDetails = [
-        [penitipan?.Barang?.nama || '-', `Rp ${formatPrice(penitipan?.Barang?.harga || 0)}`],
-        [`Kategori: ${penitipan?.Barang?.kategori_barang || '-'}`, `Berat: ${penitipan?.Barang?.berat || '-'} kg`],
-        [`Status QC: ${penitipan?.Barang?.status_qc || '-'}`, `Garansi: ${penitipan?.Barang?.garansi_berlaku ? 'Ya' : 'Tidak'}`],
-      ];
-
-      if (penitipan?.Barang?.deskripsi) {
-        barangDetails.push([`Deskripsi: ${penitipan.Barang.deskripsi}`, ""]);
+      // Info Hunter (jika ada)
+      if (penitipan?.Barang?.hunter) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Hunter : ", 15, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${penitipan.Barang.hunter.id_pegawai} / ${penitipan.Barang.hunter.nama_pegawai}`, 35, y);
+        y += 5;
+        doc.text(`Email: ${penitipan?.Barang?.hunter?.Akun?.email || '-'}`, 15, y);
+        y += 10;
       }
 
-      if (penitipan?.Barang?.tanggal_garansi) {
-        barangDetails.push([`Berlaku hingga: ${formatDate(penitipan.Barang.tanggal_garansi)}`, ""]);
+      // Detail Barang - More comprehensive
+      const barangDetails = [
+        [`ID Barang: ${penitipan?.Barang?.id_barang || '-'}`, `Harga: Rp ${formatPrice(penitipan?.Barang?.harga || 0)}`],
+        [`Nama: ${penitipan?.Barang?.nama || '-'}`, `Berat: ${penitipan?.Barang?.berat || '-'} kg`],
+        [`Kategori: ${penitipan?.Barang?.kategori_barang || '-'}`, `Status QC: ${penitipan?.Barang?.status_qc || '-'}`],
+        [`Garansi: ${penitipan?.Barang?.garansi_berlaku ? 'Ya' : 'Tidak'}`, 
+         penitipan?.Barang?.tanggal_garansi ? `Berlaku hingga: ${formatDate(penitipan.Barang.tanggal_garansi)}` : ''],
+        [`Penitip ID: ${penitipan?.Barang?.id_penitip || '-'}`, 
+         penitipan?.Barang?.id_hunter ? `Hunter ID: ${penitipan.Barang.id_hunter}` : 'Hunter: -'],
+        [`QC oleh ID: ${penitipan?.Barang?.id_pegawai_gudang || '-'}`, '']
+      ];
+
+      // Add description if available
+      if (penitipan?.Barang?.deskripsi) {
+        barangDetails.push([`Deskripsi: ${penitipan.Barang.deskripsi}`, ""]);
       }
 
       autoTable(doc, {
@@ -132,6 +150,18 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
 
       y = doc.lastAutoTable.finalY + 15;
 
+      // QC Information dengan nama pegawai
+      if (penitipan?.Barang?.pegawaiGudang) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Quality Control:", 15, y);
+        doc.setFont("helvetica", "normal");
+        y += 5;
+        doc.text(`Petugas QC: ${penitipan.Barang.pegawaiGudang.nama_pegawai} (${penitipan.Barang.pegawaiGudang.id_pegawai_gudang})`, 15, y);
+        y += 5;
+        doc.text(`Email: ${penitipan?.Barang?.pegawaiGudang?.Akun?.email || '-'}`, 15, y);
+        y += 10;
+      }
+
       // Informasi Tambahan
       doc.setFont("helvetica", "bold");
       doc.text("Informasi Penting:", 15, y);
@@ -142,23 +172,16 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
       doc.text("• Harap membawa nota ini saat pengambilan barang", 15, y);
       y += 5;
       doc.text("• Hubungi kami jika ada perpanjangan waktu penitipan", 15, y);
+      y += 5;
+      doc.text("• Barang telah melalui proses Quality Control", 15, y);
       y += 15;
 
-      // QC Information
-      if (penitipan?.Barang?.PegawaiGudang) {
-        doc.text(`QC oleh: ${penitipan.Barang.PegawaiGudang.nama_pegawai} (${penitipan.Barang.PegawaiGudang.id_pegawai})`, 15, y);
-        y += 15;
-      }
-
       // Signature section
-      doc.text("Diserahkan oleh:", 15, y);
-      doc.text("Diterima oleh:", 105, y);
+      doc.text("Diterima dan QC oleh:", 15, y);
       y += 35;
       doc.text("(.................................)", 15, y);
-      doc.text("(.................................)", 105, y);
       y += 10;
       doc.text(`Tanggal: ${formatDate(new Date())}`, 15, y);
-      doc.text("Tanggal: ............................", 105, y);
 
       // Save PDF
       doc.save(`Nota_Penitipan_${generateNotaNumber(penitipan)}.pdf`);
@@ -179,11 +202,19 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
         </div>
         <div className="card p-3 border-success shadow-sm">
           <p className="mb-2">
+            <strong>ID Barang:</strong> {penitipan?.Barang?.id_barang || '-'}
+          </p>
+          <p className="mb-2">
             <strong>Nama Barang:</strong> {penitipan?.Barang?.nama || '-'}
           </p>
           <p className="mb-2">
             <strong>Penitip:</strong> {penitipan?.Barang?.Penitip?.nama_penitip || '-'}
           </p>
+          {penitipan?.Barang?.hunter && (
+            <p className="mb-2">
+              <strong>Hunter:</strong> {penitipan.Barang.hunter.nama_pegawai || '-'}
+            </p>
+          )}
           <p className="mb-2">
             <strong>Status:</strong> {penitipan?.status_penitipan || '-'}
           </p>
@@ -204,4 +235,4 @@ const NotaPenitipanPdf = ({ show, handleClose, penitipan }) => {
   );
 };
 
-export default NotaPenitipanPdf;
+export default CetakNotaPenitipanPdf;

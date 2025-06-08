@@ -48,6 +48,7 @@ export const ENDPOINTS = {
 
     // Penitip
     GET_ALL_PENITIP: "/penitip",
+    GET_ALL_PENITIP_CUSTOM: "/penitip/custom",
     CREATE_PENITIP: "/penitip",
     SHOW_PENITIP: (id) => `/penitip/${id}`,
     UPDATE_PENITIP: (id) => `/penitip/${id}`,

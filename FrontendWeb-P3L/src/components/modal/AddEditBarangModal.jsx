@@ -9,7 +9,7 @@ const AddEditBarangModal = ({
   handleInputChange,
   handleDateChange,
   handleImageChange,
-  handleRemoveImage, // Tambahkan prop ini
+  handleRemoveImage,
   imagePreview,
   handleSubmit,
   currentBarang,
@@ -176,25 +176,31 @@ const AddEditBarangModal = ({
             </Col>
           </Row>
 
-          {currentBarang && (
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Status QC</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={currentBarang.status_qc || 'Tidak lulus'}
-                    disabled
-                    className="form-control-custom"
-                    style={{ backgroundColor: '#f8f9fa' }}
-                  />
-                  <Form.Text className="text-muted">
-                    Status QC akan dikelola oleh Customer Service
-                  </Form.Text>
-                </Form.Group>
-              </Col>
-            </Row>
-          )}
+          {/* Status QC - Dapat dipilih oleh Pegawai Gudang */}
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>Status Quality Check <span className="text-danger">*</span></Form.Label>
+                <Form.Select
+                  name="status_qc"
+                  value={formData.status_qc || ''}
+                  onChange={handleInputChange}
+                  required
+                  className="form-control-custom"
+                >
+                  <option value="">Pilih Status QC</option>
+                  {statusQCOptions.map((status, index) => (
+                    <option key={index} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Text className="text-muted">
+                  Tentukan status quality check untuk barang ini
+                </Form.Text>
+              </Form.Group>
+            </Col>
+          </Row>
 
           {shouldShowGaransi() && (
             <>

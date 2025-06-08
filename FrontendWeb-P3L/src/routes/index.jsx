@@ -36,7 +36,7 @@ import ORequest from "../pages/organisasi/ORequest";
 import ProdukDisumbang from "../pages/owner/ProdukDisumbang";
 import LaporanBulanan from "../pages/owner/LaporanBulanan";
 import LaporanKomisi from "../pages/owner/LaporanKomisi";
-import LaporanStok from "../pages/owner/LaporanStok";
+import LaporanStok from "../pages/owner/LaporanStokGudang";
 import LaporanKategori from "../pages/owner/LaporanKategori";
 import PenitipanHabis from "../pages/owner/PenitipanHabis";
 import LaporanDonasi from "../pages/owner/LaporanDonasi";

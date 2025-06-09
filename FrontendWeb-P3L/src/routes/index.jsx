@@ -58,6 +58,7 @@ import { Navigate } from "react-router-dom";
 import { decodeToken } from "../utils/jwtUtils";
 import Keranjang from "../pages/pembeli/Keranjang";
 import PenitipPage from "../pages/penitip/PenitipPage";
+import LaporanTransaksiPenitip from "../pages/owner/LaporanTransaksiPenitip";
 
 const ProfileRedirect = () => {
   const token = localStorage.getItem("authToken");
@@ -109,6 +110,7 @@ const mainRoutes = [
   { path: "/owner/kategori", element: <LaporanKategori /> },
   { path: "/owner/penitipan", element: <PenitipanHabis /> },
   { path: "/owner/donasi", element: <LaporanDonasi /> },
+  { path: "/owner/transaksi", element: <LaporanTransaksiPenitip /> },
   { path: "/owner/rekap", element: <RekapRequest /> },
 
   // Protected Routes for Admin

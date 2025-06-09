@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
-const CetakLaporanPenitipModal = ({ penitip }) => {
+const CetakLaporanPenitipModal = ({ penitip, onCetak }) => {
     const [tahun, setTahun] = useState("");
     const [bulan, setBulan] = useState("");
+    const [mode, setMode] = useState("Semua");
 
     const bulanList = [
         { nama: "Januari", value: "01" },
@@ -39,6 +40,14 @@ const CetakLaporanPenitipModal = ({ penitip }) => {
         }
     }, [penitip]);
 
+    const handleCetak = () => {
+        if(mode == "Sebagian") {
+            onCetak(penitip?.id_penitip, tahun, bulan);
+        } else {
+            onCetak(penitip?.id_penitip, null, null);
+        }
+    }
+
     return (
         <>
             <div className="modal fade" id="cetak-laporan-penitip-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
@@ -51,51 +60,70 @@ const CetakLaporanPenitipModal = ({ penitip }) => {
                         <div className="modal-body">
                             <div className="d-flex flex-row justify-content-around">
 
-                                {/* Dropdown Tahun */}
+
+                                {/* Dropdown Mode */}
                                 <div>
-                                    <p className="mb-0 me-3 fw-semibold">Tahun: </p>
+                                    <p className="mb-0 me-3 fw-semibold">Tipe Laporan: </p>
                                     <div className="input-group mb-3">
                                         <button className="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {tahun || "Pilih Tahun"}
+                                            {mode || "Pilih Jenis Laporan"}
                                         </button>
                                         <ul className="dropdown-menu">
-                                            {tahunList.map((t) => (
-                                                <li key={t}>
-                                                    <a className="dropdown-item" href="#" onClick={() => setTahun(t)}>
-                                                        {t}
-                                                    </a>
-                                                </li>
-                                            ))}
+                                            <li><a className="dropdown-item" href="#" onClick={() => setMode("Semua")}>Semua</a></li>
+                                            <li><a className="dropdown-item" href="#" onClick={() => setMode("Sebagian")}>Sebagian</a></li>
                                         </ul>
                                     </div>
                                 </div>
 
-                                {/* Dropdown Bulan */}
-                                <div>
-                                    <p className="mb-0 me-3 fw-semibold">Bulan: </p>
-                                    <div className="input-group mb-3">
-                                        <button className="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                            {bulanList.find((b) => b.value === bulan)?.nama || "Pilih Bulan"}
-                                        </button>
-                                        <ul className="dropdown-menu">
-                                            {bulanList.map((b) => (
-                                                <li key={b.value}>
-                                                    <a className="dropdown-item" href="#" onClick={() => setBulan(b.value)}>
-                                                        {b.nama}
-                                                    </a>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
+                                {
+                                    mode == "Semua" ? <></> : 
+                                    <>
+
+                                        {/* Dropdown Tahun */}
+                                        <div>
+                                            <p className="mb-0 me-3 fw-semibold">Tahun: </p>
+                                            <div className="input-group mb-3">
+                                                <button className="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    {tahun || "Pilih Tahun"}
+                                                </button>
+                                                <ul className="dropdown-menu">
+                                                    {tahunList.map((t) => (
+                                                        <li key={t}>
+                                                            <a className="dropdown-item" href="#" onClick={() => setTahun(t)}>
+                                                                {t}
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        {/* Dropdown Bulan */}
+                                        <div>
+                                            <p className="mb-0 me-3 fw-semibold">Bulan: </p>
+                                            <div className="input-group mb-3">
+                                                <button className="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    {bulanList.find((b) => b.value === bulan)?.nama || "Pilih Bulan"}
+                                                </button>
+                                                <ul className="dropdown-menu">
+                                                    {bulanList.map((b) => (
+                                                        <li key={b.value}>
+                                                            <a className="dropdown-item" href="#" onClick={() => setBulan(b.value)}>
+                                                                {b.nama}
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </>
+                                }
 
                             </div>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="button" className="btn btn-success">
-                                Cetak
-                            </button>
+                            <button type="button" className="btn btn-success" onClick={() => {handleCetak()}}>Cetak</button>
                         </div>
                     </div>
                 </div>

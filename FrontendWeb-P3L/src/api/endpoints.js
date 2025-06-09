@@ -83,7 +83,8 @@ export const ENDPOINTS = {
     UPDATE_PEMBELIAN: (id) => `/pembelian/${id}`,
     DELETE_PEMBELIAN: (id) => `/pembelian/${id}`,
     GET_PEMBELIAN_BY_PEMBELI: (id) => `/pembelian/byIdPembeli/${id}`,
-    
+    GET_PEMBELIAN_BY_PENITIP: (id) => `/pembelian/byIdPenitip/${id}`,
+
     // Pengiriman
     GET_ALL_PENGIRIMAN: "/pengiriman",
     CREATE_PENGIRIMAN: "/pengiriman",

@@ -161,8 +161,8 @@ const PenitipProfile = () => {
       filtering();
     }, [keyword, histori, sortMethod, currentPage]);
 
-    const handleCetakLaporanTransaksiPenitip = (penitip, tahun, bulan) => {
-      CetakLaporanTransaksi(bulan, tahun, penitip?.id_penitip);
+    const handleCetakLaporanTransaksiPenitip = (id_penitip, tahun, bulan) => {
+      CetakLaporanTransaksi(bulan, tahun, id_penitip);
     }
     
     return <>
@@ -306,7 +306,7 @@ const PenitipProfile = () => {
 
     </div>
     
-    <CetakLaporanPenitipModal penitip={penitip} />
+    <CetakLaporanPenitipModal penitip={penitip} onCetak={handleCetakLaporanTransaksiPenitip}/>
     <DetailTransaksiPenitipModal data={selectedHistori}/>
     <EditProfilePenitipModal data={{penitip, akun}} onUpdate={updateProfile}/>
   </>

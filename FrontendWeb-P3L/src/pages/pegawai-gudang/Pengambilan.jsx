@@ -11,7 +11,7 @@ import PaginationComponent from '../../components/pagination/Pagination';
 import CetakNotaPengambilan from '../../components/pdf/CetakNotaPengambilan';
 import TransaksiCard from '../../components/card/CardListPengambilan';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
-import { UpdateStatusPenitipan } from '../../clients/PenitipanService';
+import { UpdateStatusPenitipan, GetPenitipanByStatus, GetPenitipanByIdBarang } from '../../clients/PenitipanService';
 import { CreateTransaksi } from '../../clients/TransaksiService'; // Add this
 
 const Pengambilan = () => {
@@ -25,7 +25,7 @@ const Pengambilan = () => {
   const [toastType, setToastType] = useState('success');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(9);
-  const [selectedView, setSelectedView] = useState('Menunggu diambil pembeli');
+  const [selectedView, setSelectedView] = useState('all');
   const [akun, setAkun] = useState(null);
   const [pegawai, setPegawai] = useState({});
   const [showNotaModal, setShowNotaModal] = useState(false);
@@ -37,9 +37,12 @@ const Pengambilan = () => {
   const [viewMode, setViewMode] = useState('grid');
 
   const statusViews = [
+    { id: 'all', name: 'Semua' },
+    { id: 'Diproses', name: 'Diproses' },
+    { id: 'Selesai', name: 'Selesai' },
+    { id: 'Hangus', name: 'Hangus' },
     { id: 'Menunggu diambil pembeli', name: 'Menunggu Diambil Pembeli' },
     { id: 'Menunggu diambil kembali', name: 'Menunggu Diambil Kembali' },
-    { id: 'Hangus', name: 'Hangus' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -174,12 +177,17 @@ const Pengambilan = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // Fetch SubPembelian data (for Menunggu diambil pembeli and Hangus)
       const transaksiResponse = await apiSubPembelian.getAllSubPembelian();
+      console.log('get allsubpembelian response: ', transaksiResponse);
+
+      const transaksiData = transaksiResponse.data || transaksiResponse;
+      
       const updatedTransaksi = await Promise.all(
-        transaksiResponse.map(async (transaksi) => {
+        transaksiData.map(async (transaksi) => {
           if (transaksi.pengiriman?.jenis_pengiriman === 'Ambil di gudang') {
             const pembeliResponse = await apiPembeli.getPembeliById(transaksi.id_pembeli);
-            return { ...transaksi, Pembeli: pembeliResponse.pembeli };
+            return { ...transaksi, Pembeli: pembeliResponse.pembeli, type: 'pembelian' };
           }
           return null;
         })
@@ -187,8 +195,77 @@ const Pengambilan = () => {
 
       const filteredTransaksi = updatedTransaksi.filter((item) => item);
 
-      setTransaksiList(filteredTransaksi);
-      console.log('data transaksi : ', filteredTransaksi);
+      // Fetch Penitipan data for Menunggu diambil kembali
+      let penitipanData = [];
+      try {
+        const penitipanResponse = await GetPenitipanByStatus('Menunggu diambil');
+        console.log('penitipan menunggu diambil response: ', penitipanResponse.data);
+
+        const rawPenitipanData = penitipanResponse.data || penitipanResponse || [];
+        penitipanData = rawPenitipanData.map((penitipan) => ({
+          id_penitipan: penitipan.id_penitipan,
+          type: 'penitipan',
+          status_pengiriman: 'Menunggu diambil kembali', // Virtual status
+          barang: [
+            {
+              id_barang: penitipan.Barang.id_barang,
+              id_penitip: penitipan.Barang.id_penitip,
+              id_hunter: penitipan.Barang.id_hunter,
+              id_pegawai_gudang: penitipan.Barang.id_pegawai_gudang,
+              nama: penitipan.Barang.nama,
+              deskripsi: penitipan.Barang.deskripsi,
+              gambar: penitipan.Barang.gambar,
+              harga: penitipan.Barang.harga,
+              garansi_berlaku: penitipan.Barang.garansi_berlaku,
+              tanggal_garansi: penitipan.Barang.tanggal_garansi,
+              berat: penitipan.Barang.berat,
+              status_qc: penitipan.Barang.status_qc,
+              kategori_barang: penitipan.Barang.kategori_barang,
+              Penitipan: {
+                id_penitipan: penitipan.id_penitipan,
+                perpanjangan: penitipan.perpanjangan,
+                tanggal_awal_penitipan: penitipan.tanggal_awal_penitipan,
+                tanggal_akhir_penitipan: penitipan.tanggal_akhir_penitipan,
+                tanggal_batas_pengambilan: penitipan.tanggal_batas_pengambilan,
+                status_penitipan: penitipan.status_penitipan,
+              },
+              Penitip: {
+                id_penitip: penitipan.Barang.Penitip.id_penitip,
+                nama_penitip: penitipan.Barang.Penitip.nama_penitip,
+                total_poin: penitipan.Barang.Penitip.total_poin,
+                tanggal_registrasi: penitipan.Barang.Penitip.tanggal_registrasi,
+                Akun: {
+                  id_akun: penitipan.Barang.Penitip.Akun.id_akun,
+                  email: penitipan.Barang.Penitip.Akun.email,
+                  fcm_token: penitipan.Barang.Penitip.Akun.fcm_token,
+                  profile_picture: penitipan.Barang.Penitip.Akun.profile_picture,
+                  role: penitipan.Barang.Penitip.Akun.role,
+                },
+              },
+            },
+          ],
+          Penitip: {
+            id_penitip: penitipan.Barang.Penitip.id_penitip,
+            nama_penitip: penitipan.Barang.Penitip.nama_penitip,
+            total_poin: penitipan.Barang.Penitip.total_poin,
+            tanggal_registrasi: penitipan.Barang.Penitip.tanggal_registrasi,
+            Akun: {
+              id_akun: penitipan.Barang.Penitip.Akun.id_akun,
+              email: penitipan.Barang.Penitip.Akun.email,
+              fcm_token: penitipan.Barang.Penitip.Akun.fcm_token,
+              profile_picture: penitipan.Barang.Penitip.Akun.profile_picture,
+              role: penitipan.Barang.Penitip.Akun.role,
+            },
+          },
+        }));
+      }catch (penitipanError) {
+        console.log('No penitipan data found or error:', penitipanError.message);
+        // penitipanData tetap array kosong
+      }
+
+      // Combine both datasets
+      setTransaksiList([...filteredTransaksi, ...penitipanData]);
+      console.log('Combined data:', [...filteredTransaksi, ...penitipanData]);
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Gagal memuat data. Silakan coba lagi nanti.');
@@ -206,31 +283,38 @@ const Pengambilan = () => {
     let filtered = [...transaksiList];
 
     if (selectedView !== 'all') {
-      filtered = filtered.filter((item) =>
-        item.pengiriman?.status_pengiriman === selectedView ||
-        (selectedView === 'Menunggu diambil pembeli' && item.pengiriman?.status_pengiriman === 'Diproses')
-      );
+      filtered = filtered.filter((item) => {
+        if (item.type === 'pembelian') {
+          return (
+            item.pengiriman?.status_pengiriman === selectedView ||
+            (selectedView === 'Menunggu diambil pembeli' && item.pengiriman?.status_pengiriman === 'Diproses')
+          );
+        } else if (item.type === 'penitipan') {
+          return item.status_pengiriman === selectedView;
+        }
+        return false;
+      });
     }
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (item) =>
-          (item.id_pembelian &&
-            item.id_pembelian.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.Pembeli?.nama &&
-            item.Pembeli.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (item.barang?.some((b) =>
-            b.nama.toLowerCase().includes(searchTerm.toLowerCase())
-          )) ||
-          (item.barang?.some((b) =>
-            b.id_barang.toLowerCase().includes(searchTerm.toLowerCase())
-          ))
-      );
+      filtered = filtered.filter((item) => {
+        const searchLower = searchTerm.toLowerCase();
+        return (
+          (item.id_pembelian && item.id_pembelian.toLowerCase().includes(searchLower)) ||
+          (item.id_penitipan && item.id_penitipan.toLowerCase().includes(searchLower)) ||
+          (item.Pembeli?.nama && item.Pembeli.nama.toLowerCase().includes(searchLower)) ||
+          (item.Penitip?.nama_penitip && item.Penitip.nama_penitip.toLowerCase().includes(searchLower)) ||
+          (item.barang?.some((b) => b.nama.toLowerCase().includes(searchLower))) ||
+          (item.barang?.some((b) => b.id_barang.toLowerCase().includes(searchLower)))
+        );
+      });
     }
 
     if (startDate || endDate) {
       filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.tanggal_pembelian).setHours(0, 0, 0, 0);
+        const itemDate = item.type === 'pembelian'
+          ? new Date(item.tanggal_pembelian).setHours(0, 0, 0, 0)
+          : new Date(item.barang[0].Penitipan.tanggal_awal_penitipan).setHours(0, 0, 0, 0);
         const startDateTime = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : -Infinity;
         const endDateTime = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Infinity;
         return itemDate >= startDateTime && itemDate <= endDateTime;
@@ -477,6 +561,11 @@ const Pengambilan = () => {
     return dateString ? new Date(dateString).toLocaleDateString('id-ID', options) : '-';
   };
 
+  const clearDateFilter = () => {
+    setStartDate('');
+    setEndDate('');
+  };
+
   return (
     <Container fluid className="p-0 bg-white">
       <ToastNotification
@@ -504,12 +593,15 @@ const Pengambilan = () => {
 
         <Row>
           <Col md={3}>
-            <RoleSidebar
-              namaSidebar={'Status Pengiriman'}
-              roles={statusViews}
-              selectedRole={selectedView}
-              handleRoleChange={setSelectedView}
-            />
+            <Row>
+              <RoleSidebar
+                namaSidebar={'Status Pengiriman'}
+                roles={statusViews}
+                selectedRole={selectedView}
+                handleRoleChange={setSelectedView}
+              />
+            </Row>
+            
           </Col>
 
           <Col md={9}>

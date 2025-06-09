@@ -30,6 +30,7 @@ const TopNavigation = ({ userRole }) => {
           { name: 'Penitipan Habis', path: '/owner/penitipan' },
           { name: 'Laporan Donasi', path: '/owner/donasi' },
           { name: 'Rekap Request', path: '/owner/rekap' },
+          { name: 'Laporan Transaksi Penitip', path: '/owner/transaksi' },
         ];
       case 'Customer Service':
         return [

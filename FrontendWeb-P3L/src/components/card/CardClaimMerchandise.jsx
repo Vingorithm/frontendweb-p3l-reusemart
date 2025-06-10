@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
-import { BsInfoCircle } from 'react-icons/bs';
+import { BsInfoCircle, BsPersonFill, BsBoxSeam, BsCheckCircle, BsClock } from 'react-icons/bs';
 
 const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
   const merchandise = claim.Merchandise || {};
@@ -10,16 +10,7 @@ const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleString('id-ID', {
-      day: '2-digit',
+      day: 'numeric',
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
@@ -30,11 +21,11 @@ const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Menunggu diambil':
-        return <Badge bg="warning" text="dark" className="status-badge">Menunggu Diambil</Badge>;
+        return <Badge bg="warning" className="status-badge"><BsClock className="me-1" />Menunggu Diambil</Badge>;
       case 'Diproses':
-        return <Badge bg="info" className="status-badge">Diproses</Badge>;
+        return <Badge bg="info" className="status-badge"><BsClock className="me-1" />Diproses</Badge>;
       case 'Selesai':
-        return <Badge bg="success" className="status-badge">Selesai</Badge>;
+        return <Badge bg="success" className="status-badge"><BsCheckCircle className="me-1" />Selesai</Badge>;
       default:
         return <Badge bg="secondary" className="status-badge">{status}</Badge>;
     }
@@ -45,185 +36,227 @@ const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
   return (
     <>
       <Card className="claim-card h-100">
-        <Card.Body>
-          <div className="row mb-3">
-            <div className="col-6 claim-info">
-              <small className="text-muted claim-id">{claim.id_claim_merchandise}</small>
-              <div className="status-badge mt-1">{getStatusBadge(claim.status_claim_merchandise)}</div>
+        <Card.Body className="d-flex flex-column">
+          <div className="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h6 className="claim-id mb-1">{claim.id_claim_merchandise}</h6>
+              <small className="text-muted">Claim ID</small>
             </div>
-            <div className="col-6 text-end date-info">
-              <div className="text-muted small">Tanggal Claim</div>
-              <div className="fw-medium" style={{ fontSize: '0.75rem' }}>
-                {formatDate(claim.tanggal_claim)}
+            {getStatusBadge(claim.status_claim_merchandise)}
+          </div>
+          
+          <div className="claim-info mb-3 flex-grow-1">
+            <div className="info-item mb-2">
+              <BsPersonFill className="info-icon me-2" />
+              <div>
+                <div className="info-label">Pembeli</div>
+                <div className="info-value">{pembeli.nama || '-'}</div>
+                <small className="text-muted">{akun.email || '-'}</small>
               </div>
             </div>
-          </div>
-
-          <div className="merchandise-info-container mb-3">
-            <div className="d-flex align-items-center">
-              {merchandise.gambar ? (
-                <div className="me-3" style={{ width: '60px', height: '60px', overflow: 'hidden' }}>
-                  <img
-                    src={`${baseUrl}${merchandise.gambar.split(',')[0]}`}
-                    alt={merchandise.nama_merchandise}
-                    className="merchandise-image rounded"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                  <div
-                    className="no-image-placeholder rounded"
-                    style={{ width: '60px', height: '60px', display: 'none' }}
-                  >
-                    <span className="text-muted">No Image</span>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  className="me-3 no-image-placeholder rounded"
-                  style={{ width: '60px', height: '60px' }}
-                >
-                  <span className="text-muted">No Image</span>
+            
+            <div className="info-item mb-2">
+              <BsBoxSeam className="info-icon me-2" />
+              <div>
+                <div className="info-label">Merchandise</div>
+                <div className="info-value">{merchandise.nama_merchandise || '-'}</div>
+                <small className="text-muted">{merchandise.harga_poin || 0} poin</small>
+              </div>
+            </div>
+            
+            <div className="date-info mt-3">
+              <div className="d-flex justify-content-between">
+                <span className="text-muted">Tanggal Claim:</span>
+                <span>{formatDate(claim.tanggal_claim)}</span>
+              </div>
+              {claim.tanggal_ambil && (
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Tanggal Ambil:</span>
+                  <span>{formatDate(claim.tanggal_ambil)}</span>
                 </div>
               )}
-              <div>
-                <h6 className="merchandise-name mb-1">{merchandise.nama_merchandise || '-'}</h6>
-                <small className="text-muted">Poin: {merchandise.harga_poin || 0}</small>
-              </div>
-            </div>
-          </div>
-
-          <div className="d-flex justify-content-between mb-3">
-            <div>
-              <div className="text-muted small">Pembeli</div>
-              <div className="fw-medium">{pembeli.nama || '-'}</div>
-            </div>
-            <div className="text-end">
-              <div className="text-muted small">Tanggal Ambil</div>
-              <div className="fw-medium" style={{ fontSize: '0.75rem' }}>
-                {formatDateTime(claim.tanggal_ambil)}
-              </div>
-            </div>
-          </div>
-
-          {claim.catatan || claim.alamat_pengambilan ? (
-            <div className="additional-info mb-3">
               {claim.catatan && (
-                <div className="mb-2">
-                  <div className="text-muted small">Catatan</div>
-                  <div className="fw-medium" style={{ fontSize: '0.75rem' }}>{claim.catatan}</div>
+                <div className="mt-2">
+                  <span className="text-muted">Catatan:</span>
+                  <div className="info-value">{claim.catatan}</div>
                 </div>
               )}
               {claim.alamat_pengambilan && (
-                <div>
-                  <div className="text-muted small">Lokasi</div>
-                  <div className="fw-medium" style={{ fontSize: '0.75rem' }}>{claim.alamat_pengambilan}</div>
+                <div className="mt-2">
+                  <span className="text-muted">Lokasi:</span>
+                  <div className="info-value">{claim.alamat_pengambilan}</div>
                 </div>
               )}
             </div>
-          ) : null}
-
-          <div className="d-flex flex-column gap-2 mt-3">
-            <Button
-              variant="outline-primary"
-              className="lihat-detail-btn"
-              onClick={() => onViewDetail(claim.id_claim_merchandise)}
-            >
-              <BsInfoCircle size={12} className="me-1" />
-              Lihat Detail
-            </Button>
           </div>
+          
+          <Button
+            variant="outline-primary"
+            className="lihat-detail-btn w-100"
+            onClick={() => onViewDetail(claim.id_claim_merchandise)}
+          >
+            <BsInfoCircle className="me-2" />
+            Lihat Detail
+          </Button>
         </Card.Body>
       </Card>
 
       <style jsx>{`
         .claim-card {
-          border-radius: 8px;
-          border-color: #E7E7E7;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-          transition: transform 0.2s, box-shadow 0.2s;
+          border: 1px solid #E7E7E7;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+          height: 100%;
         }
-
+        
         .claim-card:hover {
-          transform: translateY(-3px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+          transform: translateY(-2px);
         }
-
-        .claim-info {
-          display: flex;
-          flex-direction: column;
-          padding-right: 10px;
-        }
-
+        
         .claim-id {
-          color: #686868;
-          font-size: 0.9rem;
-          margin-bottom: 4px;
-        }
-
-        .status-badge {
-          display: inline-block;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          font-size: 0.65rem;
-        }
-
-        .status-badge .badge {
-          display: inline-block;
-          max-width: 100%;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-        }
-
-        .date-info {
-          padding-left: 10px;
-        }
-
-        .merchandise-name {
-          color: #03081F;
           font-weight: 600;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
+          color: #03081F;
+          font-size: 1rem;
         }
-
-        .merchandise-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .no-image-placeholder {
-          width: 100%;
-          height: 100%;
+        
+        .status-badge {
+          font-size: 0.75rem;
+          padding: 0.35rem 0.75rem;
+          border-radius: 20px;
           display: flex;
           align-items: center;
-          justify-content: center;
-          background-color: #f8f9fa;
-          font-size: 0.7rem;
+          width: fit-content;
         }
-
-        .additional-info {
-          background-color: #f8f9fa;
-          padding: 10px;
-          border-radius: 4px;
+        
+        .status-badge svg {
+          width: 12px;
+          height: 12px;
         }
-
+        
+        .claim-info {
+          border-top: 1px solid #f8f9fa;
+          border-bottom: 1px solid #f8f9fa;
+          padding: 1rem 0;
+        }
+        
+        .info-item {
+          display: flex;
+          align-items: flex-start;
+        }
+        
+        .info-icon {
+          color: #028643;
+          font-size: 1.1rem;
+          margin-top: 2px;
+          flex-shrink: 0;
+        }
+        
+        .info-label {
+          font-size: 0.75rem;
+          color: #686868;
+          text-transform: uppercase;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+          font-size: 0.9rem;
+          color: #03081F;
+          font-weight: 500;
+          margin-top: 2px;
+        }
+        
+        .date-info {
+          font-size: 0.85rem;
+          background-color: #f8f9fa;
+          padding: 0.75rem;
+          border-radius: 8px;
+        }
+        
+        .date-info .text-muted {
+          font-size: 0.85rem;
+        }
+        
+        .date-info .info-value {
+          font-size: 0.85rem;
+          font-weight: 400;
+        }
+        
         .lihat-detail-btn {
           border-color: #028643;
           color: #028643;
+          font-weight: 500;
+          font-size: 0.9rem;
+          padding: 0.6rem 1rem;
+          border-radius: 8px;
+          transition: all 0.3s ease;
         }
-
+        
         .lihat-detail-btn:hover {
           background-color: #028643;
           color: white;
           border-color: #028643;
+          transform: translateY(-1px);
+        }
+        
+        .lihat-detail-btn svg {
+          width: 16px;
+          height: 16px;
+        }
+        
+        @media (max-width: 768px) {
+          .claim-card {
+            margin-bottom: 1rem;
+          }
+          
+          .status-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+          }
+          
+          .info-value {
+            font-size: 0.85rem;
+          }
+          
+          .lihat-detail-btn {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .status-badge {
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+          }
+          
+          .status-badge svg {
+            width: 10px;
+            height: 10px;
+          }
+          
+          .info-label {
+            font-size: 0.7rem;
+          }
+          
+          .info-value {
+            font-size: 0.8rem;
+          }
+          
+          .date-info {
+            font-size: 0.8rem;
+          }
+          
+          .lihat-detail-btn {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.6rem;
+          }
+          
+          .lihat-detail-btn svg {
+            width: 14px;
+            height: 14px;
+          }
         }
       `}</style>
     </>

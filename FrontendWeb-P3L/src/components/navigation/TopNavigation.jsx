@@ -37,7 +37,7 @@ const TopNavigation = ({ userRole }) => {
           { name: 'Data Penitip', path: '/cs/penitip' },
           { name: 'Bukti Transfer', path: '/cs/bukti' },
           { name: 'Diskusi Produk', path: '/cs/diskusi' },
-          { name: 'Merchandise', path: '/cs/merch' },
+          { name: 'Kelola Merchandise', path: '/cs/merch' },
           { name: 'History Merchandise', path: '/cs/history' },
         ];
       case 'Penitip':

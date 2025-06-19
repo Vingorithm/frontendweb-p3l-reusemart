@@ -29,6 +29,7 @@ export const ENDPOINTS = {
     UPDATE_PEMBELI: (id) => `/pembeli/${id}`,
     DELETE_PEMBELI: (id) => `/pembeli/${id}`,
     SEARCH_PEMBELI_BY_AKUN: (id) => `/pembeli/byIdAkun/${id}`,
+    UPDATE_POIN_PEMBELI: (id) => `/pembeli/${id}/poin`,
 
     // Organisasi Amal
     GET_ALL_ORGANISASI_AMAL: "/organisasi-amal",

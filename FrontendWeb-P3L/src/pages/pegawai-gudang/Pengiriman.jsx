@@ -13,6 +13,7 @@ import TransaksiCard from '../../components/card/CardListPengiriman';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 import { CreateTransaksi } from '../../clients/TransaksiService'; // Add this
 import { UpdateKeuntunganPenitip } from '../../clients/PenitipService';
+import { UpdatePoinPembeli } from '../../clients/PembeliService';
 
 
 const Pengiriman = () => {
@@ -175,6 +176,22 @@ const Pengiriman = () => {
     }
   };
 
+  const calculatePoinPembeli = (totalHargaBarang) => {
+    const harga = parseFloat(totalHargaBarang);
+    
+    // Base poin: tiap 10.000 dapat 1 poin
+    let basePoin = Math.floor(harga / 10000);
+    
+    // Bonus 20% jika pembelian di atas 500.000
+    if (harga > 500000) {
+      const bonusPoin = Math.floor(basePoin * 0.20);
+      basePoin += bonusPoin;
+    }
+    
+    return basePoin;
+  };
+
+
   const handleConfirmDiambil = async (transaksi) => {
     try {
       const today = new Date().toISOString();
@@ -221,11 +238,14 @@ const Pengiriman = () => {
               bonus_cepat: bonus_cepat ? bonus_cepat : 0,
             };
             
+            console.log(`Creating Transaksi for barang ${barang.id_barang}:`, transaksiPayload);
             await CreateTransaksi(transaksiPayload);
+            console.log(`Created Transaksi for barang ${barang.id_barang}, id_sub_pembelian: ${id_sub_pembelian}`);
             
-            // 🔥 TAMBAHKAN KODE BARU DI SINI UNTUK UPDATE SALDO PENITIP
+            // 🔥 UPDATE SALDO PENITIP
             const totalKeuntunganPenitip = pendapatan + (bonus_cepat || 0);
             await UpdateKeuntunganPenitip(barang.id_penitip, totalKeuntunganPenitip);
+            console.log(`Updated keuntungan for penitip ${barang.id_penitip}: +${totalKeuntunganPenitip}`);
             
           } catch (err) {
             console.error(`Failed to create Transaksi for barang ${barang.id_barang}:`, err.message, err.response);
@@ -234,6 +254,25 @@ const Pengiriman = () => {
         }
       }
 
+      // 🔥 UPDATE POIN PEMBELI (SETELAH LOOP SELESAI)
+      try {
+        // Hitung total harga barang (tanpa ongkir)
+        const totalHargaBarang = transaksi.barang.reduce((total, barang) => {
+          return total + parseFloat(barang.harga || 0);
+        }, 0);
+
+        // Hitung poin yang didapat
+        const poinDidapat = calculatePoinPembeli(totalHargaBarang);
+
+        if (poinDidapat > 0) {
+          await UpdatePoinPembeli(transaksi.id_pembeli, poinDidapat);
+          console.log(`Updated poin for pembeli ${transaksi.id_pembeli}: +${poinDidapat} poin`);
+          showNotification(`Pembeli mendapat ${poinDidapat} poin loyalitas!`, 'success');
+        }
+      } catch (poinError) {
+        console.error('Error updating poin pembeli:', poinError);
+        showNotification('Transaksi berhasil, namun gagal menambah poin pembeli!', 'warning');
+      }
 
       // Update transaksiList
       setFilteredTransaksi((prev) =>

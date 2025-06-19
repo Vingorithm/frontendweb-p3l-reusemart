@@ -54,6 +54,8 @@ export const ENDPOINTS = {
     UPDATE_PENITIP: (id) => `/penitip/${id}`,
     DELETE_PENITIP: (id) => `/penitip/${id}`,
     SEARCH_PENITIP_BY_AKUN: (id) => `/penitip/byIdAkun/${id}`,
+    ADD_KEUNTUNGAN_PENITIP: (id) => `/penitip/add-keuntungan/${id}`,
+
 
     // Penitipan
     GET_ALL_PENITIPAN: "/penitipan",

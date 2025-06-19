@@ -42,7 +42,7 @@ const Pengambilan = () => {
     { id: 'Selesai', name: 'Selesai' },
     { id: 'Hangus', name: 'Hangus' },
     { id: 'Menunggu diambil penitip', name: 'Menunggu Diambil Penitip' },
-    { id: 'Menunggu diambil', name: 'Menunggu Diambil Pembeli' },
+    { id: 'Menunggu diambil pembeli', name: 'Menunggu Diambil Pembeli' },
   ];
 
   const showNotification = (message, type = 'success') => {

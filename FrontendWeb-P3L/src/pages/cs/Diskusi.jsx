@@ -143,7 +143,7 @@ const OwnerPage = () => {
           paginated.map((data) => {
             return <div class="card my-1">
               <div class="card-body">
-                <a href={`http://localhost:5173/barang/${data?.Barang?.id_barang}`} style={{color: "black", textDecoration: "none"}}>
+                <a href={`${ENDPOINTS.BASE_URL}/barang/${data?.Barang?.id_barang}`} style={{color: "black", textDecoration: "none"}}>
                   <h5 class="card-title fw-bold" >{data?.Barang?.nama}</h5>
                 </a>
 

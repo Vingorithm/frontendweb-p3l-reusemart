@@ -75,8 +75,8 @@ const DetailTransaksiPenitipModal = ({data}) => {
                         {dataTransaksi?.barang.map((b, i) => (
                     <div className="card border p-4 d-flex flex-column align-items-start justify-content-center mb-4">
                             <div className='w-100 d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-start align-items-center'>
-                            <a href={`http://localhost:5173/barang/${b.id_barang}`} className="align-self-center align-self-md-start">
-                                <img src={`http://localhost:3000/uploads/barang/${b.gambar.split(',')[0]}`} alt="gambar-produk" className='rounded-circle ' style={{
+                            <a href={`${ENDPOINTS.BASE_URL}/barang/${b.id_barang}`} className="align-self-center align-self-md-start">
+                                <img src={`${ENDPOINTS.BASE_URL}/uploads/barang/${b.gambar.split(',')[0]}`} alt="gambar-produk" className='rounded-circle ' style={{
                                 minWidth: '50px',
                                 maxWidth: '150px',
                                 aspectRatio: '1/1',

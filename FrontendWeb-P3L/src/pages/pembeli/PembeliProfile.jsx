@@ -542,9 +542,9 @@ const HistoryTransaksi = ({ pembeliId }) => {
                       {transaction.barang.map((item, index) => (
                         <div key={index} style={historyStyles.productItem}>
                           <div className="d-flex flex-row align-items-center mt-2">
-                            <a href={`http://localhost:5173/barang/${item.id_barang}`} className="me-2">
+                            <a href={`${ENDPOINTS.BASE_URL}/barang/${item.id_barang}`} className="me-2">
                               <img
-                                src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
+                                src={`${ENDPOINTS.BASE_URL}/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
                                 alt={item.nama || 'No Name'}
                                 style={historyStyles.cardImage}
                                 onError={(e) => { e.target.src = 'default.jpg'; }}
@@ -552,7 +552,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
                             </a>
                             <div className="d-flex justify-content-between align-items-start w-100">
                               <div>
-                                <a href={`http://localhost:5173/barang/${item.id_barang}`} style={{ textDecoration: "none", color: 'black'}}>
+                                <a href={`${ENDPOINTS.BASE_URL}/barang/${item.id_barang}`} style={{ textDecoration: "none", color: 'black'}}>
                                   <h6 style={{ fontWeight: 'bold', marginBottom: '5px' }}>
                                     {item.nama || 'No Name'}
                                   </h6>
@@ -722,7 +722,7 @@ const HistoryTransaksi = ({ pembeliId }) => {
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <img
-                            src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
+                            src={`${ENDPOINTS.BASE_URL}/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
                             alt={item.nama || 'No Name'}
                             style={historyStyles.cardImage}
                             onError={(e) => { e.target.src = 'default.jpg'; }}
@@ -827,7 +827,7 @@ const PembeliProfile = () => {
             <img
               src={
                 profile.Akun?.profile_picture
-                  ? `http://localhost:3000/uploads/profile_picture/${profile.Akun.profile_picture}`
+                  ? `${ENDPOINTS.BASE_URL}/uploads/profile_picture/${profile.Akun.profile_picture}`
                   : "/default-profile.jpg"
               }
               alt="Profile"

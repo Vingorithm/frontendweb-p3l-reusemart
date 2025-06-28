@@ -184,7 +184,7 @@ const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, 
               {transaksi.barang?.[0]?.gambar ? (
                 <div className="me-3" style={{ width: '60px', height: '60px', overflow: 'hidden' }}>
                   <img
-                    src={`http://localhost:3000/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
+                    src={`${ENDPOINTS.BASE_URL}/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
                     alt={transaksi.barang[0].nama}
                     className="barang-image rounded"
                   />

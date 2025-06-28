@@ -399,8 +399,8 @@ const Keranjang = () => {
                       <img
                         src={
                           item?.Barang?.gambar
-                            ? `http://localhost:3000/uploads/barang/${item.Barang.gambar.split(',')[0].trim()}`
-                            : "http://localhost:3000/uploads/foto_produk/placeholder.png"
+                            ? `${ENDPOINTS.BASE_URL}/uploads/barang/${item.Barang.gambar.split(',')[0].trim()}`
+                            : "${ENDPOINTS.BASE_URL}/uploads/foto_produk/placeholder.png"
                         }
                         alt="product"
                         className="rounded mb-2"

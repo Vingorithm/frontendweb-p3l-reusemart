@@ -48,6 +48,7 @@ import Pengambilan from "../pages/pegawai-gudang/Pengambilan";
 import Pengiriman from "../pages/pegawai-gudang/Pengiriman";
 
 import DataPenitip from "../pages/cs/DataPenitip";
+import PenarikanSaldo from "../pages/penitip/PenarikanSaldo";
 import BuktiTf from "../pages/cs/BuktiTf";
 import Diskusi from "../pages/cs/Diskusi";
 import Merchandise from "../pages/cs/Merchandise";
@@ -166,7 +167,7 @@ const mainRoutes = [
   { path: "/penitip/profile", element: <PenitipProfile /> },
   { path: "/penitip/barang", element: <DaftarBarang /> },
   { path: "/penitip/history", element: <PenitipHistory /> },
-
+  { path: "/penitip/penarikan", element: <PenarikanSaldo /> },
   { path: "/penitip/laporan", element: <LaporanPenitip /> },
 
   // Protected Route for Customer Service

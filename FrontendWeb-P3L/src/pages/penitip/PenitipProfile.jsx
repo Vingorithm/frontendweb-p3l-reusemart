@@ -176,7 +176,7 @@ const PenitipProfile = () => {
         <div className="d-flex align-items-center mb-3 mb-md-0">
           <div className="position-relative me-3">
             <img
-              src={akun && akun.profile_picture !== '' ? `http://localhost:3000/uploads/profile_picture/${akun.profile_picture}` : 'http://localhost:3000/uploads/profile_picture/default.jpg'}
+              src={akun && akun.profile_picture !== '' ? `${ENDPOINTS.BASE_URL}/uploads/profile_picture/${akun.profile_picture}` : '${ENDPOINTS.BASE_URL}/uploads/profile_picture/default.jpg'}
               alt="Foto Profil"
               className="rounded-circle w-100"
               style={{
@@ -258,8 +258,8 @@ const PenitipProfile = () => {
               <div className="card shadow border-0 p-4 d-flex flex-column align-items-start justify-content-center mb-4">
                 {h.barang.map((b, i) => (
                   <div className='w-100 d-flex flex-column flex-md-row gap-3 justify-content-center justify-content-md-start align-items-center mb-2'>
-                    <a href={`http://localhost:5173/barang/${b.id_barang}`}>
-                      <img src={`http://localhost:3000/uploads/barang/${b.gambar.split(',')[0]}`} alt="gambar-produk" className='rounded-circle' style={{
+                    <a href={`${ENDPOINTS.BASE_URL}/barang/${b.id_barang}`}>
+                      <img src={`${ENDPOINTS.BASE_URL}/uploads/barang/${b.gambar.split(',')[0]}`} alt="gambar-produk" className='rounded-circle' style={{
                         minWidth: '50px',
                         maxWidth: '150px',
                         aspectRatio: '1/1'

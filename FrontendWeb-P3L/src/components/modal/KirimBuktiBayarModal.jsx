@@ -14,7 +14,7 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
 
   const resetForm = () => {
     if (pembelian?.bukti_bayar) {
-      setFotoPreview(`http://localhost:3000/uploads/bukti_bayar/${pembelian?.bukti_bayar}`);
+      setFotoPreview(`${ENDPOINTS.BASE_URL}/uploads/bukti_bayar/${pembelian?.bukti_bayar}`);
     } else {
       setFotoPreview("");
     }
@@ -106,7 +106,7 @@ const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
               />
               <p>Preview:</p>
               {fotoPreview || pembelian?.bukti_transfer != "" ? (
-                <img src={fotoPreview || (pembelian?.bukti_transfer ? `http://localhost:3000/uploads/bukti_bayar/${pembelian?.bukti_transfer}` : '')} alt="Preview" className="img-fluid border w-100" />
+                <img src={fotoPreview || (pembelian?.bukti_transfer ? `${ENDPOINTS.BASE_URL}/uploads/bukti_bayar/${pembelian?.bukti_transfer}` : '')} alt="Preview" className="img-fluid border w-100" />
               ) : (
                 <div className="border p-5 text-center text-muted">
                   Tidak ada bukti bayar

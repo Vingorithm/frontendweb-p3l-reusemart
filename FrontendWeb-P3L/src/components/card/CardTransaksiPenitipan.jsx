@@ -32,7 +32,7 @@ const CardTransaksiPenitipan = ({ penitipan, handleLihatDetail, pegawai }) => {
     }
   };
 
-  const baseUrl = 'http://localhost:3000/uploads/barang';
+  const baseUrl = '${ENDPOINTS.BASE_URL}/uploads/barang';
 
   return (
     <>

@@ -364,7 +364,7 @@ const ManageBarang = () => {
             return trimmedImg;
           }
           // Jika hanya filename, tambahkan base URL
-          return `http://localhost:3000/uploads/barang/${trimmedImg}`;
+          return `${ENDPOINTS.BASE_URL}/uploads/barang/${trimmedImg}`;
         });
         
         console.log('Processed image URLs:', imageUrls);

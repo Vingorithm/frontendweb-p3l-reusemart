@@ -45,6 +45,7 @@ const TopNavigation = ({ userRole }) => {
           { name: 'Daftar Barang', path: '/penitip/barang' },
           { name: 'History Penjualan', path: '/penitip/history' },
           { name: 'Laporan Transaksi', path: '/penitip/laporan' },
+          { name: 'Penarikan Saldo', path: '/penitip/penarikan' },
         ];
       case 'Organisasi Amal':
         return [

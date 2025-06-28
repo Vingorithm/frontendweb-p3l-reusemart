@@ -196,7 +196,7 @@ const DaftarBarang = () => {
         const response = await GetPenitipanById(id_penitipan);
         const data = response.data;
         setSelectedPenitipan(data);
-        const baseUrl = 'http://localhost:3000/uploads/barang/'; 
+        const baseUrl = '${ENDPOINTS.BASE_URL}/uploads/barang/'; 
         if (data.Barang.gambar) {
           const imageUrls = data.Barang.gambar
             .split(',')

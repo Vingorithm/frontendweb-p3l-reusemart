@@ -605,7 +605,7 @@ const Pengambilan = () => {
                       {transaksi.barang?.[0]?.gambar ? (
                         <div className="me-2" style={{ width: '40px', height: '40px', overflow: 'hidden' }}>
                           <img
-                            src={`http://localhost:3000/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
+                            src={`${ENDPOINTS.BASE_URL}/uploads/barang/${transaksi.barang[0].gambar.split(',')[0]}`}
                             alt={transaksi.barang[0].nama}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             className="rounded"
@@ -851,7 +851,7 @@ const Pengambilan = () => {
                   <div key={index} className="d-flex align-items-center mb-2">
                     {b.gambar ? (
                       <img
-                        src={`http://localhost:3000/uploads/barang/${b.gambar.split(',')[0]}`}
+                        src={`${ENDPOINTS.BASE_URL}/uploads/barang/${b.gambar.split(',')[0]}`}
                         alt={b.nama}
                         style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px', marginRight: '10px' }}
                       />

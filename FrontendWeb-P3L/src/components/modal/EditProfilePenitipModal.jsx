@@ -25,7 +25,7 @@ const EditProfilePenitipModal = ({data, onUpdate}) => {
     const resetForm = () => {
         if(data) {
             setNama(data?.penitip?.nama_penitip);
-            setFotoPreview(`http://localhost:3000/uploads/profile_picture/${data?.akun?.profile_picture}`);
+            setFotoPreview(`${ENDPOINTS.BASE_URL}/uploads/profile_picture/${data?.akun?.profile_picture}`);
             setFotoFile(null);
 
             if (fileInputRef.current) {
@@ -39,7 +39,7 @@ const EditProfilePenitipModal = ({data, onUpdate}) => {
             console.log(data);
             
             setNama(data?.penitip?.nama_penitip);
-            setFotoPreview(`http://localhost:3000/uploads/profile_picture/${data?.akun?.profile_picture}`);
+            setFotoPreview(`${ENDPOINTS.BASE_URL}/uploads/profile_picture/${data?.akun?.profile_picture}`);
         }
     }, [data]);
 
@@ -69,7 +69,7 @@ const EditProfilePenitipModal = ({data, onUpdate}) => {
                 </div>
                 <div class="modal-body">
                     <img
-                        src={fotoPreview || 'http://localhost:3000/uploads/profile_picture/default.jpg'}
+                        src={fotoPreview || '${ENDPOINTS.BASE_URL}/uploads/profile_picture/default.jpg'}
                         alt="Foto Profil"
                         className="rounded-circle mx-auto w-100"
                         style={{

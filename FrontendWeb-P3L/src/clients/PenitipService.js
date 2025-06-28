@@ -38,6 +38,20 @@ export const UpdateTotalPoinPenitip = (id, newPoin) =>
 export const AddKeuntunganPenitip = (id, tambahan_keuntungan) =>
     apiClient.put(ENDPOINTS.ADD_KEUNTUNGAN_PENITIP(id), { tambahan_keuntungan });
 
+export const TarikSaldoPenitip = async (id, data) => {
+    try {
+        const response = await apiClient.put(ENDPOINTS.TARIK_SALDO_PENITIP(id), data, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error in TarikSaldoPenitip:', error);
+        throw error;
+    }
+}
+
 export const UpdateKeuntunganPenitip = async (id_penitip, tambahan_keuntungan) => {
   try {
     // Ambil data penitip saat ini

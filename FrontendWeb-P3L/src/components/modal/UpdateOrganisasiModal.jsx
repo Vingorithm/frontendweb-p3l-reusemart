@@ -89,7 +89,7 @@ const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
                     <div
                       className="circle mb-2 mx-auto mt-1 mb-3"
                       style={{
-                        backgroundImage: `url(${previewImage || (organisasi?.Akun?.profile_picture ? `http://localhost:3000/uploads/profile_picture/${organisasi.Akun.profile_picture}` : 'http://localhost:3000/uploads/profile_picture/default.jpg')})`,
+                        backgroundImage: `url(${previewImage || (organisasi?.Akun?.profile_picture ? `${ENDPOINTS.BASE_URL}/uploads/profile_picture/${organisasi.Akun.profile_picture}` : '${ENDPOINTS.BASE_URL}/uploads/profile_picture/default.jpg')})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         width: '100px',

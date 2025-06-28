@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
 import { BsInfoCircle, BsPersonFill, BsBoxSeam, BsCheckCircle, BsClock } from 'react-icons/bs';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
   const merchandise = claim.Merchandise || {};
@@ -31,7 +32,7 @@ const ClaimMerchandiseCard = ({ claim, onViewDetail }) => {
     }
   };
 
-  const baseUrl = 'http://localhost:3000/uploads/merchandise/';
+  const baseUrl = `${ENDPOINTS.BASE_URL}/uploads/merchandise/`;
 
   return (
     <>

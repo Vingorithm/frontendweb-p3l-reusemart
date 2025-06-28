@@ -30,7 +30,7 @@ const RequestCard = ({ request, onEdit, onDelete, formatDate }) => {
       <div className="barang-card card">
         <div className="image-container">
           <img
-            src={request.OrganisasiAmal?.Akun?.profile_picture ? `http://localhost:3000/uploads/profile_picture/${request.OrganisasiAmal.Akun.profile_picture}` : '/default-profile.png'}
+            src={request.OrganisasiAmal?.Akun?.profile_picture ? `${ENDPOINTS.BASE_URL}/uploads/profile_picture/${request.OrganisasiAmal.Akun.profile_picture}` : '/default-profile.png'}
             alt="Profile"
             className="barang-image"
           />

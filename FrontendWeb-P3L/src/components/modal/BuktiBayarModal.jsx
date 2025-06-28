@@ -17,12 +17,12 @@ const BuktiBayarModal = ({img}) => {
                     </div>
                     <div className="modal-body">
                         <img 
-                        src={`http://localhost:3000/uploads/bukti_bayar/${img}`} 
+                        src={`${ENDPOINTS.BASE_URL}/uploads/bukti_bayar/${img}`} 
                         alt="Preview" 
                         className="img-fluid border w-100"
                         onError={(e) => {
                             e.target.onerror = null;
-                            e.target.src = 'http://localhost:3000/uploads/bukti_bayar/error.jpg';
+                            e.target.src = '${ENDPOINTS.BASE_URL}/uploads/bukti_bayar/error.jpg';
                         }}
                     />
                     </div>

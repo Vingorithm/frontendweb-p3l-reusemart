@@ -1,4 +1,6 @@
 export const ENDPOINTS = {
+    BASE_URL: 'https://api.reusemart88.my.id/api',
+    
     // Authentication
     REGISTER: "/akun/register",
     LOGIN: "/akun/login", 
@@ -56,8 +58,8 @@ export const ENDPOINTS = {
     DELETE_PENITIP: (id) => `/penitip/${id}`,
     SEARCH_PENITIP_BY_AKUN: (id) => `/penitip/byIdAkun/${id}`,
     ADD_KEUNTUNGAN_PENITIP: (id) => `/penitip/add-keuntungan/${id}`,
-
-
+    TARIK_SALDO_PENITIP: (id) => `/penitip/tarik-saldo/${id}`,
+    
     // Penitipan
     GET_ALL_PENITIPAN: "/penitipan",
     CREATE_PENITIPAN: "/penitipan",

@@ -38,7 +38,7 @@ const RatingModal = ({ show, onHide, currentTransaction, rating, setRating, subm
               {currentTransaction.barang?.map((item, index) => (
                 <div key={index} className="d-flex align-items-center mb-2 p-2 bg-light rounded">
                   <img
-                    src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
+                    src={`${ENDPOINTS.BASE_URL}/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
                     alt={item.nama}
                     className="rounded me-2"
                     style={{ width: '40px', height: '40px', objectFit: 'cover' }}

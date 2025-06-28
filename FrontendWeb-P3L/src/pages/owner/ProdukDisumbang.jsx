@@ -97,7 +97,7 @@ const ProdukDisumbangkanPage = () => {
           const organisasi = organisasiResponse.data;
           
           // Get Barang details
-          const barangResponse = await fetch(`http://localhost:3000/api/barang/${donasi.id_barang}`);
+          const barangResponse = await fetch(`${ENDPOINTS.BASE_URL}/api/barang/${donasi.id_barang}`);
           const barang = await barangResponse.json();
           
           return {

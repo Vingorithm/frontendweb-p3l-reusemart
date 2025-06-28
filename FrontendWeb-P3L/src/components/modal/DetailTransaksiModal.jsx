@@ -74,7 +74,7 @@ const DetailTransaksiModal = ({ show, onHide, currentTransaction, generateNotaNu
                   <Row className="align-items-center">
                     <Col xs={3} md={2}>
                       <img
-                        src={`http://localhost:3000/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
+                        src={`${ENDPOINTS.BASE_URL}/uploads/barang/${item.gambar?.split(',')[0] || 'default.jpg'}`}
                         alt={item.nama}
                         className="img-fluid rounded"
                         style={{ maxHeight: '80px', objectFit: 'cover' }}

@@ -13,7 +13,6 @@ import heroBanner3 from '../assets/images/hero-banner3.png';
 import electronicCategory from '../assets/images/electronic-category.png';
 import fashionCategory from '../assets/images/fashion-category.png';
 import furnitureCategory from '../assets/images/furniture-category.png';
-import defaultProduct from '../assets/images/default-product.jpg';
 
 const HomePage = () => {
   const navigate = useNavigate();

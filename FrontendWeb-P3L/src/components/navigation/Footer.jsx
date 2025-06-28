@@ -1,6 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaFacebookF, FaInstagram, FaTiktok, FaSnapchatGhost, FaApple, FaGooglePlay } from 'react-icons/fa';
+import logo from '../../assets/images/logo.png';
 
 const Footer = () => {
   // Styles
@@ -115,7 +116,7 @@ const Footer = () => {
           {/* Logo and Download Section */}
           <div className="col-md-3 mb-4">
             <div style={styles.logo}>
-              <img src="../src/assets/images/logo.png" alt="ReuseMart Logo" />
+              <img src={logo} alt="ReuseMart Logo" />
             </div>
             
             <div className="app-download mb-3">

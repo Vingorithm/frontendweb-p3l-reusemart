@@ -7,6 +7,8 @@ import { useSearch } from '../../utils/searchContext';
 import { useNavigate } from 'react-router-dom';
 import { GetAllBarang } from "../../clients/BarangService";
 
+import logo from '../../assets/images/logo.png';
+
 const HeaderUtama = () => {
   const navigate = useNavigate();
   const { searchQuery, setSearchQuery } = useSearch();
@@ -508,7 +510,7 @@ const HeaderUtama = () => {
           <div className="col-auto">
             <div style={logoContainerStyle}>
               <a href="/" style={{ textDecoration: 'none' }}>
-                <img src="..\src\assets\images\logo.png" alt="logo" />
+                <img src={logo} alt="logo" />
               </a>
             </div>
           </div>

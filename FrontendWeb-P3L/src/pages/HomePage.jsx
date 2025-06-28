@@ -7,6 +7,14 @@ import { Carousel } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../utils/searchContext';
 
+import heroHome from '../assets/images/hero-home.png';
+import heroBanner2 from '../assets/images/hero-banner2.png';
+import heroBanner3 from '../assets/images/hero-banner3.png';
+import electronicCategory from '../assets/images/electronic-category.png';
+import fashionCategory from '../assets/images/fashion-category.png';
+import furnitureCategory from '../assets/images/furniture-category.png';
+import defaultProduct from '../assets/images/default-product.jpg';
+
 const HomePage = () => {
   const navigate = useNavigate();
   const { searchQuery } = useSearch();
@@ -54,21 +62,21 @@ const HomePage = () => {
   const carouselImages = [
     {
       id: 1,
-      image: "../src/assets/images/hero-home.png",
+      image: heroHome,
       alt: "Shopping made easy",
       title: "Belanja Barang Bekas Berkualitas",
       subtitle: "Hemat uang, hemat bumi"
     },
     {
       id: 2,
-      image: "../src/assets/images/hero-banner2.png",
+      image: heroBanner2,
       alt: "Quality second hand products",
       title: "Kualitas Terjamin",
       subtitle: "Semua produk telah melalui pemeriksaan ketat"
     },
     {
       id: 3,
-      image: "../src/assets/images/hero-banner3.png", 
+      image: heroBanner3, 
       alt: "Affordable prices",
       title: "Harga Terjangkau",
       subtitle: "Temukan barang impianmu dengan harga menarik"
@@ -80,19 +88,19 @@ const HomePage = () => {
     {
       id: 1,
       name: "Elektronik & Gadget",
-      image: "../src/assets/images/electronic-category.png",
+      image: electronicCategory,
       discount: "30%"
     },
     {
       id: 2,
       name: "Pakaian & Aksesoris",
-      image: "../src/assets/images/fashion-category.png",
+      image: fashionCategory,
       discount: "25%"
     },
     {
       id: 3,
       name: "Perabot Rumah Tangga",
-      image: "../src/assets/images/furniture-category.png",
+      image: furnitureCategory,
       discount: "40%"
     }
   ];

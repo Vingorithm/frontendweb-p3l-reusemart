@@ -10,6 +10,7 @@ import PaginationComponent from '../../components/pagination/Pagination';
 import RequestDonasiModal from '../../components/modal/RequestDonasiModal';
 import UpdateRequestDonasiModal from '../../components/modal/UpdateRequestDonasiModal';
 import ConfirmationModalUniversal from '../../components/modal/ConfirmationModalUniversal';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const RequestCard = ({ request, onEdit, onDelete, formatDate }) => {
   const getStatusBadge = (status) => {

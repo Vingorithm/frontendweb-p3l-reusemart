@@ -12,6 +12,7 @@ import { generateNotaPenjualan } from "../../components/pdf/CetakNotaPenjualan";
 import { apiPembelian } from "../../clients/PembelianService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { ENDPOINTS } from "../../api/endpoints";
 
 // Shared color palette
 export const colors = {

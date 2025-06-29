@@ -6,6 +6,7 @@ import { decodeToken } from '../../utils/jwtUtils';
 import { GetAllDiskusiProduk, UpdateDiskusiProduk } from '../../clients/DiskusiProdukService';
 import AnswerDiskusiModal from '../../components/modal/AnswerDiskusiModal';
 import Pagination from "../../components/pagination/Pagination";
+import { ENDPOINTS } from '../../api/endpoints';
 
 const OwnerPage = () => {
   const [customerService, setCustomerService] = useState(null);

@@ -8,6 +8,7 @@ import { GetAllPenitipan, GetPenitipanById } from '../../clients/PenitipanServic
 import { GetAllDonasiBarang, GetDonasiBarangById } from '../../clients/DonasiBarangService';
 import { GetAllRequestDonasi, GetRequestDonasiById } from '../../clients/RequestDonasiService';
 import { GetAllOrganisasiAmal, GetOrganisasiAmalById } from '../../clients/OrganisasiAmalService';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const ProdukDisumbangkanPage = () => {
   const [donasiBarangList, setDonasiBarangList] = useState([]);

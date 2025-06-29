@@ -15,6 +15,7 @@ import { UpdateStatusPenitipan, GetPenitipanByStatus, GetPenitipanByIdBarang, Sc
 import { UpdateKeuntunganPenitip } from '../../clients/PenitipService';
 import { CreateTransaksi } from '../../clients/TransaksiService'; // Add this
 import { UpdatePoinPembeli } from '../../clients/PembeliService';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const Pengambilan = () => {
   const [transaksiList, setTransaksiList] = useState([]);

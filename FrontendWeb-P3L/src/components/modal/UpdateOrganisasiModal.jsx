@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ConfirmModal from "./ConfirmModal";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const UpdateOrganisasiModal = ({ organisasi, onEdit }) => {
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import ConfirmModal from "./ConfirmModal";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const KirimBuktiBayarModal = ({ pembelian, onSend }) => {
   const [fotoPreview, setFotoPreview] = useState("");

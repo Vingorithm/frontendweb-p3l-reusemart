@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Row, Col, Card, Badge } from 'react-bootstrap';
 import { FaStar } from 'react-icons/fa';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const DetailTransaksiModal = ({ show, onHide, currentTransaction, generateNotaNumber, formatDate, formatCurrency, getStatusBadgeColor }) => {
   return (

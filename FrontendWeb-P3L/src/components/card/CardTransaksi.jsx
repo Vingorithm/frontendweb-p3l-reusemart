@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Badge, Button } from 'react-bootstrap';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const CardTransaksi = ({ transaksi, handleLihatDetail }) => {
   const formatDate = (dateString) => {

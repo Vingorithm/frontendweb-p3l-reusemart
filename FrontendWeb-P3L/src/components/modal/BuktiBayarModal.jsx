@@ -1,3 +1,5 @@
+import { ENDPOINTS } from "../../api/endpoints";
+
 const BuktiBayarModal = ({img}) => {
     return <>
         <div

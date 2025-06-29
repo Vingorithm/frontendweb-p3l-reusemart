@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { GetAllPegawai } from '../../clients/PegawaiService';
+import { ENDPOINTS } from "../../api/endpoints";
 
 const DetailTransaksiPenitipModal = ({data}) => {
     const [dataTransaksi, setDataTransaksi] = useState(null);

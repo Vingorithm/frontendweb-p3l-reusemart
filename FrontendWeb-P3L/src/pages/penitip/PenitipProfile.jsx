@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import EditProfilePenitipModal from '../../components/modal/EditProfilePenitipModal';
 import CetakLaporanPenitipModal from '../../components/modal/CetakLaporanPenitipModal';
 import { CetakLaporanTransaksi } from '../../components/pdf/CetakLaporanTransaksi';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const PenitipProfile = () => {
 

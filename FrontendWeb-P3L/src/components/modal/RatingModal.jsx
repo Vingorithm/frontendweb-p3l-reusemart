@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { FaStar, FaRegStar } from 'react-icons/fa';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const RatingModal = ({ show, onHide, currentTransaction, rating, setRating, submittingRating, handleSubmitRating, formatCurrency }) => {
   return (

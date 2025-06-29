@@ -21,6 +21,7 @@ import PaginationComponent from '../../components/pagination/Pagination';
 import DetailBarangModal from '../../components/modal/DetailBarangModal';
 import CardListPenitipan from '../../components/card/CardListPenitipan';
 import ConfirmationModalUniversal from '../../components/modal/ConfirmationModalUniversal';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const DaftarBarang = () => {
   const [penitipanList, setPenitipanList] = useState([]);

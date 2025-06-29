@@ -8,6 +8,7 @@ import { SchedulePickup } from '../../clients/PenitipanService';
 import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 import { GetPegawaiById } from '../../clients/PegawaiService';
 import { SendNotification } from '../../clients/NotificationServices';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const CardListPengiriman = ({ transaksi, handleCetakNota, handleConfirmDiambil, handleLihatDetail, setTransaksiList, pegawai}) => {
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);

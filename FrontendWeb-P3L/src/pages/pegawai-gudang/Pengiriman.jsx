@@ -14,7 +14,7 @@ import { UpdatePengirimanStatus } from '../../clients/PengirimanService';
 import { CreateTransaksi } from '../../clients/TransaksiService'; // Add this
 import { UpdateKeuntunganPenitip } from '../../clients/PenitipService';
 import { UpdatePoinPembeli } from '../../clients/PembeliService';
-
+import { ENDPOINTS } from '../../api/endpoints';
 
 const Pengiriman = () => {
   const [transaksiList, setTransaksiList] = useState([]);

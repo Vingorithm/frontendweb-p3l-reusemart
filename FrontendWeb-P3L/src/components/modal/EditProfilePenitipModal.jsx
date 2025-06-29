@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ENDPOINTS } from "../../api/endpoints";
 
 const EditProfilePenitipModal = ({data, onUpdate}) => {
     const [nama, setNama] = useState("");

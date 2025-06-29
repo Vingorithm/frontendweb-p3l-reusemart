@@ -24,6 +24,7 @@ import AddEditBarangModal from '../../components/modal/AddEditBarangModal';
 import BarangCard from '../../components/card/CardListBarang';
 import ConfirmationModalUniversal from '../../components/modal/ConfirmationModalUniversal';
 import NotaPenitipanPdf from '../../components/pdf/CetakNotaPenitipanPdf';
+import { ENDPOINTS } from '../../api/endpoints';
 
 const ManageBarang = () => {
   const [barangList, setBarangList] = useState([]);

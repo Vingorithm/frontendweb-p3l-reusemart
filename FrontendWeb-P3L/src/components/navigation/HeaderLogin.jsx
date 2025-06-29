@@ -2,6 +2,7 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaArrowLeft } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
+import logo from '../../assets/images/logo.png';
 
 const HeaderLogin = ({ routes }) => {
   const navigate = useNavigate();
@@ -77,7 +78,7 @@ const HeaderLogin = ({ routes }) => {
           <div className="col">
             <div style={logoContainerStyle}>
               <Link to="/" style={{ textDecoration: 'none' }}>
-                <img src="/src/assets/images/logo.png" alt="logo" />
+                <img src={logo} alt="logo" />
               </Link>
             </div>
           </div>

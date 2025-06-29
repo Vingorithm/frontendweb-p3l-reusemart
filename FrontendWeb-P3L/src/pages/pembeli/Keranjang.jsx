@@ -12,6 +12,7 @@ import CheckoutModal from "../../components/modal/CheckoutModal";
 import { apiSubPembelian } from "../../clients/SubPembelianService";
 import { UpdateStatusPenitipan } from "../../clients/PenitipanService";
 import { FaSearch } from 'react-icons/fa';
+import { ENDPOINTS } from "../../api/endpoints";
 
 const Keranjang = () => {
   const [akun, setAkun] = useState(null);

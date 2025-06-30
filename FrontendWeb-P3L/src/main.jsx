@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import AppRouter from "../src/routes/index";
 import "bootstrap/dist/css/bootstrap.min.css";
+import bootstrap from 'bootstrap';
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
